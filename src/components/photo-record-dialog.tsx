@@ -17,6 +17,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { findSimilar, createRecordWithCode } from "@/lib/records.functions";
 import { sha256OfFile, dHashOfFile } from "@/lib/image-hash";
+import { fileToCompressedDataURL } from "@/lib/image-compress";
 import { CompareSlider } from "@/components/compare-slider";
 import jsPDF from "jspdf";
 import { supabase } from "@/integrations/supabase/client";
