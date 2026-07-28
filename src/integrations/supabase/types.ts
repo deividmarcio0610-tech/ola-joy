@@ -14,6 +14,81 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_version_installs: {
+        Row: {
+          created_at: string
+          last_seen_at: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+          version: string
+        }
+        Insert: {
+          created_at?: string
+          last_seen_at?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+          version: string
+        }
+        Update: {
+          created_at?: string
+          last_seen_at?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+          version?: string
+        }
+        Relationships: []
+      }
+      app_versions: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+          is_mandatory: boolean
+          minimum_supported_version: string | null
+          published_at: string
+          published_by: string | null
+          release_notes: Json
+          rollout_percent: number
+          title: string
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          is_mandatory?: boolean
+          minimum_supported_version?: string | null
+          published_at?: string
+          published_by?: string | null
+          release_notes?: Json
+          rollout_percent?: number
+          title?: string
+          updated_at?: string
+          version: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          is_mandatory?: boolean
+          minimum_supported_version?: string | null
+          published_at?: string
+          published_by?: string | null
+          release_notes?: Json
+          rollout_percent?: number
+          title?: string
+          updated_at?: string
+          version?: string
+        }
+        Relationships: []
+      }
       audit_log: {
         Row: {
           action: string
@@ -111,6 +186,298 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      environmental_actions: {
+        Row: {
+          after_photo_url: string | null
+          audit_id: string
+          before_photo_url: string | null
+          created_at: string
+          finding_id: string | null
+          how: string | null
+          how_much: string | null
+          id: string
+          indicator: string | null
+          priority: string
+          status: string
+          tier: string
+          updated_at: string
+          user_id: string
+          verified_at: string | null
+          verified_by: string | null
+          what: string
+          when_: string | null
+          where_: string | null
+          who: string | null
+          why: string | null
+        }
+        Insert: {
+          after_photo_url?: string | null
+          audit_id: string
+          before_photo_url?: string | null
+          created_at?: string
+          finding_id?: string | null
+          how?: string | null
+          how_much?: string | null
+          id?: string
+          indicator?: string | null
+          priority?: string
+          status?: string
+          tier?: string
+          updated_at?: string
+          user_id: string
+          verified_at?: string | null
+          verified_by?: string | null
+          what: string
+          when_?: string | null
+          where_?: string | null
+          who?: string | null
+          why?: string | null
+        }
+        Update: {
+          after_photo_url?: string | null
+          audit_id?: string
+          before_photo_url?: string | null
+          created_at?: string
+          finding_id?: string | null
+          how?: string | null
+          how_much?: string | null
+          id?: string
+          indicator?: string | null
+          priority?: string
+          status?: string
+          tier?: string
+          updated_at?: string
+          user_id?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          what?: string
+          when_?: string | null
+          where_?: string | null
+          who?: string | null
+          why?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "environmental_actions_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "environmental_audits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "environmental_actions_finding_id_fkey"
+            columns: ["finding_id"]
+            isOneToOne: false
+            referencedRelation: "environmental_findings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      environmental_attachments: {
+        Row: {
+          audit_id: string | null
+          created_at: string
+          extracted_text: string | null
+          filename: string
+          id: string
+          kind: string
+          meta: Json | null
+          mime_type: string | null
+          public_url: string | null
+          size_bytes: number | null
+          storage_path: string | null
+          user_id: string
+        }
+        Insert: {
+          audit_id?: string | null
+          created_at?: string
+          extracted_text?: string | null
+          filename: string
+          id?: string
+          kind: string
+          meta?: Json | null
+          mime_type?: string | null
+          public_url?: string | null
+          size_bytes?: number | null
+          storage_path?: string | null
+          user_id: string
+        }
+        Update: {
+          audit_id?: string | null
+          created_at?: string
+          extracted_text?: string | null
+          filename?: string
+          id?: string
+          kind?: string
+          meta?: Json | null
+          mime_type?: string | null
+          public_url?: string | null
+          size_bytes?: number | null
+          storage_path?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "environmental_attachments_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "environmental_audits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      environmental_audits: {
+        Row: {
+          ai_payload: Json | null
+          area: string | null
+          code: string
+          compared_photo_url: string | null
+          created_at: string
+          criticality: string | null
+          environment_type: string | null
+          id: string
+          location: string | null
+          original_photo_url: string | null
+          overall_confidence: number | null
+          requires_validation: boolean
+          scope: string[] | null
+          status: string
+          summary: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_payload?: Json | null
+          area?: string | null
+          code: string
+          compared_photo_url?: string | null
+          created_at?: string
+          criticality?: string | null
+          environment_type?: string | null
+          id?: string
+          location?: string | null
+          original_photo_url?: string | null
+          overall_confidence?: number | null
+          requires_validation?: boolean
+          scope?: string[] | null
+          status?: string
+          summary?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_payload?: Json | null
+          area?: string | null
+          code?: string
+          compared_photo_url?: string | null
+          created_at?: string
+          criticality?: string | null
+          environment_type?: string | null
+          id?: string
+          location?: string | null
+          original_photo_url?: string | null
+          overall_confidence?: number | null
+          requires_validation?: boolean
+          scope?: string[] | null
+          status?: string
+          summary?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      environmental_findings: {
+        Row: {
+          aspect: string | null
+          audit_id: string
+          classification: string | null
+          control_hierarchy: string | null
+          created_at: string
+          criticality: string | null
+          evidence_type: string | null
+          id: string
+          impact: string | null
+          indicators: string[] | null
+          interference_notes: string | null
+          level_1_observation: string | null
+          level_2_interpretation: string | null
+          level_3_analysis: string | null
+          medium_affected: string[] | null
+          probability: number | null
+          proposals: Json | null
+          requires: string[] | null
+          reversibility: string | null
+          severity: number | null
+          skeptic_notes: string | null
+          sort_index: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          aspect?: string | null
+          audit_id: string
+          classification?: string | null
+          control_hierarchy?: string | null
+          created_at?: string
+          criticality?: string | null
+          evidence_type?: string | null
+          id?: string
+          impact?: string | null
+          indicators?: string[] | null
+          interference_notes?: string | null
+          level_1_observation?: string | null
+          level_2_interpretation?: string | null
+          level_3_analysis?: string | null
+          medium_affected?: string[] | null
+          probability?: number | null
+          proposals?: Json | null
+          requires?: string[] | null
+          reversibility?: string | null
+          severity?: number | null
+          skeptic_notes?: string | null
+          sort_index?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          aspect?: string | null
+          audit_id?: string
+          classification?: string | null
+          control_hierarchy?: string | null
+          created_at?: string
+          criticality?: string | null
+          evidence_type?: string | null
+          id?: string
+          impact?: string | null
+          indicators?: string[] | null
+          interference_notes?: string | null
+          level_1_observation?: string | null
+          level_2_interpretation?: string | null
+          level_3_analysis?: string | null
+          medium_affected?: string[] | null
+          probability?: number | null
+          proposals?: Json | null
+          requires?: string[] | null
+          reversibility?: string | null
+          severity?: number | null
+          skeptic_notes?: string | null
+          sort_index?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "environmental_findings_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "environmental_audits"
             referencedColumns: ["id"]
           },
         ]
@@ -1051,15 +1418,19 @@ export type Database = {
           image_hash: string | null
           image_phash: string | null
           internal_code: string | null
+          kaizen_melhorias: Json | null
           location: string | null
           meta: Json | null
           module: Database["public"]["Enums"]["record_module"]
+          n3_resumo_auditoria: string | null
+          n3_riscos: Json | null
           parent_record_id: string | null
           photo_url: string | null
           prazo: string | null
           priority: Database["public"]["Enums"]["record_priority"]
           recurrence_index: number
           responsavel: string | null
+          risco_selecionado_id: string | null
           send_note: string | null
           send_proof_url: string | null
           sent_at: string | null
@@ -1136,15 +1507,19 @@ export type Database = {
           image_hash?: string | null
           image_phash?: string | null
           internal_code?: string | null
+          kaizen_melhorias?: Json | null
           location?: string | null
           meta?: Json | null
           module: Database["public"]["Enums"]["record_module"]
+          n3_resumo_auditoria?: string | null
+          n3_riscos?: Json | null
           parent_record_id?: string | null
           photo_url?: string | null
           prazo?: string | null
           priority?: Database["public"]["Enums"]["record_priority"]
           recurrence_index?: number
           responsavel?: string | null
+          risco_selecionado_id?: string | null
           send_note?: string | null
           send_proof_url?: string | null
           sent_at?: string | null
@@ -1221,15 +1596,19 @@ export type Database = {
           image_hash?: string | null
           image_phash?: string | null
           internal_code?: string | null
+          kaizen_melhorias?: Json | null
           location?: string | null
           meta?: Json | null
           module?: Database["public"]["Enums"]["record_module"]
+          n3_resumo_auditoria?: string | null
+          n3_riscos?: Json | null
           parent_record_id?: string | null
           photo_url?: string | null
           prazo?: string | null
           priority?: Database["public"]["Enums"]["record_priority"]
           recurrence_index?: number
           responsavel?: string | null
+          risco_selecionado_id?: string | null
           send_note?: string | null
           send_proof_url?: string | null
           sent_at?: string | null
