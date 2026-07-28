@@ -81,23 +81,23 @@ function Index() {
   };
 
   const buttons = [
-    { label: "C", onClick: clear, variant: "secondary" },
+    { label: "C", onClick: clear, variant: "secondary", span: 3 },
     { label: "÷", onClick: () => handleOperator("/"), variant: "accent" },
-    { label: "×", onClick: () => handleOperator("*"), variant: "accent" },
-    { label: "-", onClick: () => handleOperator("-"), variant: "accent" },
     { label: "7", onClick: () => handleNumber("7"), variant: "default" },
     { label: "8", onClick: () => handleNumber("8"), variant: "default" },
     { label: "9", onClick: () => handleNumber("9"), variant: "default" },
-    { label: "+", onClick: () => handleOperator("+"), variant: "accent" },
+    { label: "×", onClick: () => handleOperator("*"), variant: "accent" },
     { label: "4", onClick: () => handleNumber("4"), variant: "default" },
     { label: "5", onClick: () => handleNumber("5"), variant: "default" },
     { label: "6", onClick: () => handleNumber("6"), variant: "default" },
-    { label: "=", onClick: calculate, variant: "primary" },
+    { label: "-", onClick: () => handleOperator("-"), variant: "accent" },
     { label: "1", onClick: () => handleNumber("1"), variant: "default" },
     { label: "2", onClick: () => handleNumber("2"), variant: "default" },
     { label: "3", onClick: () => handleNumber("3"), variant: "default" },
-    { label: "0", onClick: () => handleNumber("0"), variant: "default" },
+    { label: "+", onClick: () => handleOperator("+"), variant: "accent" },
+    { label: "0", onClick: () => handleNumber("0"), variant: "default", span: 2 },
     { label: ".", onClick: handleDecimal, variant: "default" },
+    { label: "=", onClick: calculate, variant: "primary" },
   ];
 
   return (
@@ -120,15 +120,15 @@ function Index() {
               className={cn(
                 "h-16 rounded-2xl text-xl font-medium transition-transform active:scale-95",
                 btn.variant === "primary" &&
-                  "col-span-1 bg-primary text-primary-foreground hover:bg-primary/90",
+                  "bg-primary text-primary-foreground hover:bg-primary/90",
                 btn.variant === "secondary" &&
                   "bg-secondary text-secondary-foreground hover:bg-secondary/80",
                 btn.variant === "accent" &&
                   "bg-accent text-accent-foreground hover:bg-accent/80",
                 btn.variant === "default" &&
                   "bg-background text-foreground hover:bg-muted ring-1 ring-border",
-                btn.label === "0" && "col-span-1",
-                btn.label === "=" && "row-span-2 h-auto"
+                btn.span === 3 && "col-span-3",
+                btn.span === 2 && "col-span-2"
               )}
             >
               {btn.label}
@@ -143,4 +143,3 @@ function Index() {
 function cn(...classes: (string | false | null | undefined)[]) {
   return classes.filter(Boolean).join(" ");
 }
-
