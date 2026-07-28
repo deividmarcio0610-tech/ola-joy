@@ -70,11 +70,6 @@ export const Route = createFileRoute("/api/iris/kaizen-chat")({
           return Response.json({ error: "Sessão inválida." }, { status: 401 });
         }
 
-        const geminiKey = process.env.GEMINI_API_KEY;
-        if (!geminiKey) {
-          return Response.json({ error: "GEMINI_API_KEY não configurado." }, { status: 503 });
-        }
-
         const stateSummary = [
           body.hasImage ? "Uma fotografia já foi enviada." : "Nenhuma fotografia foi enviada ainda.",
           `Correções atuais (${body.corrections.length}):`,
@@ -83,55 +78,37 @@ export const Route = createFileRoute("/api/iris/kaizen-chat")({
           ),
         ].join("\n");
 
-        const geminiContents = [
-          { role: "user", parts: [{ text: `${SYSTEM}\n\nESTADO ATUAL:\n${stateSummary}` }] },
-          { role: "model", parts: [{ text: "Entendido. Vou responder em JSON como pedido." }] },
-          ...body.messages.slice(-12).map((m) => ({
-            role: m.role === "assistant" ? "model" : "user",
-            parts: [{ text: m.content }],
-          })),
-        ];
+        const result = await ollamaChat({
+          json: true,
+          temperature: 0.4,
+          messages: [
+            { role: "system", content: `${SYSTEM}\n\nESTADO ATUAL:\n${stateSummary}` },
+            ...body.messages.slice(-12).map((m) => ({
+              role: m.role === "assistant" ? ("assistant" as const) : ("user" as const),
+              content: m.content,
+            })),
+          ],
+        });
 
-        try {
-          const res = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                contents: geminiContents,
-                generationConfig: { responseMimeType: "application/json", temperature: 0.4 },
-              }),
-            },
-          );
-          const raw = await res.text();
-          if (!res.ok) {
-            return Response.json(
-              { error: "Falha na IA.", detail: raw.slice(0, 400), httpStatus: res.status },
-              { status: 200 },
-            );
-          }
-          const json = JSON.parse(raw) as {
-            candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-          };
-          const text = json.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-          let parsed: { assistantMessage: string; actions?: ChatAction[] };
-          try {
-            parsed = JSON.parse(text);
-          } catch {
-            parsed = { assistantMessage: text || "Certo.", actions: [] };
-          }
-          return Response.json({
-            success: true,
-            assistantMessage: parsed.assistantMessage ?? "Certo.",
-            actions: parsed.actions ?? [],
-          });
-        } catch (e) {
+        if (!result.ok) {
           return Response.json(
-            { error: "Erro na IA.", detail: e instanceof Error ? e.message : String(e) },
+            { error: "Falha na IA.", detail: result.error.slice(0, 400), httpStatus: result.status },
             { status: 200 },
           );
         }
+
+        let parsed: { assistantMessage: string; actions?: ChatAction[] };
+        try {
+          parsed = JSON.parse(result.text);
+        } catch {
+          parsed = { assistantMessage: result.text || "Certo.", actions: [] };
+        }
+        return Response.json({
+          success: true,
+          assistantMessage: parsed.assistantMessage ?? "Certo.",
+          actions: parsed.actions ?? [],
+        });
+
       },
     },
   },
