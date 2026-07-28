@@ -1,8 +1,10 @@
 // Chat conversacional da ValeTech IA no Kaizen.
-// Recebe histórico + correções + foto opcional, chama Gemini (GEMINI_API_KEY) e retorna
-// resposta em português + ações estruturadas para atualizar a lista de correções.
+// Recebe histórico + correções + foto opcional, chama o Ollama (OLLAMA_BASE_URL/OLLAMA_MODEL)
+// e retorna resposta em português + ações estruturadas para atualizar a lista de correções.
 
 import { createFileRoute } from "@tanstack/react-router";
+import { ollamaChat } from "@/lib/ai/ollama.server";
+
 
 type ChatMessage = { role: "user" | "assistant" | "system"; content: string };
 
