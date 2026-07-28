@@ -588,6 +588,71 @@ export type Database = {
           },
         ]
       }
+      lightning_strikes: {
+        Row: {
+          bearing_degrees: number | null
+          created_at: string
+          created_by: string | null
+          distance_km: number
+          id: string
+          intensity_ka: number | null
+          latitude: number
+          location_id: string | null
+          longitude: number
+          occurred_at: string
+          polarity: string | null
+          provider: string
+          quality: number | null
+          raw: Json
+          received_at: string
+          strike_type: string | null
+        }
+        Insert: {
+          bearing_degrees?: number | null
+          created_at?: string
+          created_by?: string | null
+          distance_km: number
+          id?: string
+          intensity_ka?: number | null
+          latitude: number
+          location_id?: string | null
+          longitude: number
+          occurred_at: string
+          polarity?: string | null
+          provider: string
+          quality?: number | null
+          raw?: Json
+          received_at?: string
+          strike_type?: string | null
+        }
+        Update: {
+          bearing_degrees?: number | null
+          created_at?: string
+          created_by?: string | null
+          distance_km?: number
+          id?: string
+          intensity_ka?: number | null
+          latitude?: number
+          location_id?: string | null
+          longitude?: number
+          occurred_at?: string
+          polarity?: string | null
+          provider?: string
+          quality?: number | null
+          raw?: Json
+          received_at?: string
+          strike_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lightning_strikes_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "weather_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string | null
@@ -645,6 +710,107 @@ export type Database = {
           id?: string
           role_title?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      push_deliveries: {
+        Row: {
+          body: string | null
+          created_at: string
+          error: string | null
+          http_status: number | null
+          id: string
+          is_test: boolean
+          severity: string | null
+          status: string
+          subscription_id: string
+          tag: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          error?: string | null
+          http_status?: number | null
+          id?: string
+          is_test?: boolean
+          severity?: string | null
+          status: string
+          subscription_id: string
+          tag?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          error?: string | null
+          http_status?: number | null
+          id?: string
+          is_test?: boolean
+          severity?: string | null
+          status?: string
+          subscription_id?: string
+          tag?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_deliveries_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "push_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          enabled: boolean
+          endpoint: string
+          failure_count: number
+          id: string
+          last_failure_at: string | null
+          last_success_at: string | null
+          p256dh: string
+          platform: string | null
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          enabled?: boolean
+          endpoint: string
+          failure_count?: number
+          id?: string
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          p256dh: string
+          platform?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          enabled?: boolean
+          endpoint?: string
+          failure_count?: number
+          id?: string
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          p256dh?: string
+          platform?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -1123,6 +1289,59 @@ export type Database = {
           },
         ]
       }
+      safety_plans: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          interventions: Json
+          module_key: string | null
+          photo_url: string
+          record_id: string | null
+          revision: number
+          status: string
+          svg_state: Json
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          interventions?: Json
+          module_key?: string | null
+          photo_url: string
+          record_id?: string | null
+          revision?: number
+          status?: string
+          svg_state?: Json
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          interventions?: Json
+          module_key?: string | null
+          photo_url?: string
+          record_id?: string | null
+          revision?: number
+          status?: string
+          svg_state?: Json
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_plans_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1143,6 +1362,187 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      weather_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          created_at: string
+          created_by: string
+          decided_at: string | null
+          decided_by: string | null
+          decision: string | null
+          expires_at: string | null
+          id: string
+          location_id: string | null
+          message: string | null
+          metadata: Json
+          resolved_at: string | null
+          severity: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          created_at?: string
+          created_by?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision?: string | null
+          expires_at?: string | null
+          id?: string
+          location_id?: string | null
+          message?: string | null
+          metadata?: Json
+          resolved_at?: string | null
+          severity: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          created_at?: string
+          created_by?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision?: string | null
+          expires_at?: string | null
+          id?: string
+          location_id?: string | null
+          message?: string | null
+          metadata?: Json
+          resolved_at?: string | null
+          severity?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weather_alerts_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "weather_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weather_locations: {
+        Row: {
+          contract: string | null
+          created_at: string
+          created_by: string
+          enabled: boolean
+          id: string
+          is_primary: boolean
+          latitude: number
+          lightning_radius_km: number
+          longitude: number
+          name: string
+          responsible_email: string | null
+          responsible_name: string | null
+          responsible_phone: string | null
+          timezone: string
+          unit: string | null
+          updated_at: string
+          warning_radius_km: number
+        }
+        Insert: {
+          contract?: string | null
+          created_at?: string
+          created_by?: string
+          enabled?: boolean
+          id?: string
+          is_primary?: boolean
+          latitude: number
+          lightning_radius_km?: number
+          longitude: number
+          name: string
+          responsible_email?: string | null
+          responsible_name?: string | null
+          responsible_phone?: string | null
+          timezone?: string
+          unit?: string | null
+          updated_at?: string
+          warning_radius_km?: number
+        }
+        Update: {
+          contract?: string | null
+          created_at?: string
+          created_by?: string
+          enabled?: boolean
+          id?: string
+          is_primary?: boolean
+          latitude?: number
+          lightning_radius_km?: number
+          longitude?: number
+          name?: string
+          responsible_email?: string | null
+          responsible_name?: string | null
+          responsible_phone?: string | null
+          timezone?: string
+          unit?: string | null
+          updated_at?: string
+          warning_radius_km?: number
+        }
+        Relationships: []
+      }
+      weather_snapshots: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          error: string | null
+          fetched_at: string
+          id: string
+          latitude: number
+          location_id: string | null
+          longitude: number
+          normalized: Json
+          provider: string
+          raw: Json
+          response_ms: number | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          fetched_at?: string
+          id?: string
+          latitude: number
+          location_id?: string | null
+          longitude: number
+          normalized?: Json
+          provider?: string
+          raw?: Json
+          response_ms?: number | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          fetched_at?: string
+          id?: string
+          latitude?: number
+          location_id?: string | null
+          longitude?: number
+          normalized?: Json
+          provider?: string
+          raw?: Json
+          response_ms?: number | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weather_snapshots_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "weather_locations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
