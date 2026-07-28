@@ -333,14 +333,27 @@ function partsFromContent(content: string | ChatContentPart[]): GeminiPart[] {
   return parts;
 }
 
-function mapGeminiError(status: number, body: string) {
+function mapOllamaError(status: number, body: string) {
   const lower = body.toLowerCase();
-  if (status === 401 || status === 403) return "Chave da API Gemini inválida ou sem permissão.";
-  if (status === 402 || lower.includes("quota") || lower.includes("billing") || lower.includes("payment"))
-    return "Cota da API Gemini esgotada. Verifique o faturamento no Google AI Studio.";
-  if (status === 429) return "Limite de uso da API Gemini atingido. Tente novamente em instantes.";
-  if (status >= 500) return "API Gemini temporariamente indisponível. Tente novamente.";
-  return `Falha na API Gemini (${status}).`;
+  if (status === 404 || lower.includes("not found"))
+    return "Modelo não encontrado no servidor de IA. Rode o pull do modelo configurado.";
+  if (status === 401 || status === 403) return "Servidor de IA recusou a requisição.";
+  if (status === 429) return "Servidor de IA ocupado. Tente novamente em instantes.";
+  if (status >= 500) return "Servidor de IA temporariamente indisponível. Tente novamente.";
+  return `Falha no servidor de IA (${status}).`;
+}
+
+function stripThinking(text: string) {
+  return text
+    .replace(/<think>[\s\S]*?<\/think>/gi, "")
+    .replace(/<think>[\s\S]*$/i, "")
+    .trim();
+}
+
+function hasImage(messages: ChatMessage[]) {
+  return messages.some(
+    (m) => Array.isArray(m.content) && m.content.some((p) => p.type === "image_url"),
+  );
 }
 
 async function callChat(params: {
@@ -350,106 +363,88 @@ async function callChat(params: {
   log?: Logger;
 }) {
   const log = params.log ?? (() => {});
-  const key = Deno.env.get("GEMINI_API_KEY");
-  if (!key) {
-    log("gemini_chat.missing_key");
-    throw jsonResponse({ error: "GEMINI_API_KEY não configurada." }, 503);
+  const baseUrl = (Deno.env.get("OLLAMA_BASE_URL") ?? "").replace(/\/+$/, "");
+  if (!baseUrl) {
+    log("ollama_chat.missing_base_url");
+    throw jsonResponse({ error: "OLLAMA_BASE_URL não configurada." }, 503);
   }
-
-  const systemTexts: string[] = [];
-  const contents: GeminiContent[] = [];
-  for (const m of params.messages) {
-    if (m.role === "system") {
-      if (typeof m.content === "string") systemTexts.push(m.content);
-      else for (const p of m.content) if (p.type === "text") systemTexts.push(p.text);
-      continue;
-    }
-    contents.push({
-      role: m.role === "assistant" ? "model" : "user",
-      parts: partsFromContent(m.content),
-    });
-  }
+  const withImage = hasImage(params.messages);
+  const model = withImage
+    ? (Deno.env.get("OLLAMA_VISION_MODEL") ?? "qwen2.5vl:7b")
+    : (Deno.env.get("OLLAMA_MODEL") ?? "qwen3:8b");
 
   const body: Record<string, unknown> = {
-    contents,
-    generationConfig: {
-      temperature: params.temperature ?? 0.2,
-      ...(params.responseJson ? { responseMimeType: "application/json" } : {}),
-    },
+    model,
+    messages: params.messages,
+    temperature: params.temperature ?? 0.2,
+    stream: false,
+    ...(params.responseJson ? { response_format: { type: "json_object" } } : {}),
   };
-  if (systemTexts.length) {
-    body.systemInstruction = { parts: [{ text: systemTexts.join("\n\n") }] };
-  }
 
-  const partsSummary = contents.flatMap((c) =>
-    c.parts.map((p) => p.inline_data
-      ? { role: c.role, kind: "image", mime: p.inline_data.mime_type, approxBytes: Math.floor((p.inline_data.data.length * 3) / 4) }
-      : { role: c.role, kind: "text", chars: p.text?.length ?? 0 }),
-  );
-  log("gemini_chat.request", {
-    model: CHAT_MODEL,
+  log("ollama_chat.request", {
+    model,
     responseJson: Boolean(params.responseJson),
     temperature: params.temperature ?? 0.2,
-    systemChars: systemTexts.join("\n\n").length,
-    contents: partsSummary,
+    hasImage: withImage,
     bodyBytes: JSON.stringify(body).length,
   });
 
   const t0 = Date.now();
-  let response: Response;
-  const url = `${GEMINI_BASE}/models/${CHAT_MODEL}:generateContent?key=${encodeURIComponent(key)}`;
-  const init = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
+  const url = `${baseUrl}/v1/chat/completions`;
+  const init = {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  };
   const MAX_ATTEMPTS = 3;
   let attempt = 0;
   let errText = "";
+  let response: Response;
   while (true) {
     attempt++;
     try {
       response = await fetch(url, init);
     } catch (e) {
-      log("gemini_chat.network_error", { attempt, error: String(e), latencyMs: Date.now() - t0 });
-      throw jsonResponse({ error: "Falha de rede ao chamar a API Gemini.", details: String(e).slice(0, 300) }, 502);
+      log("ollama_chat.network_error", { attempt, error: String(e), latencyMs: Date.now() - t0 });
+      throw jsonResponse(
+        { error: "Falha de rede ao chamar o servidor de IA.", details: String(e).slice(0, 300) },
+        502,
+      );
     }
-    if (response.status !== 429 || attempt >= MAX_ATTEMPTS) break;
+    if ((response.status !== 429 && response.status < 500) || attempt >= MAX_ATTEMPTS) break;
     errText = await response.text().catch(() => "");
-    let waitMs = Math.min(30000, 1000 * 2 ** (attempt - 1));
-    const m = /"retryDelay"\s*:\s*"(\d+(?:\.\d+)?)s"/.exec(errText);
-    if (m) waitMs = Math.min(30000, Math.ceil(parseFloat(m[1]) * 1000) + 250);
-    log("gemini_chat.retry_429", { attempt, waitMs });
+    const waitMs = Math.min(30000, 1000 * 2 ** (attempt - 1));
+    log("ollama_chat.retry", { attempt, status: response.status, waitMs });
     await new Promise((r) => setTimeout(r, waitMs));
   }
 
   const latencyMs = Date.now() - t0;
-  log("gemini_chat.response", { status: response.status, ok: response.ok, latencyMs, attempts: attempt });
+  log("ollama_chat.response", { status: response.status, ok: response.ok, latencyMs, attempts: attempt });
 
   if (!response.ok) {
     if (!errText) errText = await response.text().catch(() => "");
-    log("gemini_chat.error_body", { status: response.status, preview: errText.slice(0, 500) });
+    log("ollama_chat.error_body", { status: response.status, preview: errText.slice(0, 500) });
     throw jsonResponse(
-      { error: mapGeminiError(response.status, errText), details: errText.slice(0, 500) },
+      { error: mapOllamaError(response.status, errText), details: errText.slice(0, 500) },
       response.status,
     );
   }
 
-  const data = await response.json().catch(() => ({})) as {
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> }; finishReason?: string; safetyRatings?: unknown }>;
-    promptFeedback?: unknown;
-    usageMetadata?: unknown;
+  const data = (await response.json().catch(() => ({}))) as {
+    choices?: Array<{ message?: { content?: string }; finish_reason?: string }>;
+    usage?: unknown;
   };
-  const cand = data.candidates?.[0];
-  const parts = cand?.content?.parts ?? [];
-  const text = parts.map((p) => p.text ?? "").join("");
-  log("gemini_chat.parsed", {
-    finishReason: cand?.finishReason,
-    candidatesCount: data.candidates?.length ?? 0,
+  const text = stripThinking(data.choices?.[0]?.message?.content ?? "");
+  log("ollama_chat.parsed", {
+    finishReason: data.choices?.[0]?.finish_reason,
     textChars: text.length,
-    usageMetadata: data.usageMetadata,
-    promptFeedback: data.promptFeedback,
+    usage: data.usage,
     textPreview: text.slice(0, 240),
   });
-  if (!text) log("gemini_chat.empty_text", { safetyRatings: cand?.safetyRatings, promptFeedback: data.promptFeedback });
+  if (!text) log("ollama_chat.empty_text", {});
   return text;
 }
+
 
 async function callImageGeneration(promptText: string, imageDataUrl: string, log: Logger = () => {}) {
   const key = Deno.env.get("GEMINI_API_KEY");
