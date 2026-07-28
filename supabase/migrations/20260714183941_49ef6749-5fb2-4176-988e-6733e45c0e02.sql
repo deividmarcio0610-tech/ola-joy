@@ -1,0 +1,1 @@
+ALTER TABLE public.records ADD COLUMN photo_url text;

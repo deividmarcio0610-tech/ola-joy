@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.next_internal_code(text, text) TO authenticated, service_role;
