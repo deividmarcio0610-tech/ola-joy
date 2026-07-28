@@ -1195,6 +1195,7 @@ export type Database = {
         | "supervision"
         | "crm"
         | "gain"
+        | "inspection"
       record_priority: "baixa" | "media" | "alta" | "critica"
       record_status: "aberto" | "em_andamento" | "concluido" | "cancelado"
       risk_level: "verde" | "amarelo" | "vermelho"
@@ -1358,6 +1359,7 @@ export const Constants = {
         "supervision",
         "crm",
         "gain",
+        "inspection",
       ],
       record_priority: ["baixa", "media", "alta", "critica"],
       record_status: ["aberto", "em_andamento", "concluido", "cancelado"],

@@ -1,0 +1,1 @@
+ALTER TYPE public.record_module ADD VALUE IF NOT EXISTS 'inspection';
