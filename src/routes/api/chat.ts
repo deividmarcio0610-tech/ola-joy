@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
+import { createOllamaProvider, getOllamaConfig } from "@/lib/ai/ollama.server";
+
 import {
   convertToModelMessages,
   streamText,
