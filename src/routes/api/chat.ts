@@ -52,10 +52,11 @@ export const Route = createFileRoute("/api/chat")({
           return new Response("Forbidden", { status: 403 });
         }
 
-        const geminiKey = process.env.GEMINI_API_KEY;
-        if (!geminiKey) {
-          return new Response("Missing GEMINI_API_KEY", { status: 500 });
+        const { baseURL: ollamaUrl, model: ollamaModel } = getOllamaConfig();
+        if (!ollamaUrl) {
+          return new Response("Missing OLLAMA_BASE_URL", { status: 500 });
         }
+
 
         const uiMessages = messages as UIMessage[];
 
