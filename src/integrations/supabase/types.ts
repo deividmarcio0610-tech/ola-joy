@@ -50,6 +50,71 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_conversations: {
+        Row: {
+          archived: boolean
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          archived?: boolean
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          archived?: boolean
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          parts: Json
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content?: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          parts?: Json
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          parts?: Json
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gain_history: {
         Row: {
           action: string
@@ -218,6 +283,203 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      image_generation_attempts: {
+        Row: {
+          attempt_number: number
+          completed_at: string | null
+          duration_ms: number
+          error_type: string | null
+          estimated_cost_cents: number
+          http_status: number | null
+          id: string
+          job_id: string
+          model: string | null
+          provider_name: string
+          sanitized_error_message: string | null
+          started_at: string
+          status: string
+        }
+        Insert: {
+          attempt_number: number
+          completed_at?: string | null
+          duration_ms?: number
+          error_type?: string | null
+          estimated_cost_cents?: number
+          http_status?: number | null
+          id?: string
+          job_id: string
+          model?: string | null
+          provider_name: string
+          sanitized_error_message?: string | null
+          started_at?: string
+          status: string
+        }
+        Update: {
+          attempt_number?: number
+          completed_at?: string | null
+          duration_ms?: number
+          error_type?: string | null
+          estimated_cost_cents?: number
+          http_status?: number | null
+          id?: string
+          job_id?: string
+          model?: string | null
+          provider_name?: string
+          sanitized_error_message?: string | null
+          started_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "image_generation_attempts_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "image_generation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      image_generation_jobs: {
+        Row: {
+          completed_at: string | null
+          corrected_image_url: string | null
+          corrections_hash: string
+          created_at: string
+          detected_risks: Json
+          error_message: string | null
+          estimated_total_cost_cents: number
+          final_status: string
+          generation_mode: string
+          id: string
+          internal_credits_used: number
+          original_image_hash: string
+          original_image_url: string | null
+          scene_description: string | null
+          selected_corrections: Json
+          successful_model: string | null
+          successful_provider: string | null
+          total_attempts: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          corrected_image_url?: string | null
+          corrections_hash: string
+          created_at?: string
+          detected_risks?: Json
+          error_message?: string | null
+          estimated_total_cost_cents?: number
+          final_status?: string
+          generation_mode?: string
+          id?: string
+          internal_credits_used?: number
+          original_image_hash: string
+          original_image_url?: string | null
+          scene_description?: string | null
+          selected_corrections?: Json
+          successful_model?: string | null
+          successful_provider?: string | null
+          total_attempts?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          corrected_image_url?: string | null
+          corrections_hash?: string
+          created_at?: string
+          detected_risks?: Json
+          error_message?: string | null
+          estimated_total_cost_cents?: number
+          final_status?: string
+          generation_mode?: string
+          id?: string
+          internal_credits_used?: number
+          original_image_hash?: string
+          original_image_url?: string | null
+          scene_description?: string | null
+          selected_corrections?: Json
+          successful_model?: string | null
+          successful_provider?: string | null
+          total_attempts?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      image_providers: {
+        Row: {
+          blocked_until: string | null
+          consecutive_failures: number
+          created_at: string
+          current_status: string
+          daily_budget_cents: number | null
+          default_model: string | null
+          enabled: boolean
+          final_model: string | null
+          id: string
+          last_error_type: string | null
+          last_failure_at: string | null
+          last_success_at: string | null
+          monthly_budget_cents: number | null
+          notes: string | null
+          preview_model: string | null
+          priority: number
+          provider_name: string
+          total_cost_cents: number
+          total_failure: number
+          total_success: number
+          updated_at: string
+        }
+        Insert: {
+          blocked_until?: string | null
+          consecutive_failures?: number
+          created_at?: string
+          current_status?: string
+          daily_budget_cents?: number | null
+          default_model?: string | null
+          enabled?: boolean
+          final_model?: string | null
+          id?: string
+          last_error_type?: string | null
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          monthly_budget_cents?: number | null
+          notes?: string | null
+          preview_model?: string | null
+          priority?: number
+          provider_name: string
+          total_cost_cents?: number
+          total_failure?: number
+          total_success?: number
+          updated_at?: string
+        }
+        Update: {
+          blocked_until?: string | null
+          consecutive_failures?: number
+          created_at?: string
+          current_status?: string
+          daily_budget_cents?: number | null
+          default_model?: string | null
+          enabled?: boolean
+          final_model?: string | null
+          id?: string
+          last_error_type?: string | null
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          monthly_budget_cents?: number | null
+          notes?: string | null
+          preview_model?: string | null
+          priority?: number
+          provider_name?: string
+          total_cost_cents?: number
+          total_failure?: number
+          total_success?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       inspections: {
         Row: {
@@ -576,12 +838,49 @@ export type Database = {
       }
       records: {
         Row: {
+          ai_feedback: Json
+          analysis_v2: Json | null
           area: string | null
           created_at: string
           description: string | null
+          duplicate_of: string | null
+          env_actions: Json | null
+          env_after_description: string | null
+          env_after_executed_at: string | null
+          env_after_executed_by: string | null
+          env_after_photo_url: string | null
+          env_ai_after: Json | null
+          env_ai_before: Json | null
+          env_aspect: string | null
+          env_aspects_secondary: string[] | null
+          env_audit_note: string | null
+          env_audit_verdict: string | null
+          env_categories: string[] | null
+          env_checklist: Json | null
+          env_control: number | null
+          env_effectiveness: string | null
+          env_impact_direct: string | null
+          env_impact_indirect: string | null
+          env_level_after: string | null
+          env_level_before: string | null
+          env_material: string | null
+          env_medium: string | null
+          env_persistence: number | null
+          env_probability: number | null
+          env_reincidence_of: string | null
+          env_scope: number | null
+          env_score_after: number | null
+          env_score_before: number | null
+          env_sensitivity: number | null
+          env_severity: number | null
+          env_simulation_url: string | null
+          env_source: string | null
+          env_validated_at: string | null
+          env_validated_by: string | null
           equipment: string | null
           equipment_number: string | null
           financial_value: number | null
+          human_review: Json | null
           id: string
           image_hash: string | null
           image_phash: string | null
@@ -591,8 +890,10 @@ export type Database = {
           module: Database["public"]["Enums"]["record_module"]
           parent_record_id: string | null
           photo_url: string | null
+          prazo: string | null
           priority: Database["public"]["Enums"]["record_priority"]
           recurrence_index: number
+          responsavel: string | null
           send_note: string | null
           send_proof_url: string | null
           sent_at: string | null
@@ -600,7 +901,9 @@ export type Database = {
           sent_channel: string | null
           similarity_meta: Json | null
           status: Database["public"]["Enums"]["record_status"]
+          status_history: Json
           title: string
+          turno: string | null
           updated_at: string
           user_id: string
           vale_channel: string | null
@@ -620,12 +923,49 @@ export type Database = {
           vale_version: number
         }
         Insert: {
+          ai_feedback?: Json
+          analysis_v2?: Json | null
           area?: string | null
           created_at?: string
           description?: string | null
+          duplicate_of?: string | null
+          env_actions?: Json | null
+          env_after_description?: string | null
+          env_after_executed_at?: string | null
+          env_after_executed_by?: string | null
+          env_after_photo_url?: string | null
+          env_ai_after?: Json | null
+          env_ai_before?: Json | null
+          env_aspect?: string | null
+          env_aspects_secondary?: string[] | null
+          env_audit_note?: string | null
+          env_audit_verdict?: string | null
+          env_categories?: string[] | null
+          env_checklist?: Json | null
+          env_control?: number | null
+          env_effectiveness?: string | null
+          env_impact_direct?: string | null
+          env_impact_indirect?: string | null
+          env_level_after?: string | null
+          env_level_before?: string | null
+          env_material?: string | null
+          env_medium?: string | null
+          env_persistence?: number | null
+          env_probability?: number | null
+          env_reincidence_of?: string | null
+          env_scope?: number | null
+          env_score_after?: number | null
+          env_score_before?: number | null
+          env_sensitivity?: number | null
+          env_severity?: number | null
+          env_simulation_url?: string | null
+          env_source?: string | null
+          env_validated_at?: string | null
+          env_validated_by?: string | null
           equipment?: string | null
           equipment_number?: string | null
           financial_value?: number | null
+          human_review?: Json | null
           id?: string
           image_hash?: string | null
           image_phash?: string | null
@@ -635,8 +975,10 @@ export type Database = {
           module: Database["public"]["Enums"]["record_module"]
           parent_record_id?: string | null
           photo_url?: string | null
+          prazo?: string | null
           priority?: Database["public"]["Enums"]["record_priority"]
           recurrence_index?: number
+          responsavel?: string | null
           send_note?: string | null
           send_proof_url?: string | null
           sent_at?: string | null
@@ -644,7 +986,9 @@ export type Database = {
           sent_channel?: string | null
           similarity_meta?: Json | null
           status?: Database["public"]["Enums"]["record_status"]
+          status_history?: Json
           title: string
+          turno?: string | null
           updated_at?: string
           user_id: string
           vale_channel?: string | null
@@ -664,12 +1008,49 @@ export type Database = {
           vale_version?: number
         }
         Update: {
+          ai_feedback?: Json
+          analysis_v2?: Json | null
           area?: string | null
           created_at?: string
           description?: string | null
+          duplicate_of?: string | null
+          env_actions?: Json | null
+          env_after_description?: string | null
+          env_after_executed_at?: string | null
+          env_after_executed_by?: string | null
+          env_after_photo_url?: string | null
+          env_ai_after?: Json | null
+          env_ai_before?: Json | null
+          env_aspect?: string | null
+          env_aspects_secondary?: string[] | null
+          env_audit_note?: string | null
+          env_audit_verdict?: string | null
+          env_categories?: string[] | null
+          env_checklist?: Json | null
+          env_control?: number | null
+          env_effectiveness?: string | null
+          env_impact_direct?: string | null
+          env_impact_indirect?: string | null
+          env_level_after?: string | null
+          env_level_before?: string | null
+          env_material?: string | null
+          env_medium?: string | null
+          env_persistence?: number | null
+          env_probability?: number | null
+          env_reincidence_of?: string | null
+          env_scope?: number | null
+          env_score_after?: number | null
+          env_score_before?: number | null
+          env_sensitivity?: number | null
+          env_severity?: number | null
+          env_simulation_url?: string | null
+          env_source?: string | null
+          env_validated_at?: string | null
+          env_validated_by?: string | null
           equipment?: string | null
           equipment_number?: string | null
           financial_value?: number | null
+          human_review?: Json | null
           id?: string
           image_hash?: string | null
           image_phash?: string | null
@@ -679,8 +1060,10 @@ export type Database = {
           module?: Database["public"]["Enums"]["record_module"]
           parent_record_id?: string | null
           photo_url?: string | null
+          prazo?: string | null
           priority?: Database["public"]["Enums"]["record_priority"]
           recurrence_index?: number
+          responsavel?: string | null
           send_note?: string | null
           send_proof_url?: string | null
           sent_at?: string | null
@@ -688,7 +1071,9 @@ export type Database = {
           sent_channel?: string | null
           similarity_meta?: Json | null
           status?: Database["public"]["Enums"]["record_status"]
+          status_history?: Json
           title?: string
+          turno?: string | null
           updated_at?: string
           user_id?: string
           vale_channel?: string | null
@@ -708,6 +1093,20 @@ export type Database = {
           vale_version?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "records_duplicate_of_fkey"
+            columns: ["duplicate_of"]
+            isOneToOne: false
+            referencedRelation: "records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "records_env_reincidence_of_fkey"
+            columns: ["env_reincidence_of"]
+            isOneToOne: false
+            referencedRelation: "records"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "records_parent_record_id_fkey"
             columns: ["parent_record_id"]
