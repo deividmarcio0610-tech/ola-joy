@@ -191,12 +191,30 @@ function Index() {
   };
 
   return (
-    <main className="flex min-h-screen items-start justify-center bg-background p-6">
+    <main className="flex min-h-screen flex-col items-center bg-background p-6">
+      <header className="mb-6 w-full max-w-3xl">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          Calculadora
+          <span className="ml-2 text-primary">verde</span>
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Cálculos rápidos com teclado, histórico e assistente de IA.
+        </p>
+      </header>
       <div className="grid w-full max-w-3xl gap-6 md:grid-cols-2">
-        <section className="rounded-3xl bg-card p-6 shadow-2xl ring-1 ring-border">
-          <h1 className="mb-4 text-lg font-semibold text-foreground">Calculadora</h1>
+        <section
+          className="rounded-3xl p-6 ring-1 ring-border"
+          style={{
+            backgroundImage: "var(--gradient-surface)",
+            boxShadow: "var(--shadow-elegant)",
+          }}
+        >
+          <h2 className="mb-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Teclado
+          </h2>
 
           <div className="mb-6 rounded-2xl bg-muted p-4 text-right">
+
             <div className="h-5 text-xs text-muted-foreground">
               {previous !== null && operator ? `${previous} ${operator}` : ""}
             </div>
@@ -220,7 +238,7 @@ function Index() {
                   btn.variant === "accent" &&
                     "bg-accent text-accent-foreground hover:bg-accent/80",
                   btn.variant === "default" &&
-                    "bg-background text-foreground ring-1 ring-border hover:bg-muted",
+                    "bg-muted/60 text-foreground ring-1 ring-border hover:bg-muted",
                   btn.span === 3 && "col-span-3",
                   btn.span === 2 && "col-span-2",
                 )}
@@ -244,7 +262,13 @@ function Index() {
           )}
         </section>
 
-        <section className="rounded-3xl bg-card p-6 shadow-2xl ring-1 ring-border">
+        <section
+          className="rounded-3xl p-6 ring-1 ring-border"
+          style={{
+            backgroundImage: "var(--gradient-surface)",
+            boxShadow: "var(--shadow-elegant)",
+          }}
+        >
           <h2 className="mb-1 text-lg font-semibold text-foreground">Assistente IA</h2>
           <p className="mb-4 text-sm text-muted-foreground">
             Pergunte um cálculo em linguagem natural.
