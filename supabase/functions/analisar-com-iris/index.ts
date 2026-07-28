@@ -11,7 +11,7 @@ const corsHeaders = {
 };
 
 const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta";
-const CHAT_MODEL = (Deno.env.get("GEMINI_CHAT_MODEL") ?? "gemini-flash-latest").trim();
+// Chat/visão rodam no Ollama (OLLAMA_BASE_URL / OLLAMA_MODEL / OLLAMA_VISION_MODEL).
 // Nano Banana 2 Pro (Gemini 3 Pro Image) — modelo de geração/edição de imagem.
 const IMAGE_MODEL = (Deno.env.get("GEMINI_IMAGE_MODEL") ?? "gemini-3-pro-image").trim();
 
