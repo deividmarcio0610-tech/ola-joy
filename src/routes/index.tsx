@@ -238,7 +238,7 @@ function Index() {
                   btn.variant === "accent" &&
                     "bg-accent text-accent-foreground hover:bg-accent/80",
                   btn.variant === "default" &&
-                    "bg-background text-foreground ring-1 ring-border hover:bg-muted",
+                    "bg-muted/60 text-foreground ring-1 ring-border hover:bg-muted",
                   btn.span === 3 && "col-span-3",
                   btn.span === 2 && "col-span-2",
                 )}
@@ -262,7 +262,13 @@ function Index() {
           )}
         </section>
 
-        <section className="rounded-3xl bg-card p-6 shadow-2xl ring-1 ring-border">
+        <section
+          className="rounded-3xl p-6 ring-1 ring-border"
+          style={{
+            backgroundImage: "var(--gradient-surface)",
+            boxShadow: "var(--shadow-elegant)",
+          }}
+        >
           <h2 className="mb-1 text-lg font-semibold text-foreground">Assistente IA</h2>
           <p className="mb-4 text-sm text-muted-foreground">
             Pergunte um cálculo em linguagem natural.
