@@ -87,14 +87,9 @@ export const Route = createFileRoute("/api/chat")({
           }
         }
 
-        const gateway = createOpenAICompatible({
-          name: "gemini",
-          baseURL: "https://generativelanguage.googleapis.com/v1beta/openai",
-          apiKey: geminiKey,
-        });
-        const model = gateway.chatModel(
-          process.env.GEMINI_CHAT_MODEL ?? "gemini-2.5-flash",
-        );
+        const gateway = createOllamaProvider(ollamaUrl);
+        const model = gateway.chatModel(ollamaModel);
+
 
         const result = streamText({
           model,
