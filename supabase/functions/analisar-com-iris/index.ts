@@ -312,7 +312,6 @@ type ChatContentPart =
 type ChatMessage = { role: "system" | "user" | "assistant"; content: string | ChatContentPart[] };
 
 type GeminiPart = { text?: string; inline_data?: { mime_type: string; data: string } };
-type GeminiContent = { role: "user" | "model"; parts: GeminiPart[] };
 
 function parseDataUrl(url: string): { mime_type: string; data: string } | null {
   const m = /^data:([^;]+);base64,(.+)$/.exec(url.trim());
@@ -320,18 +319,6 @@ function parseDataUrl(url: string): { mime_type: string; data: string } | null {
   return { mime_type: m[1].toLowerCase(), data: m[2] };
 }
 
-function partsFromContent(content: string | ChatContentPart[]): GeminiPart[] {
-  if (typeof content === "string") return [{ text: content }];
-  const parts: GeminiPart[] = [];
-  for (const p of content) {
-    if (p.type === "text") parts.push({ text: p.text });
-    else if (p.type === "image_url") {
-      const inline = parseDataUrl(p.image_url.url);
-      if (inline) parts.push({ inline_data: inline });
-    }
-  }
-  return parts;
-}
 
 function mapOllamaError(status: number, body: string) {
   const lower = body.toLowerCase();
