@@ -1233,26 +1233,18 @@ async function handleSimulation(body: Record<string, unknown>, log: Logger) {
 // ------------------------- diagnóstico -------------------------
 
 async function handleDiagnostic() {
-  const key = Deno.env.get("GEMINI_API_KEY") ?? "";
+  const baseUrl = (Deno.env.get("OLLAMA_BASE_URL") ?? "").replace(/\/+$/, "");
+  const chatModel = Deno.env.get("OLLAMA_MODEL") ?? "qwen3:8b";
+  const visionModel = Deno.env.get("OLLAMA_VISION_MODEL") ?? "qwen2.5vl:7b";
   let conectada = false;
   let status: number | null = null;
   let body: string | null = null;
   let latencyMs: number | null = null;
 
-  if (key) {
+  if (baseUrl) {
     const t0 = Date.now();
     try {
-      const r = await fetch(
-        `${GEMINI_BASE}/models/${CHAT_MODEL}:generateContent?key=${encodeURIComponent(key)}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ role: "user", parts: [{ text: "ok" }] }],
-            generationConfig: { temperature: 0 },
-          }),
-        },
-      );
+      const r = await fetch(`${baseUrl}/api/tags`);
       latencyMs = Date.now() - t0;
       status = r.status;
       conectada = r.ok;
@@ -1265,9 +1257,10 @@ async function handleDiagnostic() {
 
   return jsonResponse({
     timestamp: new Date().toISOString(),
-    gemini: {
-      chave_configurada: Boolean(key),
-      modelo_chat: CHAT_MODEL,
+    ia: {
+      servidor_configurado: Boolean(baseUrl),
+      modelo_chat: chatModel,
+      modelo_visao: visionModel,
       modelo_imagem: IMAGE_MODEL,
       conectada,
       ultimo_http: status,
@@ -1277,6 +1270,7 @@ async function handleDiagnostic() {
     ambiente: "backend (edge function)",
   });
 }
+
 
 // ------------------------- server -------------------------
 
