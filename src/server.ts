@@ -2,6 +2,11 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import { handleHealthRequest } from "./lib/healthEndpoints";
+import { handleClaudeAdminRequest } from "./server/claudeAdminEndpoints";
+import { handleErrorCenterRequest } from "./server/errorEndpoints";
+import { handleRecordingRequest } from "./server/recordingEndpoints";
+import { handleTradingRequest } from "./server/tradingEndpoints";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -47,11 +52,41 @@ function isH3SwallowedErrorBody(body: string): boolean {
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      // Health check ANTES do SSR: precisa responder mesmo com o aplicativo
+      // quebrado — é o que impede o container de subir silenciosamente ruim.
+      const health = await handleHealthRequest(request);
+      if (health) return health;
+
+      const trading = await handleTradingRequest(request);
+      if (trading) return trading;
+
+      const recording = await handleRecordingRequest(request);
+      if (recording) return recording;
+
+      const errors = await handleErrorCenterRequest(request);
+      if (errors) return errors;
+
+      const admin = await handleClaudeAdminRequest(request);
+      if (admin) return admin;
+
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);
     } catch (error) {
       console.error(error);
+      // Erros de backend também entram na Central de Erros, sem segredos.
+      try {
+        const { recordError } = await import("./server/errorRepository");
+        recordError({
+          severity: "CRITICAL",
+          source: "BACKEND",
+          route: new URL(request.url).pathname,
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? (error.stack ?? null) : null,
+        });
+      } catch {
+        // A central de erros nunca pode quebrar o tratamento do erro original.
+      }
       return new Response(renderErrorPage(), {
         status: 500,
         headers: { "content-type": "text/html; charset=utf-8" },

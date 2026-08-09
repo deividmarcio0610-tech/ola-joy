@@ -1,1 +1,0 @@
-DROP POLICY IF EXISTS "authenticated insert record_versions" ON public.record_versions;
