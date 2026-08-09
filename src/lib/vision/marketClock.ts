@@ -48,6 +48,7 @@ export class MarketClock {
   };
   /** Garante monotonicidade: uma correção de OCR nunca volta o tempo. */
   private lastEmitted = 0;
+  private lastSource: MarketClockSource | null = null;
 
   update(read: ChartClockRead | null, atLocal: number): void {
     if (!read || read.confidence < MIN_CONFIDENCE || !read.time) {
@@ -113,8 +114,13 @@ export class MarketClock {
       t = localNow;
       source = "REALTIME_FALLBACK";
     }
-    // Monotônico: correções de OCR nunca retrocedem candles já ordenados.
-    if (t < this.lastEmitted) t = this.lastEmitted;
+    // Monotônico DENTRO da mesma fonte: correções de OCR nunca retrocedem
+    // candles já ordenados. Uma TROCA de fonte (fallback→chartClock ou
+    // vice-versa) é uma descontinuidade legítima de linha do tempo — sem isso,
+    // o Date.now() do fallback "envenenava" o clamp e um replay de dia
+    // histórico (gráfico atrás do relógio local) ficava congelado para sempre.
+    if (source === this.lastSource && t < this.lastEmitted) t = this.lastEmitted;
+    this.lastSource = source;
     this.lastEmitted = t;
     return { t, source };
   }
@@ -142,5 +148,6 @@ export class MarketClock {
       confidence: 0,
     };
     this.lastEmitted = 0;
+    this.lastSource = null;
   }
 }

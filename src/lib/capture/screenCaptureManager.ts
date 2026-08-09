@@ -42,6 +42,7 @@ class ScreenCaptureManager {
   private fpsTimer: ReturnType<typeof setInterval> | null = null;
   private frameCounter = 0;
   private processingFrame = false;
+  private mutedPause = false;
 
   private state: CaptureManagerState = {
     status: "sem-fonte",
@@ -143,11 +144,20 @@ class ScreenCaptureManager {
         this.stop("O compartilhamento foi encerrado. Selecione novamente a janela do gráfico."),
       );
       track?.addEventListener("mute", () => {
+        this.mutedPause = true;
         this.clearTimers();
         this.setState({
           status: "pausado",
           error: "A janela deixou de fornecer frames. Restaure-a ou selecione novamente.",
         });
+      });
+      // Janela restaurada volta a fornecer frames: a pausa causada pelo mute
+      // se desfaz sozinha (a mensagem de erro prometia exatamente isso).
+      track?.addEventListener("unmute", () => {
+        if (this.mutedPause && this.capture) {
+          this.mutedPause = false;
+          this.beginProcessing();
+        }
       });
       this.setState({ status: "aguardando-confirmacao" });
     } catch (error) {

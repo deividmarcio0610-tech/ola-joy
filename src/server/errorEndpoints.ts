@@ -18,6 +18,21 @@ function json(payload: unknown, status = 200): Response {
  * (comando §18: /erros somente ADMIN). O REPORT continua aberto — a própria
  * aplicação precisa reportar erros sem credencial.
  */
+const reportBuckets = new Map<string, number[]>();
+
+function reportRateLimited(ip: string, maxPerMinute = 60): boolean {
+  const now = Date.now();
+  if (reportBuckets.size > 1_000) reportBuckets.clear();
+  const bucket = (reportBuckets.get(ip) ?? []).filter((at) => now - at < 60_000);
+  if (bucket.length >= maxPerMinute) {
+    reportBuckets.set(ip, bucket);
+    return true;
+  }
+  bucket.push(now);
+  reportBuckets.set(ip, bucket);
+  return false;
+}
+
 function adminDenied(request: Request): Response | null {
   const configured = process.env["ADMIN_TOKEN"]?.trim();
   if (!configured) return null; // instalação sem admin: modo local/dev
@@ -50,6 +65,10 @@ export async function handleErrorCenterRequest(request: Request): Promise<Respon
       });
     }
     if (request.method === "POST" && path === "/api/errors/report") {
+      // O report é aberto (a aplicação precisa reportar sem credencial), mas
+      // tem teto por IP para não permitir flood ilimitado do SQLite.
+      const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+      if (reportRateLimited(ip)) return json({ error: "Rate-limit de report de erros." }, 429);
       const payload = (await request.json()) as Parameters<typeof recordError>[0];
       if (!payload?.message) return json({ error: "message é obrigatório." }, 400);
       return json({ ok: true, error: recordError(payload) });

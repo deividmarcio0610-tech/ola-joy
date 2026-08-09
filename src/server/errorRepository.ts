@@ -180,9 +180,11 @@ export function listErrors(filter?: {
     params.push(filter.resolved ? 1 : 0);
   }
   const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
+  // limit não numérico (NaN) não pode derrubar a listagem com datatype mismatch.
+  const limit = Number.isFinite(filter?.limit) ? Math.min(Math.max(1, filter!.limit!), 500) : 200;
   const rows = getDatabase()
     .prepare(`SELECT * FROM error_events ${where} ORDER BY last_seen DESC LIMIT ?`)
-    .all(...params, Math.min(filter?.limit ?? 200, 500)) as Array<Record<string, unknown>>;
+    .all(...params, limit) as Array<Record<string, unknown>>;
   return rows.map(rowToRecord);
 }
 

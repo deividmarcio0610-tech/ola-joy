@@ -88,6 +88,15 @@ export function saveRecordingChunk(
   if (bytes.byteLength === 0) {
     return { ...meta, size: 0, status: "EMPTY_DISCARDED" };
   }
+  // A sessão precisa existir ANTES de qualquer byte ir para disco: sem isso,
+  // um sessionId inexistente deixaria .webm.part órfão (enchimento de disco)
+  // quando o INSERT com FK falhasse depois da escrita.
+  const session = getDatabase()
+    .prepare("SELECT 1 FROM recording_sessions WHERE session_id=?")
+    .get(meta.sessionId);
+  if (!session) {
+    throw new Error(`Sessão de gravação inexistente: ${meta.sessionId}`);
+  }
   const dir = recordingsDir(meta.sessionId);
   const filePath = join(dir, `${String(meta.index).padStart(6, "0")}.webm.part`);
   writeFileSync(filePath, bytes);

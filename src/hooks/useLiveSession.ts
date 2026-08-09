@@ -147,6 +147,7 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
 
   const clockBusyRef = useRef(false);
   const framesSinceClockRef = useRef(0);
+  const clockSourceRef = useRef<"CHART_CLOCK" | "REALTIME_FALLBACK" | null>(null);
   const timeAxisOkRef = useRef(false);
   const snapshotRef = useRef<TradeSignalSnapshot | null>(null);
   const lastCandleColumnsRef = useRef(0);
@@ -426,7 +427,10 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
       // Balde de dedupe derivado de medida real (stop estrutural ≈ escala do ATR).
       if (adjusted.plan) events.setPriceBucket(adjusted.plan.stopDistance / 2);
       const captureId = `an_${adjusted.t}`;
-      if (adjusted.internalConfirmation.capture.valid) {
+      // Paridade com o backtest: enquanto a escala é geométrica (unidades de
+      // pixel), nenhum "preço" é persistido como evento no banco.
+      const priceTrustworthy = adjusted.reading.priceScaleReady;
+      if (priceTrustworthy && adjusted.internalConfirmation.capture.valid) {
         const detail = adjusted.internalConfirmation.capture.detail;
         if (detail.price !== null) {
           events.add({
@@ -446,6 +450,7 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
         }
       }
       if (
+        priceTrustworthy &&
         adjusted.internalConfirmation.sms.confirmed &&
         adjusted.internalConfirmation.sms.brokenLevel !== null
       ) {
@@ -464,7 +469,7 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
           direction: adjusted.direction,
         });
       }
-      if (adjusted.mainPoi) {
+      if (priceTrustworthy && adjusted.mainPoi) {
         events.add({
           timestamp: adjusted.t,
           candleId: `${asset}:${adjusted.t}`,
@@ -700,7 +705,13 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
         liveDecision.decision.startsWith("ENTER_") ? "alert" : "info",
       );
       if (adjusted.blockers.length) appendLog(adjusted.blockers[0]!, "warn");
-      void requestAIValidation(adjusted, liveDecision);
+      // Falha de rede na revisão da IA não pode virar unhandled rejection.
+      void requestAIValidation(adjusted, liveDecision).catch((error) => {
+        appendLog(
+          `Revisão da IA indisponível: ${error instanceof Error ? error.message : String(error)}`,
+          "warn",
+        );
+      });
     },
     [appendLog, asset, buildReading, refreshDiagnostics, requestAIValidation],
   );
@@ -727,8 +738,16 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
       if (changed && anchors.length > 0) {
         setAnchors([]);
         setCalibrationState(schedulerRef.current.invalidate("zoom/resolução alterada"));
+        // A série NÃO pode misturar preços reais com o modo geométrico (pixel)
+        // que assume até a recalibração: os candles reais já lidos são
+        // preservados no banco, mas a reconstrução recomeça — exatamente como
+        // na primeira calibração. Sem isso, uma operação aberta receberia
+        // STOP/ALVO comparados contra números em unidade de pixel.
+        reconstructorRef.current = new CandleReconstructor(asset);
+        setCandles([]);
+        setFormingCandle(null);
         appendLog(
-          "Zoom/resolução mudou: escala invalidada e recalibrando em paralelo. A análise estrutural segue ativa.",
+          "Zoom/resolução mudou: escala invalidada, série reiniciada e recalibrando em paralelo. A análise estrutural segue ativa.",
           "warn",
         );
       }
@@ -788,6 +807,19 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
       // Tempo oficial do candle: chartClock quando válido; fallback realtime
       // registrado no diagnóstico. Nunca Date.now() "cru" com relógio válido.
       const market = liveMarketClock.now();
+      // Troca de fonte do relógio = descontinuidade legítima da linha do
+      // tempo: a série recomeça no novo referencial em vez de rejeitar todas
+      // as amostras "fora de ordem" para sempre.
+      if (clockSourceRef.current !== null && clockSourceRef.current !== market.source) {
+        reconstructorRef.current = new CandleReconstructor(asset);
+        setCandles([]);
+        setFormingCandle(null);
+        appendLog(
+          `Relógio da sessão mudou para ${market.source === "CHART_CLOCK" ? "o horário do gráfico" : "o relógio local (fallback)"} — série reiniciada no novo referencial.`,
+          "warn",
+        );
+      }
+      clockSourceRef.current = market.source;
       const result = reconstructorRef.current.push({
         t: market.t,
         price,
@@ -837,6 +869,9 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
     reconstructorRef.current = new CandleReconstructor(asset);
     eventStoreRef.current = createPersistentEventStore(asset);
     entryMachineRef.current.reset();
+    // A escala calibrada do ativo anterior não vale para o novo ativo.
+    setAnchors([]);
+    clockSourceRef.current = null;
     outcomeTrackerRef.current = null;
     confirmedAnalysisRef.current = null;
     sessionTradesRef.current = [];
@@ -870,6 +905,15 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
     reconstructorRef.current.reset();
     eventStoreRef.current.reset();
     entryMachineRef.current.reset();
+    // Nada da sessão anterior pode vazar para a nova: operação em curso,
+    // análise congelada, trades acumulados e o id do registro histórico.
+    outcomeTrackerRef.current = null;
+    confirmedAnalysisRef.current = null;
+    sessionTradesRef.current = [];
+    liveRecordIdRef.current = `live_${Date.now()}`;
+    lastOperationStatusRef.current = null;
+    clockSourceRef.current = null;
+    setOperation(null);
     // Snapshot da técnica em produção: qualquer promoção posterior só vale na
     // próxima sessão, nunca no meio de uma operação.
     techniqueSnapshotRef.current = store.productionTechnique()?.version ?? STRATEGY_VERSION;

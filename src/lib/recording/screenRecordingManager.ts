@@ -77,7 +77,13 @@ class ScreenRecordingManager {
   private setState(patch: Partial<RecordingManagerState>): void {
     this.state = { ...this.state, ...patch };
     // Regra do status visível: os três fatos reais, nunca otimismo de UI.
-    if (this.state.status !== "IDLE" && this.state.status !== "FINALIZANDO") {
+    // Estados TERMINAIS/finais nunca são recomputados de volta para GRAVANDO
+    // por um chunk atrasado da fila.
+    const recomputable =
+      this.state.status === "STARTING" ||
+      this.state.status === "GRAVANDO" ||
+      this.state.status === "RECORDER_ERROR";
+    if (recomputable) {
       const recording =
         this.state.recorderState === "recording" &&
         this.state.firstChunkSaved &&
@@ -166,10 +172,17 @@ class ScreenRecordingManager {
       const recorder = new MediaRecorder(this.stream, { mimeType: this.pickMimeType() });
       this.recorder = recorder;
       this.chunkStartedAt = Date.now();
-      recorder.ondataavailable = (event) => this.onChunk(sessionId, segment, event);
-      recorder.onerror = () => this.onRecorderError(sessionId, segment);
+      // Guardas de recorder OBSOLETO: após um restart, os handlers do recorder
+      // antigo ainda podem disparar (onstop tardio) — eles não podem derrubar
+      // o estado do recorder novo.
+      recorder.ondataavailable = (event) => {
+        if (this.recorder === recorder) this.onChunk(sessionId, segment, event);
+      };
+      recorder.onerror = () => {
+        if (this.recorder === recorder) this.onRecorderError(sessionId, segment);
+      };
       recorder.onstop = () => {
-        this.setState({ recorderState: "inactive" });
+        if (this.recorder === recorder) this.setState({ recorderState: "inactive" });
         for (const resolve of this.stopResolvers.splice(0)) resolve();
       };
       recorder.start(CHUNK_MS);
@@ -192,20 +205,30 @@ class ScreenRecordingManager {
     // Fila sequencial: preserva a ordem dos chunks e nunca acumula o vídeo em RAM.
     this.uploadQueue = this.uploadQueue
       .then(async () => {
-        const query = new URLSearchParams({
-          sessionId,
-          index: String(index),
-          segment: String(segment),
-          startedAt: String(startedAt),
-          endedAt: String(endedAt),
-          mimeType: blob.type || this.pickMimeType(),
-        });
-        const response = await fetch(`/api/recording/chunks?${query.toString()}`, {
-          method: "POST",
-          headers: { "content-type": "application/octet-stream" },
-          body: blob,
-        });
-        if (!response.ok) throw new Error(`chunk HTTP ${response.status}`);
+        const send = async () => {
+          const query = new URLSearchParams({
+            sessionId,
+            index: String(index),
+            segment: String(segment),
+            startedAt: String(startedAt),
+            endedAt: String(endedAt),
+            mimeType: blob.type || this.pickMimeType(),
+          });
+          const response = await fetch(`/api/recording/chunks?${query.toString()}`, {
+            method: "POST",
+            headers: { "content-type": "application/octet-stream" },
+            body: blob,
+          });
+          if (!response.ok) throw new Error(`chunk HTTP ${response.status}`);
+        };
+        try {
+          await send();
+        } catch {
+          // UMA retentativa antes de desistir: uma oscilação de rede não pode
+          // abrir buraco no manifesto silenciosamente.
+          await new Promise((resolve) => setTimeout(resolve, 1_000));
+          await send();
+        }
         this.setState({
           firstChunkSaved: true,
           chunksSaved: this.state.chunksSaved + 1,
@@ -215,7 +238,7 @@ class ScreenRecordingManager {
       })
       .catch((error) => {
         this.setState({
-          error: `Falha ao persistir chunk ${index}: ${error instanceof Error ? error.message : String(error)}`,
+          error: `Falha ao persistir chunk ${index} (retentado 1x): ${error instanceof Error ? error.message : String(error)}`,
         });
       });
   }

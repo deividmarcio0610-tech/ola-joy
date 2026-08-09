@@ -217,7 +217,9 @@ export function extractCandlesFromPixels(
         else bear++;
       }
     }
-    if (lowY <= highY) continue;
+    // lowY === highY é um candle FECHADO de 1 linha de pixels (histórico
+    // comprimido): descartá-lo deslocaria o timestamp de todos os anteriores.
+    if (lowY < highY) continue;
 
     const bodyRows: number[] = [];
     const bodyThreshold = Math.max(1, Math.ceil(width * 0.45));
@@ -306,81 +308,8 @@ function drawSourceCropped(
   return { frame: { data: image.data, width: sw, height: sh }, canvas };
 }
 
-/**
- * Frame para GRAVAÇÃO DE REPLAY (capture mode): apenas operações baratas e
- * determinísticas — hash, extração pixel→candles e qualidade visual. Nenhuma
- * IA é chamada aqui; a análise pesada acontece depois de FINALIZAR.
- */
-export function captureReplayFrame(
-  source: CanvasImageSource,
-  calibration: Calibration,
-  crop: CropRect | null,
-): { imageHash: number; candles: ExtractedCandle[]; quality: number } {
-  const { frame } = drawSourceCropped(source, crop);
-  const inspected = inspectPixelFrame(frame);
-  return {
-    imageHash: frameHash(frame.data),
-    candles: extractCandlesFromPixels(frame, calibration, 0),
-    quality: Math.round(inspected.quality * 100),
-  };
-}
-
-/** Recorte da escala para OCR respeitando a região selecionada da gravação. */
-export function capturePriceScaleImageCropped(
-  source: CanvasImageSource,
-  crop: CropRect | null,
-): { imageDataUrl: string; frameWidth: number; frameHeight: number } {
-  if (!crop) return capturePriceScaleImage(source);
-  const { canvas } = drawSourceCropped(source, crop);
-  return capturePriceScaleImageFromCanvas(canvas);
-}
-
-function capturePriceScaleImageFromCanvas(canvas: HTMLCanvasElement): {
-  imageDataUrl: string;
-  frameWidth: number;
-  frameHeight: number;
-} {
-  const fromX = Math.floor(canvas.width * 0.76);
-  const rulerWidth = 64;
-  const cropWidth = canvas.width - fromX;
-  const output = document.createElement("canvas");
-  output.width = rulerWidth + cropWidth;
-  output.height = canvas.height;
-  const context = output.getContext("2d");
-  if (!context) throw new Error("Canvas 2D indisponível para OCR da escala.");
-  context.fillStyle = "#05080d";
-  context.fillRect(0, 0, output.width, output.height);
-  context.drawImage(
-    canvas,
-    fromX,
-    0,
-    cropWidth,
-    canvas.height,
-    rulerWidth,
-    0,
-    cropWidth,
-    canvas.height,
-  );
-  context.font = "bold 12px monospace";
-  context.textBaseline = "middle";
-  for (let percent = 0; percent <= 100; percent += 5) {
-    const y = Math.min(output.height - 1, (percent / 100) * output.height);
-    context.strokeStyle = percent % 10 === 0 ? "#22d3ee" : "#155e75";
-    context.beginPath();
-    context.moveTo(rulerWidth - (percent % 10 === 0 ? 14 : 8), y);
-    context.lineTo(rulerWidth, y);
-    context.stroke();
-    if (percent % 10 === 0) {
-      context.fillStyle = "#67e8f9";
-      context.fillText(String(percent), 2, y);
-    }
-  }
-  return {
-    imageDataUrl: output.toDataURL("image/jpeg", 0.9),
-    frameWidth: canvas.width,
-    frameHeight: canvas.height,
-  };
-}
+// O "capture mode" antigo (captureReplayFrame/capturePriceScaleImageCropped)
+// foi removido junto com o replay por vídeo: T4 contínuo é o único caminho.
 
 /**
  * Banda do eixo de tempo observada no Profit. O eixo fica acima das abas/status

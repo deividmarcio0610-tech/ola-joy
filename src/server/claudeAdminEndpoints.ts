@@ -46,6 +46,8 @@ const rateBuckets = new Map<string, number[]>();
 
 function rateLimited(key: string, maxPerMinute = 20): boolean {
   const now = Date.now();
+  // Teto do mapa: um atacante variando chaves não cresce memória sem limite.
+  if (rateBuckets.size > 1_000) rateBuckets.clear();
   const bucket = (rateBuckets.get(key) ?? []).filter((at) => now - at < 60_000);
   if (bucket.length >= maxPerMinute) {
     rateBuckets.set(key, bucket);
@@ -67,13 +69,15 @@ function checkAdmin(request: Request): Response | null {
       503,
     );
   }
-  const provided = request.headers.get("x-admin-token")?.trim();
-  if (!provided || provided !== configured) {
-    return json({ error: "Não autorizado. Informe o token de admin." }, 401);
-  }
+  // Rate-limit ANTES de comparar o token: tentativas erradas também contam —
+  // sem isso o brute-force do ADMIN_TOKEN seria ilimitado.
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
   if (rateLimited(`admin_${ip}`)) {
     return json({ error: "Rate-limit: aguarde um minuto antes de novas chamadas." }, 429);
+  }
+  const provided = request.headers.get("x-admin-token")?.trim();
+  if (!provided || provided !== configured) {
+    return json({ error: "Não autorizado. Informe o token de admin." }, 401);
   }
   return null;
 }
