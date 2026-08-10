@@ -54,6 +54,16 @@ function play(direction: SoundDirection): boolean {
   return true;
 }
 
+/**
+ * Desbloqueio do AudioContext no GESTO do usuário (comando gerenciamento §6):
+ * chamado no clique de "Iniciar análise", para que a confirmação — que chega
+ * minutos depois, fora de qualquer gesto — possa tocar sem bloqueio do
+ * navegador.
+ */
+export function unlockAudio(): void {
+  audio();
+}
+
 /** Alerta de confirmação: 1x por signalId, dedupe permanente na sessão do navegador. */
 export function playConfirmationOnce(
   signalId: string,

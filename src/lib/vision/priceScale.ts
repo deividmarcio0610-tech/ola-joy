@@ -499,6 +499,84 @@ export function calibrationDrift(
   return { stale: maxDriftPx > SCALE_CONFIG.maxResidualPx * 2, maxDriftPx };
 }
 
+export const PRICE_PLAUSIBILITY = {
+  /** Salto máximo tolerado entre leituras consecutivas (fração do preço). */
+  maxJumpFraction: 0.02,
+  /** Margem além da faixa visível antes de declarar a escala vencida. */
+  rangeMarginFraction: 0.2,
+} as const;
+
+/**
+ * PREÇO DO PROFIT É SOBERANO (comando ao-vivo §1).
+ *
+ * Mesmo com a calibração aprovada, uma escala vencida (autoescala, janela
+ * trocada, OCR que leu números de outro painel) produz preços que NÃO batem
+ * com o gráfico — foi exatamente o bug "site mostra 202xxx, gráfico mostra
+ * 173270". Antes de qualquer amostra virar candle/entrada/stop/alvo, o preço
+ * derivado precisa passar três verificações contra o próprio frame:
+ *
+ * 1. faixa plausível do ativo (WIN/WDO);
+ * 2. faixa efetivamente VISÍVEL da calibração (com margem) — o marcador de
+ *    último preço está dentro do recorte, então o preço convertido também
+ *    precisa estar;
+ * 3. continuidade: salto acima de 2% entre leituras consecutivas denuncia
+ *    divergência de escala, nunca movimento real de 1 minuto do WIN.
+ *
+ * Modo geométrico não é avaliado aqui: não é preço real por definição e já
+ * fica bloqueado por `priceReliable`.
+ */
+export function pricePlausibility(input: {
+  asset: string;
+  calibration: Calibration;
+  price: number;
+  frameHeight: number;
+  lastPrice?: number | null;
+}): { ok: boolean; reason: string | null } {
+  const { calibration, price } = input;
+  if (!calibration.usable) return { ok: true, reason: null };
+  if (!Number.isFinite(price)) {
+    return { ok: false, reason: "Preço derivado não numérico — calibração inválida." };
+  }
+  const expected = ASSET_PRICE_RANGES.find((range) => range.pattern.test(input.asset.trim()));
+  if (expected && (price < expected.min || price > expected.max)) {
+    return {
+      ok: false,
+      reason: `Preço ${price} fora da faixa plausível do ${expected.label} (${expected.min}–${expected.max}) — escala rejeitada.`,
+    };
+  }
+  const range = visibleRange(calibration, input.frameHeight);
+  if (range) {
+    const margin = (range.max - range.min) * PRICE_PLAUSIBILITY.rangeMarginFraction;
+    if (price < range.min - margin || price > range.max + margin) {
+      return {
+        ok: false,
+        reason: `Preço ${price} fora da região visível do gráfico (${range.min}–${range.max}) — calibração vencida.`,
+      };
+    }
+  }
+  const last = input.lastPrice;
+  if (last != null && Number.isFinite(last) && last > 0) {
+    const jump = Math.abs(price - last) / last;
+    if (jump > PRICE_PLAUSIBILITY.maxJumpFraction) {
+      return {
+        ok: false,
+        reason: `Salto de ${(jump * 100).toFixed(1)}% entre leituras (${last} → ${price}) — divergência de escala, amostra rejeitada.`,
+      };
+    }
+  }
+  return { ok: true, reason: null };
+}
+
+/** Arredonda pelo incremento REAL do ativo (tick). Sem tick, usa as casas decimais. */
+export function roundToTick(value: number, tickSize: number | null, decimals = 0): number {
+  if (!Number.isFinite(value)) return value;
+  if (tickSize !== null && tickSize > 0) {
+    const ticks = Math.round(value / tickSize);
+    return round(ticks * tickSize, Math.max(decimals, 6));
+  }
+  return round(value, decimals);
+}
+
 /** Estados de qualidade da calibração (spec V5 §11) — derivados de métricas reais. */
 export type CalibrationGrade = "EXCELENTE" | "BOA" | "ACEITAVEL" | "INSUFICIENTE";
 

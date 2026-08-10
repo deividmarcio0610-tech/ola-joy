@@ -48,17 +48,23 @@ function coloredAt(frame: PixelFrame, x: number, y: number): PixelSide {
  * verdes/vermelhos dessas áreas não podem virar candles falsos. Mantemos uma
  * margem pequena, sem depender da resolução.
  */
+/**
+ * ROI do gráfico em FRAÇÕES do frame — a mesma região analisada pelo motor.
+ * Exportado para o preview desenhar exatamente o retângulo que é lido.
+ */
+export const GRAPH_ROI = { left: 0.02, right: 0.88, top: 0.13, bottom: 0.86 } as const;
+
 function graphVerticalBounds(height: number): { top: number; bottom: number } {
   const safeHeight = Math.max(1, Math.round(height));
-  const top = Math.max(0, Math.floor(safeHeight * 0.13));
-  const bottom = Math.min(safeHeight, Math.max(top + 1, Math.ceil(safeHeight * 0.86)));
+  const top = Math.max(0, Math.floor(safeHeight * GRAPH_ROI.top));
+  const bottom = Math.min(safeHeight, Math.max(top + 1, Math.ceil(safeHeight * GRAPH_ROI.bottom)));
   return { top, bottom };
 }
 
 /** Leitura puramente visual do frame. Não converte pixel em preço. */
 export function inspectPixelFrame(frame: PixelFrame): Omit<FrameRead, "t" | "activity"> {
-  const graphLeft = Math.floor(frame.width * 0.02);
-  const graphRight = Math.floor(frame.width * 0.88);
+  const graphLeft = Math.floor(frame.width * GRAPH_ROI.left);
+  const graphRight = Math.floor(frame.width * GRAPH_ROI.right);
   const { top: graphTop, bottom: graphBottom } = graphVerticalBounds(frame.height);
   const columnMass = new Uint16Array(frame.width);
   let bullPixels = 0;

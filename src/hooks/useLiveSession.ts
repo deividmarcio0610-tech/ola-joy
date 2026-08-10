@@ -13,7 +13,9 @@ import { readChartClock } from "@/lib/chartClock.functions";
 import { screenCaptureManager } from "@/lib/capture/screenCaptureManager";
 import { screenRecordingManager } from "@/lib/recording/screenRecordingManager";
 import { reportError } from "@/lib/errors/errorReporter";
+import { PipelineErrorGate } from "@/lib/errors/pipelineErrors";
 import { MarketClock } from "@/lib/vision/marketClock";
+import type { LivePriceInfo } from "@/lib/t4/managementView";
 import {
   EMPTY_DIAGNOSTICS,
   candleParseError,
@@ -49,6 +51,8 @@ import {
   geometricCalibration,
   normalizeScaleAnchorsForAsset,
   priceAt,
+  pricePlausibility,
+  visibleRange,
   type ScaleAnchor,
 } from "@/lib/vision/priceScale";
 import {
@@ -151,9 +155,27 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
   const timeAxisOkRef = useRef(false);
   const snapshotRef = useRef<TradeSignalSnapshot | null>(null);
   const lastCandleColumnsRef = useRef(0);
+  // §2: dedupe por sessão+código com evento de recuperação. Timeouts da IA no
+  // OCR do relógio viram AI_TIMEOUT (OLLAMA), nunca CHART_CLOCK duplicado.
+  const clockErrorGateRef = useRef(new PipelineErrorGate());
+  const priceErrorGateRef = useRef(new PipelineErrorGate());
+  // §1: preço do Profit é soberano — confiança corrente da conversão pixel→preço.
+  const priceTrustRef = useRef<{ trusted: boolean; reason: string | null }>({
+    trusted: false,
+    reason: "Escala ainda não calibrada.",
+  });
+  const lastTrustedPriceRef = useRef<number | null>(null);
+  const lastComputedPriceRef = useRef<number | null>(null);
+  const divergenceStreakRef = useRef(0);
 
   const [sessionActive, setSessionActive] = useState(false);
   const [signalSnapshot, setSignalSnapshot] = useState<TradeSignalSnapshot | null>(null);
+  const [priceInfo, setPriceInfoState] = useState<LivePriceInfo>({
+    price: null,
+    trusted: false,
+    reason: "Escala ainda não calibrada.",
+    at: null,
+  });
   const [diagnostics, setDiagnostics] = useState<PipelineDiagnostics>(EMPTY_DIAGNOSTICS);
   const [anchors, setAnchors] = useState<ScaleAnchor[]>([]);
   const [frameSize, setFrameSize] = useState<{ width: number; height: number } | null>(null);
@@ -243,6 +265,14 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
   sessionActiveRef.current = sessionActive;
   const calibrationRefUsable = useRef(false);
   calibrationRefUsable.current = calibration.usable;
+  const calibrationRefFull = useRef(calibration);
+  calibrationRefFull.current = calibration;
+
+  /** Publica o preço vivo (ref imperativa para o motor + estado para a UI). */
+  const publishPriceInfo = useCallback((next: LivePriceInfo) => {
+    priceTrustRef.current = { trusted: next.trusted, reason: next.reason };
+    setPriceInfoState(next);
+  }, []);
   const aiProviderRef = useRef(aiProvider);
   aiProviderRef.current = aiProvider;
   const ollamaStatusRef = useRef("DESCONHECIDO");
@@ -319,6 +349,22 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
       BLOCK_REASON: analysisNow?.blockers[0] ?? null,
       OLLAMA_STATUS: ollamaStatusRef.current,
       parseError: sessionActiveRef.current ? candleParseError(partial) : null,
+      // §6: preço visual bruto → processado → confiável, com faixa/incremento/R²
+      // da calibração vigente. Nunca liberar níveis com calibração inválida.
+      PRICE_RAW_Y: read?.priceY ?? null,
+      PRICE_PROCESSED: lastComputedPriceRef.current,
+      PRICE_TRUSTED: priceTrustRef.current.trusted,
+      PRICE_SOURCE: calibrationRefFull.current.usable
+        ? "CALIBRADA"
+        : read !== null && captureActive
+          ? "GEOMETRICA"
+          : "AUSENTE",
+      PRICE_RANGE:
+        calibrationRefFull.current.usable && frameSizeRef.current
+          ? visibleRange(calibrationRefFull.current, frameSizeRef.current.height)
+          : null,
+      PRICE_INCREMENT: calibrationRefFull.current.tickSize,
+      PRICE_R2: calibrationRefFull.current.usable ? calibrationRefFull.current.r2 : null,
     };
     setDiagnostics(next);
   }, []);
@@ -428,8 +474,9 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
       if (adjusted.plan) events.setPriceBucket(adjusted.plan.stopDistance / 2);
       const captureId = `an_${adjusted.t}`;
       // Paridade com o backtest: enquanto a escala é geométrica (unidades de
-      // pixel), nenhum "preço" é persistido como evento no banco.
-      const priceTrustworthy = adjusted.reading.priceScaleReady;
+      // pixel) OU o preço reprovou na plausibilidade (comando ao-vivo §1),
+      // nenhum "preço" é persistido como evento no banco.
+      const priceTrustworthy = adjusted.reading.priceScaleReady && priceTrustRef.current.trusted;
       if (priceTrustworthy && adjusted.internalConfirmation.capture.valid) {
         const detail = adjusted.internalConfirmation.capture.detail;
         if (detail.price !== null) {
@@ -486,6 +533,21 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
         });
       }
       analysisRef.current = adjusted;
+      // PREÇO DO PROFIT É SOBERANO (comando ao-vivo §1) — paridade com o
+      // backtest (`if (!calibrated) return;`): sem escala calibrada E plausível,
+      // NENHUMA decisão operacional roda. Era exatamente este gate que faltava
+      // ao vivo: o decide() recebia preços em unidade de pixel (~202xxx) e a UI
+      // publicava entrada/stop/alvos fictícios enquanto o gráfico mostrava
+      // ~173270. A leitura estrutural continua; entrada/stop/alvos ficam
+      // bloqueados com o motivo real exposto na UI ("PREÇO NÃO CONFIÁVEL").
+      if (!priceTrustworthy) {
+        setAnalysis(adjusted);
+        setDecision(null);
+        decisionRef.current = null;
+        setLastAnalysisAt(Date.now());
+        refreshDiagnostics();
+        return;
+      }
       // §29/§63: a AUTORIDADE operacional é o BacktestDecisionEngine baseado em evidência histórica.
       const liveDecision = decide({
         analysis: adjusted,
@@ -746,6 +808,14 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
         reconstructorRef.current = new CandleReconstructor(asset);
         setCandles([]);
         setFormingCandle(null);
+        lastTrustedPriceRef.current = null;
+        divergenceStreakRef.current = 0;
+        publishPriceInfo({
+          price: null,
+          trusted: false,
+          reason: "Zoom/resolução alterada — escala recalibrando.",
+          at: null,
+        });
         appendLog(
           "Zoom/resolução mudou: escala invalidada, série reiniciada e recalibrando em paralelo. A análise estrutural segue ativa.",
           "warn",
@@ -771,16 +841,30 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
           void readClock({ data: { imageDataUrl } })
             .then((clock) => {
               timeAxisOkRef.current = clock.read !== null;
+              // Timeout da IA NÃO destrói estado: relógio, candles e
+              // calibração seguem intactos; só o refresh desta leitura falhou.
               liveMarketClock.update(clock.read, Date.now());
               if (clock.error) {
-                reportError("CHART_CLOCK", clock.error, { severity: "WARNING" });
+                // §2: timeout da IA → AI_TIMEOUT (OLLAMA); falha real de
+                // leitura → CHART_CLOCK. Dedupe por sessão+código.
+                clockErrorGateRef.current.reportOnce("CHART_CLOCK", clock.error, {
+                  sessionId: sessionIdRef.current,
+                });
+              } else if (clock.read) {
+                // Leitura voltou: um único INFO de recuperação limpa o aviso.
+                clockErrorGateRef.current.recover(
+                  sessionIdRef.current,
+                  "Leitura do chartClock recuperada — pipeline normalizado.",
+                );
               }
             })
             .catch((error) => {
               timeAxisOkRef.current = false;
-              reportError("CHART_CLOCK", error instanceof Error ? error.message : String(error), {
-                severity: "WARNING",
-              });
+              clockErrorGateRef.current.reportOnce(
+                "CHART_CLOCK",
+                error instanceof Error ? error.message : String(error),
+                { sessionId: sessionIdRef.current },
+              );
             })
             .finally(() => {
               clockBusyRef.current = false;
@@ -799,6 +883,7 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
       // relativas) — estrutura idêntica, preço exato ainda indisponível.
       const scale = calibration.usable ? calibration : geometricCalibration(read.height);
       const price = priceAt(scale, read.priceY);
+      lastComputedPriceRef.current = price;
       if (price === null) {
         setLastRejectedRead("Frame ilegível para reconstrução de candles.");
         refreshDiagnostics();
@@ -807,6 +892,73 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
       // Tempo oficial do candle: chartClock quando válido; fallback realtime
       // registrado no diagnóstico. Nunca Date.now() "cru" com relógio válido.
       const market = liveMarketClock.now();
+
+      // PREÇO SOBERANO (comando ao-vivo §1): mesmo com calibração aprovada, a
+      // amostra só vira candle/nível se o preço convertido for plausível contra
+      // o próprio frame (faixa do ativo, faixa visível, salto máximo de 2%).
+      if (calibration.usable) {
+        const plausibility = pricePlausibility({
+          asset,
+          calibration,
+          price,
+          frameHeight: read.height,
+          lastPrice: lastTrustedPriceRef.current,
+        });
+        if (!plausibility.ok) {
+          divergenceStreakRef.current++;
+          publishPriceInfo({
+            price: null,
+            trusted: false,
+            reason: plausibility.reason,
+            at: market.t,
+          });
+          setLastRejectedRead(plausibility.reason);
+          priceErrorGateRef.current.reportOnce(
+            "CAPTURA",
+            plausibility.reason ?? "Preço implausível.",
+            {
+              sessionId: sessionIdRef.current,
+              severity: "ERROR",
+              context: { price, priceY: read.priceY },
+            },
+          );
+          // Divergência persistente = calibração vencida de verdade (não um
+          // frame ruidoso isolado): a escala é invalidada e recalibra em
+          // paralelo; a série reinicia para nunca misturar referenciais.
+          if (divergenceStreakRef.current >= 3) {
+            divergenceStreakRef.current = 0;
+            lastTrustedPriceRef.current = null;
+            setAnchors([]);
+            setCalibrationState(schedulerRef.current.invalidate("preço divergente da escala"));
+            reconstructorRef.current = new CandleReconstructor(asset);
+            setCandles([]);
+            setFormingCandle(null);
+            appendLog(
+              "PREÇO NÃO CONFIÁVEL: leituras divergentes da escala calibrada. Escala invalidada, série reiniciada e recalibração automática em andamento. Entrada, stop e alvos permanecem bloqueados.",
+              "warn",
+            );
+          }
+          refreshDiagnostics();
+          return;
+        }
+        divergenceStreakRef.current = 0;
+        lastTrustedPriceRef.current = price;
+        publishPriceInfo({ price, trusted: true, reason: null, at: market.t });
+        priceErrorGateRef.current.recover(
+          sessionIdRef.current,
+          "Preço voltou a bater com a escala calibrada — leitura confiável novamente.",
+        );
+      } else {
+        // Modo geométrico: NUNCA publicado como preço real (comando §1 —
+        // nenhum preço fictício/normalizado chega à UI de gerenciamento).
+        lastTrustedPriceRef.current = null;
+        publishPriceInfo({
+          price: null,
+          trusted: false,
+          reason: calibration.reason,
+          at: market.t,
+        });
+      }
       // Troca de fonte do relógio = descontinuidade legítima da linha do
       // tempo: a série recomeça no novo referencial em vez de rejeitar todas
       // as amostras "fora de ordem" para sempre.
@@ -835,7 +987,9 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
     [
       anchors.length,
       appendLog,
+      asset,
       calibration,
+      publishPriceInfo,
       readClock,
       refreshDiagnostics,
       runAnalysis,
@@ -872,6 +1026,17 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
     // A escala calibrada do ativo anterior não vale para o novo ativo.
     setAnchors([]);
     clockSourceRef.current = null;
+    clockErrorGateRef.current.reset();
+    priceErrorGateRef.current.reset();
+    lastTrustedPriceRef.current = null;
+    lastComputedPriceRef.current = null;
+    divergenceStreakRef.current = 0;
+    publishPriceInfo({
+      price: null,
+      trusted: false,
+      reason: "Escala ainda não calibrada.",
+      at: null,
+    });
     outcomeTrackerRef.current = null;
     confirmedAnalysisRef.current = null;
     sessionTradesRef.current = [];
@@ -886,7 +1051,7 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
     snapshotRef.current = null;
     setSignalSnapshot(null);
     setSessionActive(false);
-  }, [asset]);
+  }, [asset, publishPriceInfo]);
 
   const startSession = useCallback((): string[] => {
     const errors: string[] = [];
@@ -913,6 +1078,10 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
     liveRecordIdRef.current = `live_${Date.now()}`;
     lastOperationStatusRef.current = null;
     clockSourceRef.current = null;
+    clockErrorGateRef.current.reset();
+    priceErrorGateRef.current.reset();
+    lastTrustedPriceRef.current = null;
+    divergenceStreakRef.current = 0;
     setOperation(null);
     // Snapshot da técnica em produção: qualquer promoção posterior só vale na
     // próxima sessão, nunca no meio de uma operação.
@@ -1082,6 +1251,10 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
       entryMachineRef.current.reset();
       setCandles([]);
       setFormingCandle(null);
+      // Escala nova = referencial novo: a continuidade de preço recomeça e a
+      // primeira leitura não é comparada com a escala anterior.
+      lastTrustedPriceRef.current = null;
+      divergenceStreakRef.current = 0;
       setAnchors(next.anchors);
       setAutoCalibrationError(null);
       report(scheduler.succeed(next.anchors.length));
@@ -1262,6 +1435,8 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
     operation,
     signalSnapshot,
     diagnostics,
+    /** Preço vivo (única fonte para Gerenciamento, preview e motor — §9). */
+    priceInfo,
     marketClock: liveMarketClock.snapshot(),
     frozenEntry: entryMachineRef.current.frozenEntry(),
     chat,

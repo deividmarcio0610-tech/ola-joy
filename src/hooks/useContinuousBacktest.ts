@@ -27,7 +27,7 @@ import type { AnalysisResult, Candle, ChatEntry, ReadingState } from "@/lib/engi
 import { CandleStitcher } from "@/lib/replay/candleStitcher";
 import { chronologicalFrontiers } from "@/lib/replay/chronologicalFrontier";
 import { store, type MarketEventRecord } from "@/lib/storage";
-import { reportError } from "@/lib/errors/errorReporter";
+import { PipelineErrorGate } from "@/lib/errors/pipelineErrors";
 import {
   EMPTY_DIAGNOSTICS,
   candleParseError,
@@ -43,6 +43,7 @@ import {
   emptyCalibration,
   geometricCalibration,
   normalizeScaleAnchorsForAsset,
+  visibleRange,
   type Calibration,
 } from "@/lib/vision/priceScale";
 import {
@@ -154,6 +155,9 @@ export function useContinuousBacktest(asset: string) {
   const lastCalibrationRefreshRef = useRef(0);
   const clockRef = useRef(new ClockStabilizer());
   const clockBusyRef = useRef(false);
+  // §2: timeouts da IA no OCR do relógio classificados como AI_TIMEOUT
+  // (OLLAMA), com dedupe por sessão+código e INFO único de recuperação.
+  const clockErrorGateRef = useRef(new PipelineErrorGate());
   const framesSinceClockRef = useRef(0);
   const qualitySumRef = useRef(0);
   const qualityCountRef = useRef(0);
@@ -272,6 +276,20 @@ export function useContinuousBacktest(asset: string) {
             CANDLES_PARSED: parsed,
           })
         : null,
+      PRICE_RAW_Y: read?.priceY ?? null,
+      PRICE_PROCESSED: calibrationRef.current.usable ? (analysisNow?.price ?? null) : null,
+      PRICE_TRUSTED: calibrationRef.current.usable,
+      PRICE_SOURCE: calibrationRef.current.usable
+        ? "CALIBRADA"
+        : read !== null && captureActive
+          ? "GEOMETRICA"
+          : "AUSENTE",
+      PRICE_RANGE:
+        calibrationRef.current.usable && read
+          ? visibleRange(calibrationRef.current, read.height)
+          : null,
+      PRICE_INCREMENT: calibrationRef.current.tickSize,
+      PRICE_R2: calibrationRef.current.usable ? calibrationRef.current.r2 : null,
     });
   }, [aiProvider.configured, aiProvider.model]);
 
@@ -899,9 +917,20 @@ export function useContinuousBacktest(asset: string) {
           void readClock({ data: { imageDataUrl } })
             .then((clock) => {
               if (!clock.read) {
-                if (clock.error) reportError("CHART_CLOCK", clock.error, { severity: "WARNING" });
+                // §2: timeout da IA → AI_TIMEOUT (OLLAMA); falha de leitura →
+                // CHART_CLOCK. Dedupe por sessão+código; nada de estado é
+                // destruído — o pipeline não-IA continua normalmente.
+                if (clock.error) {
+                  clockErrorGateRef.current.reportOnce("CHART_CLOCK", clock.error, {
+                    sessionId: sessionIdRef.current,
+                  });
+                }
                 return;
               }
+              clockErrorGateRef.current.recover(
+                sessionIdRef.current,
+                "Leitura do chartClock recuperada — pipeline normalizado.",
+              );
               if (clock.read.time) {
                 lastClockAtRef.current = Date.now();
                 marketTimeRef.current = clock.read.time;
@@ -913,9 +942,11 @@ export function useContinuousBacktest(asset: string) {
               }
             })
             .catch((error) =>
-              reportError("CHART_CLOCK", error instanceof Error ? error.message : String(error), {
-                severity: "WARNING",
-              }),
+              clockErrorGateRef.current.reportOnce(
+                "CHART_CLOCK",
+                error instanceof Error ? error.message : String(error),
+                { sessionId: sessionIdRef.current },
+              ),
             )
             .finally(() => {
               clockBusyRef.current = false;
@@ -1010,6 +1041,7 @@ export function useContinuousBacktest(asset: string) {
     discontinuitiesRef.current = [];
     sessionDatesRef.current = new Set();
     clockRef.current = new ClockStabilizer();
+    clockErrorGateRef.current.reset();
     entryMachineRef.current.reset();
     trackerRef.current = null;
     frozenAnalysisRef.current = null;

@@ -1,25 +1,27 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import type { AnalysisResult } from "@/lib/engines/types";
+import {
+  buildManagementView,
+  type LivePriceInfo,
+  type ManagementLevel,
+} from "@/lib/t4/managementView";
+import type { TradeSignalSnapshot } from "@/lib/t4/signalSnapshot";
 import { cn } from "@/lib/utils";
-
-function value(value: number | null | undefined, decimals = 2): string {
-  return value === null || value === undefined || !Number.isFinite(value)
-    ? "—"
-    : value.toFixed(decimals);
-}
 
 function Field({
   label,
   text,
   tone,
+  highlight,
 }: {
   label: string;
   text: string;
-  tone?: "bull" | "bear" | "warn";
+  tone?: "bull" | "bear" | "warn" | "neutral";
+  highlight?: boolean;
 }) {
   return (
-    <div>
+    <div className={cn(highlight && "rounded-md border border-bull/60 bg-bull/10 px-2 py-1")}>
       <p className="text-[9px] tracking-widest text-muted-foreground">{label}</p>
       <p
         className={cn(
@@ -35,64 +37,146 @@ function Field({
   );
 }
 
-/** Leitura técnica; a autorização final continua no motor de evidência histórica. */
+function levelText(level: ManagementLevel | null): string {
+  return level ? level.value : "OCULTO ATÉ CONFIRMAR";
+}
+
+/**
+ * GERENCIAMENTO AO VIVO (comando gerenciamento §1–§10).
+ *
+ * Usa o view-model puro `buildManagementView` — o MESMO consumido pela aba
+ * Gerenciamento, então os valores são idênticos por construção:
+ *
+ * - <100%: "PREÇO ATUAL: xxxxxx / STATUS: ANALISANDO" em tempo real (nunca
+ *   "AGUARDANDO DADOS" no preço durante a análise); a entrada candidata segue
+ *   o mercado em tom neutro; stop/3R/5R/runner OCULTOS.
+ * - 100% + snapshot + signalId: entrada CONGELADA (destaque verde) e níveis
+ *   exclusivamente do snapshot; o mercado segue em "MERCADO AGORA".
+ * - Preço/calibração não confiável: "PREÇO NÃO CONFIÁVEL" — nada congela
+ *   errado, nenhum número é inventado nem interpolado.
+ */
 export function ManagementPanel({
   analysis,
   asset,
+  snapshot = null,
+  priceInfo,
+  tickSize = null,
+  decimals = 0,
+  sessionActive = false,
 }: {
   analysis: AnalysisResult | null;
   asset: string;
+  snapshot?: TradeSignalSnapshot | null;
+  priceInfo: LivePriceInfo;
+  tickSize?: number | null;
+  decimals?: number;
+  sessionActive?: boolean;
 }) {
-  const exposeManagement = Boolean(
-    analysis?.technicalReady && analysis.reading.sufficient && analysis.plan,
-  );
-  const plan = exposeManagement ? analysis?.plan : null;
+  const view = buildManagementView({
+    sessionActive,
+    analysis,
+    snapshot,
+    priceInfo,
+    tickSize,
+    decimals,
+  });
+  const confirmed = view.status === "CONFIRMADO";
+  const directionTone = view.direction === "COMPRA" ? "bull" : "bear";
+
   return (
-    <Card className="border-border/70 bg-panel p-3">
+    <Card
+      className={cn(
+        "border-border/70 bg-panel p-3",
+        confirmed && view.direction === "COMPRA" && "border-bull/60",
+        confirmed && view.direction === "VENDA" && "border-bear/60",
+      )}
+    >
       <div className="mb-3 flex items-center justify-between gap-2">
         <p className="text-[10px] font-medium tracking-widest text-muted-foreground">
-          T4 — LEITURA TÉCNICA · REPLAY E AO VIVO USAM O MESMO MOTOR
+          T4 — GERENCIAMENTO AO VIVO · REPLAY E AO VIVO USAM O MESMO MOTOR
         </p>
         <Badge
           variant="outline"
           className={cn(
             "text-[10px]",
-            analysis?.technicalReady ? "border-bull text-bull" : "border-warn text-warn",
+            confirmed
+              ? view.direction === "COMPRA"
+                ? "border-bull text-bull"
+                : "border-bear text-bear"
+              : view.status === "ANALISANDO"
+                ? "border-primary text-primary"
+                : "border-border text-muted-foreground",
           )}
         >
-          {analysis?.technicalReady ? "SETUP TÉCNICO COMPLETO" : "AGUARDAR"}
+          {confirmed ? `CONFIRMADO — ${view.direction}` : `STATUS: ${view.status}`}
         </Badge>
       </div>
+
+      {/* Campo principal contínuo: preço vivo + status, sem recarregar a página. */}
+      <div className="mb-3 flex flex-wrap items-baseline gap-x-6 gap-y-1 rounded-md border border-border/60 bg-background/60 p-2">
+        <div>
+          <p className="text-[9px] tracking-widest text-muted-foreground">{view.livePriceLabel}</p>
+          <p
+            className={cn(
+              "font-mono text-xl font-bold",
+              view.livePriceTrusted ? "text-foreground" : "text-warn",
+            )}
+          >
+            {view.livePrice}
+          </p>
+        </div>
+        <div>
+          <p className="text-[9px] tracking-widest text-muted-foreground">STATUS</p>
+          <p
+            className={cn(
+              "font-mono text-sm font-semibold",
+              confirmed
+                ? view.direction === "COMPRA"
+                  ? "text-bull"
+                  : "text-bear"
+                : "text-primary",
+            )}
+          >
+            {view.status}
+          </p>
+        </div>
+        {!view.livePriceTrusted && view.priceReason && (
+          <p className="basis-full text-[10px] text-warn">{view.priceReason}</p>
+        )}
+      </div>
+
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-6">
         <Field label="ATIVO" text={asset} />
         <Field label="PERÍODO" text="1 minuto" />
-        {exposeManagement && plan ? (
+        {confirmed ? (
           <>
+            <Field label="DIREÇÃO" text={view.direction ?? "—"} tone={directionTone} />
+            <Field label="SETUP T4" text={view.setup ?? "—"} />
+            {/* §4: entrada congelada EXATA do snapshot, destacada em verde. */}
             <Field
-              label="DIREÇÃO"
-              text={analysis?.direction ?? "AGUARDANDO"}
-              tone={analysis?.direction === "COMPRA" ? "bull" : "bear"}
+              label="ENTRADA CONFIRMADA"
+              text={view.entry?.value ?? "—"}
+              tone="bull"
+              highlight
             />
-            <Field
-              label="SETUP T4"
-              text={`${analysis?.t4.quality ?? "—"} · ${analysis?.t4.setup ?? "NONE"}`}
-            />
-            <Field label="PREÇO ATUAL" text={value(analysis?.price)} />
-            <Field label="ENTRADA" text={value(plan.entry)} />
-            <Field label="STOP TÉCNICO" text={value(plan.stop)} tone="bear" />
-            <Field label="DISTÂNCIA STOP" text={`${value(plan.stopDistance)} pts`} />
-            <Field label="1º CONTRATO · 3R" text={value(plan.target1)} tone="bull" />
-            <Field label="2º CONTRATO · 5R" text={value(plan.target2)} tone="bull" />
-            <Field label="3º CONTRATO" text="RUNNER ESTRUTURAL" tone="bull" />
-            <Field label="R:R PARCIAL" text={`${value(plan.riskReward)}R`} />
-            <Field label="R:R FINAL" text={`${value(plan.riskRewardFinal)}R`} />
-            <Field label="R:R PLANO" text={`${value(plan.riskRewardPlan)}R`} />
+            <Field label="STOP" text={levelText(view.stop)} tone="bear" />
+            <Field label="1º CONTRATO · 3R" text={levelText(view.threeR)} tone="bull" />
+            <Field label="2º CONTRATO · 5R" text={levelText(view.fiveR)} tone="bull" />
+            <Field label="3º CONTRATO" text={view.runner ?? "RUNNER ESTRUTURAL"} tone="bull" />
+            <Field label="SIGNAL ID" text={view.signalId ?? "—"} />
           </>
         ) : (
-          <div className="col-span-2 rounded-md border border-warn/40 bg-warn/10 p-2 text-[11px] text-warn sm:col-span-4 xl:col-span-4">
-            Entrada, stop e alvos ficam ocultos até a leitura visual e os gates específicos da T4
-            estarem completos.
-          </div>
+          <>
+            {/* §3: a entrada candidata segue o mercado — neutra, nunca congelada. */}
+            <Field
+              label="ENTRADA (EM FORMAÇÃO)"
+              text={view.entry ? view.entry.value : view.livePriceTrusted ? "—" : "BLOQUEADA"}
+              tone="neutral"
+            />
+            <Field label="STOP" text="OCULTO ATÉ CONFIRMAR" tone="neutral" />
+            <Field label="3R / 5R" text="OCULTOS ATÉ CONFIRMAR" tone="neutral" />
+            <Field label="RUNNER" text="OCULTO ATÉ CONFIRMAR" tone="neutral" />
+          </>
         )}
         <Field
           label="ESTADO DA LEITURA"
@@ -100,7 +184,8 @@ export function ManagementPanel({
           tone={analysis?.reading.sufficient ? "bull" : "warn"}
         />
       </div>
-      {analysis?.blockers.length ? (
+
+      {!confirmed && analysis?.blockers.length ? (
         <ul className="mt-3 space-y-1 rounded-md border border-warn/40 bg-warn/10 p-2 text-[11px] text-warn">
           {analysis.blockers.map((blocker) => (
             <li key={blocker}>• {blocker}</li>

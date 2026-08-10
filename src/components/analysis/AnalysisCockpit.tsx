@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import type { DecisionObject } from "@/lib/engines/backtestDecisionEngine";
 import type { AnalysisResult, Candle, ChatEntry } from "@/lib/engines/types";
+import type { LivePriceInfo } from "@/lib/t4/managementView";
 import type { T4Progress } from "@/lib/t4/progress";
 import type { TradeSignalSnapshot } from "@/lib/t4/signalSnapshot";
 
@@ -42,6 +43,13 @@ export interface AnalysisCockpitProps {
   priceScaleReady?: boolean;
   /** Linha única e consolidada do estado da calibração. */
   calibrationSummary?: string;
+  /** Preço vivo (fonte única do gerenciamento). Ausente: derivado da análise. */
+  priceInfo?: LivePriceInfo;
+  /** Incremento real do ativo lido na escala — arredondamento único (§9). */
+  tickSize?: number | null;
+  /** Casas decimais reconhecidas na escala. */
+  decimals?: number;
+  sessionActive?: boolean;
 }
 
 export function AnalysisCockpit({
@@ -59,7 +67,23 @@ export function AnalysisCockpit({
   tradingDateLabel,
   priceScaleReady = true,
   calibrationSummary,
+  priceInfo,
+  tickSize = null,
+  decimals = 0,
+  sessionActive = false,
 }: AnalysisCockpitProps) {
+  // Replay: sem feed de preço vivo dedicado, o preço do último candle fechado
+  // cumpre o papel — mesma fonte que alimentou o motor.
+  const effectivePriceInfo: LivePriceInfo = priceInfo ?? {
+    price: priceScaleReady ? (analysis?.price ?? null) : null,
+    trusted: priceScaleReady && analysis !== null,
+    reason: priceScaleReady
+      ? analysis
+        ? null
+        : "Aguardando primeiro candle fechado."
+      : (calibrationSummary ?? "Escala de preços em calibração."),
+    at: analysis?.t ?? null,
+  };
   return (
     // COCKPIT NEXUS: contexto | leitura T4 dominante | decisão. Empilha no mobile.
     <div className="grid gap-3 xl:grid-cols-[250px_minmax(0,1fr)_350px]">
@@ -121,7 +145,15 @@ export function AnalysisCockpit({
       <div className="flex min-w-0 flex-col gap-3 xl:order-2">
         <T4ProgressCard asset={asset} progress={progress} snapshot={snapshot} />
         <EvidenceTable evidences={analysis?.evidences ?? []} />
-        <ManagementPanel analysis={analysis} asset={asset} />
+        <ManagementPanel
+          analysis={analysis}
+          asset={asset}
+          snapshot={snapshot}
+          priceInfo={effectivePriceInfo}
+          tickSize={tickSize}
+          decimals={decimals}
+          sessionActive={sessionActive}
+        />
       </div>
 
       {/* Coluna direita — DECISÃO + ADVERSARIAL + IA */}

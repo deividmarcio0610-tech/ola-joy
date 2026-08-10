@@ -30,6 +30,22 @@ export interface PipelineDiagnostics {
   OLLAMA_STATUS: string;
   /** Erro específico quando gráfico visível e candles=0. */
   parseError: string | null;
+
+  // ── PREÇO VISUAL (comando ao-vivo §6): bruto → processado → confiável ──
+  /** Linha de pixel BRUTA do marcador de preço no último frame (Y). */
+  PRICE_RAW_Y: number | null;
+  /** Preço processado da última leitura (real quando PRICE_TRUSTED). */
+  PRICE_PROCESSED: number | null;
+  /** Preço aprovado na plausibilidade — só então níveis são liberados. */
+  PRICE_TRUSTED: boolean;
+  /** Origem da conversão pixel→preço. */
+  PRICE_SOURCE: "CALIBRADA" | "GEOMETRICA" | "AUSENTE";
+  /** Faixa de preços visível no recorte segundo a calibração vigente. */
+  PRICE_RANGE: { min: number; max: number } | null;
+  /** Incremento (tick) reconhecido na escala. */
+  PRICE_INCREMENT: number | null;
+  /** Qualidade do ajuste linear da calibração. */
+  PRICE_R2: number | null;
 }
 
 export const EMPTY_DIAGNOSTICS: PipelineDiagnostics = {
@@ -51,6 +67,13 @@ export const EMPTY_DIAGNOSTICS: PipelineDiagnostics = {
   BLOCK_REASON: null,
   OLLAMA_STATUS: "DESCONHECIDO",
   parseError: null,
+  PRICE_RAW_Y: null,
+  PRICE_PROCESSED: null,
+  PRICE_TRUSTED: false,
+  PRICE_SOURCE: "AUSENTE",
+  PRICE_RANGE: null,
+  PRICE_INCREMENT: null,
+  PRICE_R2: null,
 };
 
 /** Erro específico exigido pelo comando quando gráfico visível e candles=0. */

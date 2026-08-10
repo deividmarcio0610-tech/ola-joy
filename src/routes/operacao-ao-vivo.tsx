@@ -5,6 +5,7 @@ import { Bot, Play, Power, RotateCcw, ShieldAlert } from "lucide-react";
 import { AnalysisCockpit } from "@/components/analysis/AnalysisCockpit";
 import { useAnalyzer } from "@/components/AnalyzerProvider";
 import { CaptureConsole } from "@/components/live/CaptureConsole";
+import { LivePreview } from "@/components/live/LivePreview";
 import { PipelineDiagnosticsCard } from "@/components/t4/PipelineDiagnosticsCard";
 import { RecordingStatusCard } from "@/components/t4/RecordingStatusCard";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { isSecureContextAvailable } from "@/lib/capture/screenCapture";
 import { computeT4Progress } from "@/lib/t4/progress";
+import { unlockAudio } from "@/lib/t4/signalSound";
 import { visibleRange } from "@/lib/vision/priceScale";
 
 export const Route = createFileRoute("/operacao-ao-vivo")({
@@ -36,9 +38,24 @@ function LivePage() {
     analysis: live.analysis,
     decisionEvaluated: live.decision !== null,
     snapshot: live.signalSnapshot,
+    // §1: preço reprovado na plausibilidade trava o progresso e expõe o motivo.
+    priceTrusted: live.priceInfo.trusted,
+    priceTrustReason: live.priceInfo.reason,
   });
 
+  const chartClockLabel =
+    live.diagnostics.CHART_CLOCK === "VALID"
+      ? live.priceInfo.at
+        ? new Date(live.priceInfo.at).toLocaleTimeString("pt-BR", { hour12: false })
+        : "VÁLIDO"
+      : live.diagnostics.CHART_CLOCK === "FALLBACK_REALTIME"
+        ? "FALLBACK (relógio local)"
+        : "INDISPONÍVEL";
+
   const start = async () => {
+    // §6 (gerenciamento): o clique de iniciar é o GESTO que desbloqueia o
+    // AudioContext — o som da confirmação chega minutos depois, sem gesto.
+    unlockAudio();
     setStartErrors([]);
     if (live.chart.status === "sem-fonte") {
       await live.selectSourceAndStart();
@@ -142,6 +159,22 @@ function LivePage() {
         onSwitchSource={() => void live.switchSourceAndStart()}
       />
 
+      {live.chart.status !== "sem-fonte" && (
+        <LivePreview
+          status={live.chart.status}
+          sourceLabel={live.chart.sourceLabel}
+          fps={live.chart.fps}
+          resolution={live.chart.resolution}
+          error={live.chart.error}
+          lastFrameAt={live.chart.lastFrameAt}
+          chartClockLabel={chartClockLabel}
+          priceInfo={live.priceInfo}
+          tickSize={live.calibration.tickSize}
+          decimals={live.calibration.decimals}
+          snapshot={live.signalSnapshot}
+        />
+      )}
+
       <Card className="border-border/70 bg-panel p-3">
         <div className="flex flex-wrap items-start gap-3">
           <div className="min-w-[220px] flex-1">
@@ -227,6 +260,10 @@ function LivePage() {
         snapshot={live.signalSnapshot}
         priceScaleReady={live.priceScaleReady}
         calibrationSummary={live.calibrationSummary}
+        priceInfo={live.priceInfo}
+        tickSize={live.calibration.tickSize}
+        decimals={live.calibration.decimals}
+        sessionActive={live.sessionActive}
         chat={live.chat}
         aiProvider={live.aiProvider}
       />

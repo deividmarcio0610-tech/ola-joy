@@ -82,6 +82,43 @@ export function PipelineDiagnosticsCard({ diagnostics }: { diagnostics: Pipeline
       value: diagnostics.OLLAMA_STATUS,
       ok: diagnostics.OLLAMA_STATUS.startsWith("ONLINE"),
     },
+    // Comando ao-vivo §6: preço visual bruto → processado → confiável.
+    {
+      label: "PRICE_RAW_Y",
+      value: diagnostics.PRICE_RAW_Y === null ? "—" : `${diagnostics.PRICE_RAW_Y}px`,
+      ok: null,
+    },
+    {
+      label: "PRICE_PROCESSED",
+      value:
+        diagnostics.PRICE_PROCESSED === null
+          ? "—"
+          : `${diagnostics.PRICE_PROCESSED}${diagnostics.PRICE_TRUSTED ? "" : " (não confiável)"}`,
+      ok: diagnostics.PRICE_PROCESSED === null ? null : diagnostics.PRICE_TRUSTED,
+    },
+    {
+      label: "PRICE_TRUSTED",
+      value: diagnostics.PRICE_TRUSTED ? "SIM" : "NÃO — níveis bloqueados",
+      ok: diagnostics.PRICE_TRUSTED,
+    },
+    { label: "PRICE_SOURCE", value: diagnostics.PRICE_SOURCE, ok: null },
+    {
+      label: "PRICE_RANGE",
+      value: diagnostics.PRICE_RANGE
+        ? `${diagnostics.PRICE_RANGE.min}–${diagnostics.PRICE_RANGE.max}`
+        : "—",
+      ok: null,
+    },
+    {
+      label: "PRICE_INCREMENT",
+      value: diagnostics.PRICE_INCREMENT === null ? "—" : String(diagnostics.PRICE_INCREMENT),
+      ok: null,
+    },
+    {
+      label: "PRICE_R2",
+      value: diagnostics.PRICE_R2 === null ? "—" : diagnostics.PRICE_R2.toFixed(5),
+      ok: null,
+    },
   ];
   return (
     <Card className="nexus-card gap-2 p-3">

@@ -11,14 +11,46 @@ function diagnostics(overrides: Partial<PipelineDiagnostics>): PipelineDiagnosti
   return { ...EMPTY_DIAGNOSTICS, ...overrides };
 }
 
-function fakeAnalysis(): AnalysisResult {
+const SEQUENCE_STAGES = [
+  "liquiditySweep",
+  "reaction",
+  "confirmationClose",
+  "structureShift",
+  "poi",
+  "retest",
+  "entryConfirmation",
+] as const;
+
+function fakeAnalysis(overrides?: {
+  liquidityLevels?: number;
+  blockingContradiction?: boolean;
+  setup?: string;
+  metStages?: string[];
+  structureState?: string;
+}): AnalysisResult {
+  const met = new Set(overrides?.metStages ?? []);
   return {
-    evidences: [{ group: "estrutura", state: "parcial" }],
-    liquidity: { levels: [] },
-    contradictions: [],
+    evidences: [{ group: "estrutura", state: overrides?.structureState ?? "parcial" }],
+    liquidity: { levels: Array.from({ length: overrides?.liquidityLevels ?? 1 }, (_, i) => i) },
+    contradictions: overrides?.blockingContradiction
+      ? [{ id: "c1", severity: "bloqueia", description: "x", evidence: "y" }]
+      : [],
+    t4: { setup: overrides?.setup ?? "NONE", quality: "A" },
+    sequence: {
+      complete: SEQUENCE_STAGES.every((stage) => met.has(stage)),
+      stages: SEQUENCE_STAGES.map((stage) => ({ stage, met: met.has(stage), at: null, note: "" })),
+    },
     blockers: ["T4: aguardando setup A/A+."],
   } as unknown as AnalysisResult;
 }
+
+const FULL_DIAG = diagnostics({
+  CAPTURE_ACTIVE: true,
+  PROFIT_DETECTED: true,
+  GRAPH_DETECTED: true,
+  PRICE_AXIS: true,
+  CHART_CLOCK: "VALID",
+});
 
 function snapshot() {
   return createSignalSnapshot({
@@ -34,7 +66,7 @@ function snapshot() {
   });
 }
 
-describe("progresso T4 0–100 (comando §6)", () => {
+describe("progresso T4 0–100 dinâmico (comando ao-vivo §3)", () => {
   it("0% quando a sessão não iniciou — nunca timer fake", () => {
     const progress = computeT4Progress({
       sessionActive: false,
@@ -59,12 +91,7 @@ describe("progresso T4 0–100 (comando §6)", () => {
   });
 
   it("50% exige chartClock válido OU fallback declarado com motivo", () => {
-    const base = {
-      sessionActive: true,
-      analysis: null,
-      decisionEvaluated: false,
-      snapshot: null,
-    };
+    const base = { sessionActive: true, analysis: null, decisionEvaluated: false, snapshot: null };
     const withoutClock = computeT4Progress({
       ...base,
       diagnostics: diagnostics({
@@ -91,29 +118,88 @@ describe("progresso T4 0–100 (comando §6)", () => {
     expect(withFallback.percent).toBe(50);
   });
 
-  it("90% com análise+gates avaliados e 100% somente com snapshot/signalId", () => {
-    const diag = diagnostics({
-      CAPTURE_ACTIVE: true,
-      PROFIT_DETECTED: true,
-      GRAPH_DETECTED: true,
-      PRICE_AXIS: true,
-      CHART_CLOCK: "VALID",
+  it("preço NÃO confiável trava em 30% com o motivo como bloqueio (§1)", () => {
+    const progress = computeT4Progress({
+      sessionActive: true,
+      diagnostics: FULL_DIAG,
+      analysis: fakeAnalysis(),
+      decisionEvaluated: true,
+      snapshot: null,
+      priceTrusted: false,
+      priceTrustReason: "PREÇO NÃO CONFIÁVEL — salto de 16% entre leituras.",
     });
+    expect(progress.percent).toBe(30);
+    expect(progress.blockers.some((b) => b.includes("PREÇO NÃO CONFIÁVEL"))).toBe(true);
+  });
+
+  it("60% quando estrutura lida mas liquidez ainda não mapeada", () => {
+    const progress = computeT4Progress({
+      sessionActive: true,
+      diagnostics: FULL_DIAG,
+      analysis: fakeAnalysis({ liquidityLevels: 0 }),
+      decisionEvaluated: true,
+      snapshot: null,
+    });
+    expect(progress.percent).toBe(60);
+  });
+
+  it("liquidez por varredura na sequência também conta como mapeada", () => {
+    const progress = computeT4Progress({
+      sessionActive: true,
+      diagnostics: FULL_DIAG,
+      analysis: fakeAnalysis({ liquidityLevels: 0, metStages: ["liquiditySweep"] }),
+      decisionEvaluated: false,
+      snapshot: null,
+    });
+    expect(progress.percent).toBe(80); // liquidez OK + contraponto limpo, sem setup
+  });
+
+  it("contradição BLOQUEADORA derruba o percentual para 70 (pode CAIR)", () => {
+    const before = computeT4Progress({
+      sessionActive: true,
+      diagnostics: FULL_DIAG,
+      analysis: fakeAnalysis({ setup: "TREND_FIRST_PULLBACK" }),
+      decisionEvaluated: true,
+      snapshot: null,
+    });
+    expect(before.percent).toBe(90);
+    const after = computeT4Progress({
+      sessionActive: true,
+      diagnostics: FULL_DIAG,
+      analysis: fakeAnalysis({ setup: "TREND_FIRST_PULLBACK", blockingContradiction: true }),
+      decisionEvaluated: true,
+      snapshot: null,
+    });
+    expect(after.percent).toBe(70);
+  });
+
+  it("nunca parado em 90 sem explicação: setup NONE segura em 80 e lista a sequência pendente", () => {
+    const progress = computeT4Progress({
+      sessionActive: true,
+      diagnostics: FULL_DIAG,
+      analysis: fakeAnalysis({ setup: "NONE" }),
+      decisionEvaluated: true,
+      snapshot: null,
+    });
+    expect(progress.percent).toBe(80);
+    expect(progress.blockers.some((b) => b.includes("Sequência T4 pendente"))).toBe(true);
+  });
+
+  it("90% com gates avaliados + setup identificado; 100% SOMENTE com snapshot/signalId", () => {
     const ninety = computeT4Progress({
       sessionActive: true,
-      diagnostics: diag,
-      analysis: fakeAnalysis(),
+      diagnostics: FULL_DIAG,
+      analysis: fakeAnalysis({ setup: "TREND_FIRST_PULLBACK" }),
       decisionEvaluated: true,
       snapshot: null,
     });
     expect(ninety.percent).toBe(90);
     expect(ninety.status).toBe("ANALISANDO");
-    expect(ninety.blockers).toContain("T4: aguardando setup A/A+.");
 
     const hundred = computeT4Progress({
       sessionActive: true,
-      diagnostics: diag,
-      analysis: fakeAnalysis(),
+      diagnostics: FULL_DIAG,
+      analysis: fakeAnalysis({ setup: "TREND_FIRST_PULLBACK", metStages: [...SEQUENCE_STAGES] }),
       decisionEvaluated: true,
       snapshot: snapshot(),
     });
@@ -122,21 +208,15 @@ describe("progresso T4 0–100 (comando §6)", () => {
     expect(hundred.stages.ENTRADA).toBe(true);
   });
 
-  it("sem decisão avaliada nunca chega a 90 mesmo com análise completa", () => {
+  it("snapshot confirmado mantém 100% mesmo com a análise do candle seguinte recomeçando", () => {
     const progress = computeT4Progress({
       sessionActive: true,
-      diagnostics: diagnostics({
-        CAPTURE_ACTIVE: true,
-        PROFIT_DETECTED: true,
-        GRAPH_DETECTED: true,
-        PRICE_AXIS: true,
-        CHART_CLOCK: "VALID",
-      }),
-      analysis: fakeAnalysis(),
+      diagnostics: FULL_DIAG,
+      analysis: fakeAnalysis({ liquidityLevels: 0, setup: "NONE" }),
       decisionEvaluated: false,
-      snapshot: null,
+      snapshot: snapshot(),
     });
-    expect(progress.percent).toBe(80);
+    expect(progress.percent).toBe(100);
   });
 });
 

@@ -55,6 +55,8 @@ class ScreenCaptureManager {
 
   private frameSubscribers = new Set<(read: FrameRead) => void>();
   private stateSubscribers = new Set<() => void>();
+  /** Elementos de PREVIEW visíveis — mesma MediaStream, nunca segunda captura. */
+  private previewElements = new Set<HTMLVideoElement>();
 
   getState(): CaptureManagerState {
     return this.state;
@@ -68,6 +70,35 @@ class ScreenCaptureManager {
   subscribeFrames(listener: (read: FrameRead) => void): () => void {
     this.frameSubscribers.add(listener);
     return () => this.frameSubscribers.delete(listener);
+  }
+
+  /**
+   * PREVIEW VISÍVEL (comando ao-vivo §4): a página monta um <video> próprio e
+   * ele recebe a MESMA MediaStream global — nenhuma segunda captura, nenhum
+   * processamento duplicado. Desmontar a rota só desanexa o elemento; a
+   * captura e o <video> interno de processamento continuam intactos.
+   */
+  attachPreview(element: HTMLVideoElement): () => void {
+    this.previewElements.add(element);
+    element.muted = true;
+    element.playsInline = true;
+    element.autoplay = true;
+    const stream = this.capture?.stream ?? null;
+    if (stream && element.srcObject !== stream) {
+      element.srcObject = stream;
+      void element.play().catch(() => undefined);
+    }
+    return () => {
+      this.previewElements.delete(element);
+      element.srcObject = null;
+    };
+  }
+
+  private syncPreviews(stream: MediaStream | null): void {
+    for (const element of this.previewElements) {
+      element.srcObject = stream;
+      if (stream) void element.play().catch(() => undefined);
+    }
   }
 
   private setState(patch: Partial<CaptureManagerState>): void {
@@ -140,6 +171,7 @@ class ScreenCaptureManager {
         video.srcObject = handle.stream;
         await video.play();
       }
+      this.syncPreviews(handle.stream);
       track?.addEventListener("ended", () =>
         this.stop("O compartilhamento foi encerrado. Selecione novamente a janela do gráfico."),
       );
@@ -195,6 +227,7 @@ class ScreenCaptureManager {
     this.capture = null;
     this.processor = null;
     if (this.videoRef.current) this.videoRef.current.srcObject = null;
+    this.syncPreviews(null);
     this.frameCounter = 0;
     this.setState({
       status: "sem-fonte",
