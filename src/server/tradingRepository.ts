@@ -745,13 +745,22 @@ export function saveReplayBatch(input: {
   backtest: BacktestRecord | null;
   replaySession: ReplayRecordingRecord;
 }): void {
-  // Uma única requisição de backend garante a ordem referencial: pregões →
-  // trechos → trades/backtest → resumo da gravação.
-  for (const record of input.tradingSessions) upsertTradingSession(record);
-  for (const record of input.segments) upsertSegment(record);
-  for (const event of input.marketEvents) upsertMarketEvent(event);
-  if (input.backtest) upsertBacktest(input.backtest);
-  upsertReplaySession(input.replaySession);
+  // TRANSAÇÃO ÚNICA: ou o lote inteiro entra (pregões → trechos →
+  // trades/backtest → resumo da gravação), ou nada entra. Uma falha no meio
+  // não pode deixar estado parcial referenciando registros ausentes.
+  const database = db();
+  database.exec("BEGIN IMMEDIATE");
+  try {
+    for (const record of input.tradingSessions) upsertTradingSession(record);
+    for (const record of input.segments) upsertSegment(record);
+    for (const event of input.marketEvents) upsertMarketEvent(event);
+    if (input.backtest) upsertBacktest(input.backtest);
+    upsertReplaySession(input.replaySession);
+    database.exec("COMMIT");
+  } catch (error) {
+    database.exec("ROLLBACK");
+    throw error;
+  }
 }
 
 /** Handle compartilhado do banco para os repositórios auxiliares. */
