@@ -2,6 +2,7 @@ import type { BacktestTrade, TradeOrigin } from "@/lib/engines/backtestEngine";
 import { DEFAULT_RISK_PARAMS, type RiskParams, type StopMethod } from "@/lib/engines/strategy";
 import type { AnalysisResult, Candle } from "@/lib/engines/types";
 import type { DailyLearningReport } from "@/lib/engines/dailyLearning";
+import { markTradingUnauthorized, writeHeaders } from "@/lib/tradingSession";
 
 export interface LiveSessionRecord {
   id: string;
@@ -234,10 +235,24 @@ async function api(
 ): Promise<Response> {
   const response = await fetch(path, {
     method,
-    headers: payload === undefined ? undefined : { "content-type": "application/json" },
+    // O cookie de sessão do operador (HttpOnly) viaja aqui; o CSRF acompanha
+    // as escritas. Nenhuma credencial é lida ou montada pelo cliente.
+    credentials: "same-origin",
+    headers:
+      method === "GET"
+        ? undefined
+        : writeHeaders(payload === undefined ? {} : { "content-type": "application/json" }),
     body: payload === undefined ? undefined : JSON.stringify(payload),
     cache: "no-store",
   });
+  if (response.status === 401 || response.status === 403) {
+    // Sessão ausente/expirada: a UI precisa pedir o desbloqueio em vez de
+    // acumular falhas silenciosas na fila de escrita.
+    markTradingUnauthorized();
+    throw new Error(
+      `Escrita não autorizada em ${path}. Desbloqueie a gravação do T4 com o token do operador.`,
+    );
+  }
   if (!response.ok) throw new Error(`Persistência HTTP ${response.status} em ${path}`);
   return response;
 }

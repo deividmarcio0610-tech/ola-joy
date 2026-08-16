@@ -3,7 +3,15 @@ import { join, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
 import type { BacktestTrade } from "@/lib/engines/backtestEngine";
-import { STRATEGY_VERSION, T4_PROFILE } from "@/lib/engines/strategy";
+import { STRATEGY_VERSION } from "@/lib/engines/strategy";
+import {
+  activateTechnique,
+  activeTechnique,
+  bootstrapTechniques,
+  migrateTechniqueAuditColumns,
+  techniqueBootstrapDiagnostic,
+  type TechniqueAuditRecord,
+} from "./techniqueRegistry";
 import { learnFromDay, type DailyLearningReport } from "@/lib/engines/dailyLearning";
 import type {
   BacktestRecord,
@@ -16,7 +24,8 @@ import type {
   TradingSessionRecord,
 } from "@/lib/storage";
 
-const SCHEMA_VERSION = 4;
+// 5: colunas de auditoria da técnica (origin/actor/notes/metrics/previous).
+const SCHEMA_VERSION = 5;
 
 function dataDir(): string {
   return resolve(process.env["DATA_DIR"]?.trim() || "./data");
@@ -268,38 +277,13 @@ function migrate(database: DatabaseSync): void {
     );
   `);
   migrateTradeAuditColumns(database);
+  migrateTechniqueAuditColumns(database);
   database
     .prepare("INSERT OR IGNORE INTO schema_migrations(version, applied_at) VALUES (?, ?)")
     .run(SCHEMA_VERSION, Date.now());
-  const now = Date.now();
-  const current = database
-    .prepare(
-      "SELECT version FROM techniques WHERE status='PRODUCTION' ORDER BY promoted_at DESC, created_at DESC LIMIT 1",
-    )
-    .get() as { version: string } | undefined;
-  if (current?.version !== STRATEGY_VERSION) {
-    database.exec("BEGIN IMMEDIATE");
-    try {
-      database.prepare("UPDATE techniques SET status='ARCHIVED' WHERE status='PRODUCTION'").run();
-      database
-        .prepare(
-          `
-        INSERT INTO techniques(version, status, rules_json, created_at, promoted_at)
-        VALUES (?, 'PRODUCTION', ?, ?, ?)
-        ON CONFLICT(version) DO UPDATE SET status='PRODUCTION', rules_json=excluded.rules_json, promoted_at=excluded.promoted_at
-      `,
-        )
-        .run(STRATEGY_VERSION, JSON.stringify(T4_PROFILE), now, now);
-      database.exec("COMMIT");
-    } catch (error) {
-      database.exec("ROLLBACK");
-      throw error;
-    }
-  } else {
-    database
-      .prepare("UPDATE techniques SET rules_json=? WHERE version=?")
-      .run(JSON.stringify(T4_PROFILE), STRATEGY_VERSION);
-  }
+  // A técnica ATIVA vem do banco. STRATEGY_VERSION só semeia banco vazio —
+  // ver techniqueRegistry.ts para a regra completa e a causa raiz corrigida.
+  bootstrapTechniques(database);
 }
 
 function migrateTradeAuditColumns(database: DatabaseSync): void {
@@ -588,28 +572,13 @@ export function upsertMarketEvent(event: MarketEventRecord): void {
     );
 }
 
-export function getProductionTechnique(): TechniqueRecord | null {
-  const row = db()
-    .prepare(
-      "SELECT version, status, rules_json, created_at, promoted_at FROM techniques WHERE status='PRODUCTION' ORDER BY promoted_at DESC, created_at DESC LIMIT 1",
-    )
-    .get() as
-    | {
-        version: string;
-        status: "PRODUCTION";
-        rules_json: string;
-        created_at: number;
-        promoted_at: number | null;
-      }
-    | undefined;
-  if (!row) return null;
-  return {
-    version: row.version,
-    status: row.status,
-    rules: parse<Record<string, unknown>>(row.rules_json),
-    createdAt: row.created_at,
-    promotedAt: row.promoted_at,
-  };
+/**
+ * Técnica ATIVA — sempre do banco. Regras corrompidas não derrubam a leitura
+ * nem são sobrescritas: `rulesValid=false` expõe o problema (techniqueRegistry).
+ */
+export function getProductionTechnique(): TechniqueAuditRecord | null {
+  db(); // garante migração/bootstrap antes da primeira leitura
+  return activeTechnique();
 }
 
 export function listTechniqueCandidates(): TechniqueCandidateRecord[] {
@@ -662,16 +631,24 @@ export function upsertTechniqueCandidate(record: TechniqueCandidateRecord): void
     );
 }
 
-export function promoteTechniqueCandidate(candidateId: string): TechniqueRecord {
-  const database = db();
-  const candidate = database
+/**
+ * PROMOÇÃO — atômica e auditada. A versão promovida passa a ser a fonte de
+ * verdade e SOBREVIVE a restart (ver techniqueRegistry.bootstrapTechniques).
+ */
+export function promoteTechniqueCandidate(
+  candidateId: string,
+  options?: { actor?: string | null; notes?: string | null },
+): TechniqueAuditRecord {
+  const candidate = db()
     .prepare(
-      "SELECT id, version, status, rules_json, created_at FROM technique_candidates WHERE id=?",
+      "SELECT id, version, base_version, hypothesis, status, rules_json, created_at FROM technique_candidates WHERE id=?",
     )
     .get(candidateId) as
     | {
         id: string;
         version: string;
+        base_version: string;
+        hypothesis: string;
         status: TechniqueCandidateRecord["status"];
         rules_json: string;
         created_at: number;
@@ -681,25 +658,19 @@ export function promoteTechniqueCandidate(candidateId: string): TechniqueRecord 
   if (candidate.status !== "VALIDATED") {
     throw new Error("Somente uma candidata VALIDATED pode ser promovida.");
   }
-  const now = Date.now();
-  database.exec("BEGIN IMMEDIATE");
-  try {
-    database.prepare("UPDATE techniques SET status='ARCHIVED' WHERE status='PRODUCTION'").run();
-    database
-      .prepare(
-        `
-      INSERT INTO techniques(version, status, rules_json, created_at, promoted_at)
-      VALUES (?, 'PRODUCTION', ?, ?, ?)
-      ON CONFLICT(version) DO UPDATE SET status='PRODUCTION', rules_json=excluded.rules_json, promoted_at=excluded.promoted_at
-    `,
-      )
-      .run(candidate.version, candidate.rules_json, candidate.created_at, now);
-    database.exec("COMMIT");
-  } catch (error) {
-    database.exec("ROLLBACK");
-    throw error;
-  }
-  return getProductionTechnique()!;
+  return activateTechnique({
+    version: candidate.version,
+    rulesJson: candidate.rules_json,
+    createdAt: candidate.created_at,
+    origin: "PROMOTION",
+    actor: options?.actor ?? null,
+    notes: options?.notes ?? candidate.hypothesis,
+    metricsJson: JSON.stringify({
+      candidateId: candidate.id,
+      baseVersion: candidate.base_version,
+      candidateStatus: candidate.status,
+    }),
+  });
 }
 
 export function listDailyLearningReports(): DailyLearningReport[] {
@@ -773,9 +744,18 @@ export function getDataDir(): string {
   return dataDir();
 }
 
-export function databaseInfo(): { path: string; schemaVersion: number } {
+export function databaseInfo(): {
+  path: string;
+  schemaVersion: number;
+  /** O que o boot fez com a técnica ativa — visível para auditoria. */
+  techniqueBootstrap: ReturnType<typeof techniqueBootstrapDiagnostic>;
+} {
   db();
-  return { path: dbPath(), schemaVersion: SCHEMA_VERSION };
+  return {
+    path: dbPath(),
+    schemaVersion: SCHEMA_VERSION,
+    techniqueBootstrap: techniqueBootstrapDiagnostic(),
+  };
 }
 
 // Type-only assertion keeps the persisted trade shape coupled to the domain.

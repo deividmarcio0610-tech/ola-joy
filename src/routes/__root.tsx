@@ -11,6 +11,7 @@ import type { ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { AnalyzerProvider } from "@/components/AnalyzerProvider";
+import { TradingAuthGate } from "@/components/TradingAuthGate";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { StatusBar } from "@/components/StatusBar";
@@ -129,7 +130,9 @@ function RootComponent() {
                 <SidebarTrigger />
                 <StatusBar />
               </header>
-              <main className="min-w-0 flex-1 p-3 md:p-4">
+              <main className="flex min-w-0 flex-1 flex-col gap-3 p-3 md:p-4">
+                {/* Persistência exige sessão de operador; a análise não. */}
+                <TradingAuthGate />
                 {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
                 <Outlet />
               </main>
