@@ -53,6 +53,9 @@ function LabPage() {
   }, []);
 
   const lab = useMemo(() => {
+    // `revision` é o gatilho real: o cache do banco é externo ao React e este
+    // contador força a releitura periódica do estado hidratado.
+    void revision;
     const records = store.backtests();
     // §28: LEGACY_IMAGE fica só como histórico — fora da evidência por padrão.
     const trades = filterEvidenceTrades(records);

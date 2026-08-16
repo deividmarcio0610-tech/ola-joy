@@ -1027,7 +1027,8 @@ export function useContinuousBacktest(asset: string) {
     const errors: string[] = [];
     const hasSource = Boolean(chart.videoRef.current?.srcObject);
     if (!hasSource) errors.push("Compartilhe a janela do gráfico do Profit.");
-    if (!storageReady) errors.push("Banco persistente ainda não disponível.");
+    // Checagem ao vivo: o desbloqueio do operador re-hidrata após o mount.
+    if (!store.isHydrated()) errors.push("Banco persistente ainda não disponível.");
     if (errors.length) return errors;
     if (chart.status !== "capturando") chart.confirmPreview();
 
@@ -1070,7 +1071,7 @@ export function useContinuousBacktest(asset: string) {
       "info",
     );
     return [];
-  }, [appendLog, asset, chart, openSegment, openTradingSession, storageReady]);
+  }, [appendLog, asset, chart, openSegment, openTradingSession]);
 
   const pause = useCallback(() => {
     phaseRef.current = "pausado";
@@ -1133,11 +1134,12 @@ export function useContinuousBacktest(asset: string) {
     );
   }, [appendLog, chart, persistEvent, persistSession, persistTrades, pushTimeline]);
 
-  const evidence = useMemo(
-    () => evaluateEvidence(filterEvidenceTrades(store.backtests())),
-    // recalculado quando novas operações entram na base
-    [counters.trades],
-  );
+  const evidence = useMemo(() => {
+    // counters.trades é o gatilho REAL do recálculo: o cache de backtests é
+    // externo ao React e só muda quando novas operações entram na base.
+    void counters.trades;
+    return evaluateEvidence(filterEvidenceTrades(store.backtests()));
+  }, [counters.trades]);
 
   return {
     chart,

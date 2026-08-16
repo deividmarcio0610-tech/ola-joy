@@ -6,6 +6,7 @@ import {
   saveRecordingEvent,
   updateRecordingSession,
 } from "./recordingRepository";
+import { authorizeRead, authorizeWrite } from "./tradingAuth";
 
 function json(payload: unknown, status = 200): Response {
   return new Response(JSON.stringify(payload), {
@@ -23,6 +24,10 @@ function json(payload: unknown, status = 200): Response {
  * POST /api/recording/state             → recorder.state/erros reportados
  * POST /api/recording/stop              → finaliza validando bytes em disco
  * POST /api/recording/events            → eventos T4 sincronizados (real+chart)
+ *
+ * MESMA autorização do /api/trading: os POSTs gravam vídeo/manifesto em disco
+ * (vetor de flood) e exigem a sessão de operador; o GET segue a regra de
+ * leitura. Nada aqui fica anônimo quando há token configurado.
  */
 export async function handleRecordingRequest(request: Request): Promise<Response | null> {
   const url = new URL(request.url);
@@ -30,6 +35,8 @@ export async function handleRecordingRequest(request: Request): Promise<Response
   if (!path.startsWith("/api/recording/")) return null;
 
   try {
+    const denied = request.method === "GET" ? authorizeRead(request) : authorizeWrite(request);
+    if (denied) return json({ error: denied.error }, denied.status);
     const statusMatch = /^\/api\/recording\/status\/([^/]+)$/.exec(path);
     if (request.method === "GET" && statusMatch) {
       const status = getRecordingStatus(decodeURIComponent(statusMatch[1]!));

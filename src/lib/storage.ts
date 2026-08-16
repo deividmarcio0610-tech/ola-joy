@@ -2,7 +2,7 @@ import type { BacktestTrade, TradeOrigin } from "@/lib/engines/backtestEngine";
 import { DEFAULT_RISK_PARAMS, type RiskParams, type StopMethod } from "@/lib/engines/strategy";
 import type { AnalysisResult, Candle } from "@/lib/engines/types";
 import type { DailyLearningReport } from "@/lib/engines/dailyLearning";
-import { markTradingUnauthorized, writeHeaders } from "@/lib/tradingSession";
+import { markTradingUnauthorized, subscribeTradingAuth, writeHeaders } from "@/lib/tradingSession";
 
 export interface LiveSessionRecord {
   id: string;
@@ -250,7 +250,9 @@ async function api(
     // acumular falhas silenciosas na fila de escrita.
     markTradingUnauthorized();
     throw new Error(
-      `Escrita não autorizada em ${path}. Desbloqueie a gravação do T4 com o token do operador.`,
+      method === "GET"
+        ? `Leitura não autorizada em ${path}. Autentique-se com o token do operador.`
+        : `Escrita não autorizada em ${path}. Desbloqueie a gravação do T4 com o token do operador.`,
     );
   }
   if (!response.ok) throw new Error(`Persistência HTTP ${response.status} em ${path}`);
@@ -268,6 +270,19 @@ function persist(path: string, payload: unknown): void {
     .catch((error) => {
       console.error("Falha ao persistir dados do analisador:", error);
     });
+}
+
+// Login efetuado com a hidratação ainda pendente (o primeiro GET levou 401
+// porque a leitura também exige sessão): re-hidrata sozinho, sem recarregar a
+// página — a captura/sessão ao vivo não podem morrer num reload.
+if (typeof window !== "undefined") {
+  subscribeTradingAuth((auth) => {
+    if (auth.authenticated && !hydrated) {
+      void store.hydrate(true).catch(() => {
+        // O erro reaparece na próxima interação; nada a derrubar aqui.
+      });
+    }
+  });
 }
 
 export const store = {

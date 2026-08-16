@@ -18,6 +18,7 @@ import {
 import { rollbackTechnique, techniqueHistory } from "./techniqueRegistry";
 import {
   authRequired,
+  authorizeRead,
   authorizeWrite,
   createSessionCookieValue,
   currentSession,
@@ -45,8 +46,10 @@ async function body<T>(request: Request): Promise<T> {
 /**
  * SUPERFÍCIE HTTP DO ANALISADOR.
  *
- * LEITURA PÚBLICA (GET): snapshot, técnica ativa, candidatas e histórico. São
- * os próprios dados do operador, não carregam segredo e não alteram estado.
+ * LEITURA (GET): snapshot, técnica ativa, candidatas e histórico expõem o
+ * histórico do operador — com token configurado, ler também exige a sessão
+ * (sem CSRF). Somente /auth/status permanece aberto, para a UI saber que
+ * precisa pedir o desbloqueio.
  *
  * ESCRITA (POST): exige sessão de operador — cookie HttpOnly assinado +
  * CSRF + mesma origem (ver tradingAuth.ts). Vale para TODOS os endpoints que
@@ -117,6 +120,10 @@ export async function handleTradingRequest(request: Request): Promise<Response |
     }
 
     // ------------------------------------------------------- porteiro geral
+    if (request.method === "GET") {
+      const denied = authorizeRead(request);
+      if (denied) return json({ error: denied.error }, denied.status);
+    }
     if (request.method !== "GET") {
       const isAdminPath = ADMIN_PATHS.has(path);
       if (isAdminPath || WRITE_PATHS.has(path)) {

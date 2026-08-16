@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Bot, Play, Power, RotateCcw, ShieldAlert } from "lucide-react";
 
 import { AnalysisCockpit } from "@/components/analysis/AnalysisCockpit";
-import { useAnalyzer } from "@/components/AnalyzerProvider";
+import { useAnalyzer } from "@/components/analyzerContext";
 import { CaptureConsole } from "@/components/live/CaptureConsole";
 import { LivePreview } from "@/components/live/LivePreview";
 import { PipelineDiagnosticsCard } from "@/components/t4/PipelineDiagnosticsCard";

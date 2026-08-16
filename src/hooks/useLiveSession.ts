@@ -1086,11 +1086,14 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
 
   const startSession = useCallback((): string[] => {
     const errors: string[] = [];
-    if (!storageReady)
+    // Checagem AO VIVO (não o estado montado): o desbloqueio do operador
+    // re-hidrata o banco depois do mount e a sessão deve poder iniciar sem
+    // recarregar a página.
+    if (!store.isHydrated())
       errors.push(
         storageError
           ? `Banco persistente indisponível: ${storageError}`
-          : "Aguardando banco persistente.",
+          : "Aguardando banco persistente (desbloqueie a gravação se o token estiver configurado).",
       );
     if (chart.status !== "capturando")
       errors.push("Confirme a janela do gráfico antes de iniciar.");
@@ -1224,7 +1227,6 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
     chart.videoRef,
     runAnalysis,
     storageError,
-    storageReady,
     timeframeConfirmed,
   ]);
 

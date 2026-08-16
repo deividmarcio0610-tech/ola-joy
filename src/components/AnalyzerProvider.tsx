@@ -1,8 +1,10 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
+import { AnalyzerContext } from "@/components/analyzerContext";
 import { useContinuousBacktest } from "@/hooks/useContinuousBacktest";
 import { useLiveSession } from "@/hooks/useLiveSession";
 import { installGlobalErrorCapture } from "@/lib/errors/errorReporter";
+import { refreshTradingAuth } from "@/lib/tradingSession";
 
 /**
  * ANALYZER PROVIDER — o runtime do analisador vive AQUI, no layout raiz.
@@ -14,20 +16,6 @@ import { installGlobalErrorCapture } from "@/lib/errors/errorReporter";
  * /biblioteca /configuracoes NÃO para a captura, NÃO zera candles/contexto e
  * NÃO reinicia o T4 — as páginas são apenas janelas para o mesmo estado.
  */
-
-interface AnalyzerContextValue {
-  liveAsset: string;
-  setLiveAsset: (asset: string) => void;
-  timeframeConfirmed: boolean;
-  setTimeframeConfirmed: (confirmed: boolean) => void;
-  live: ReturnType<typeof useLiveSession>;
-  backtestAsset: string;
-  setBacktestAsset: (asset: string) => void;
-  backtest: ReturnType<typeof useContinuousBacktest>;
-}
-
-const AnalyzerContext = createContext<AnalyzerContextValue | null>(null);
-
 export function AnalyzerProvider({ children }: { children: ReactNode }) {
   const [liveAsset, setLiveAsset] = useState("WINFUT");
   const [timeframeConfirmed, setTimeframeConfirmed] = useState(false);
@@ -35,7 +23,12 @@ export function AnalyzerProvider({ children }: { children: ReactNode }) {
   const live = useLiveSession(liveAsset, timeframeConfirmed);
   const backtest = useContinuousBacktest(backtestAsset);
 
-  useEffect(() => installGlobalErrorCapture(), []);
+  useEffect(() => {
+    installGlobalErrorCapture();
+    // Descobre cedo se a leitura/escrita exigem sessão — o gate de
+    // desbloqueio aparece antes da primeira falha de persistência.
+    void refreshTradingAuth();
+  }, []);
 
   return (
     <AnalyzerContext.Provider
@@ -53,10 +46,4 @@ export function AnalyzerProvider({ children }: { children: ReactNode }) {
       {children}
     </AnalyzerContext.Provider>
   );
-}
-
-export function useAnalyzer(): AnalyzerContextValue {
-  const context = useContext(AnalyzerContext);
-  if (!context) throw new Error("useAnalyzer precisa do AnalyzerProvider no layout raiz.");
-  return context;
 }

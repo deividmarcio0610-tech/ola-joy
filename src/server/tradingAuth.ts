@@ -239,6 +239,23 @@ export function authorizeWrite(
   return null;
 }
 
+/**
+ * Autoriza uma LEITURA de dados de trading. Os GETs não mudam estado, mas
+ * expõem o histórico do operador (sessões, trades, técnica): com token
+ * configurado, ler também exige a sessão — sem CSRF, que só protege escrita.
+ * Loopback e instalação sem token seguem liberados (uso local/desktop).
+ */
+export function authorizeRead(request: Request): AuthorizationResult | null {
+  if (!authRequired()) return null;
+  if (currentSession(request)) return null;
+  if (isLoopback(request)) return null;
+  return {
+    ok: false,
+    status: 401,
+    error: "Leitura dos dados do T4 exige sessão de operador. Autentique-se no analisador.",
+  };
+}
+
 /** Valida o token digitado e decide o papel da sessão. */
 export function resolveRole(provided: string): TradingRole | null {
   const admin = adminToken();

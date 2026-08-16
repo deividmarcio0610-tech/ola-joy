@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
-import { useAnalyzer } from "@/components/AnalyzerProvider";
+import { useAnalyzer } from "@/components/analyzerContext";
 import { ManagementPanel } from "@/components/live/ManagementPanel";
 import { TradeManagementCard } from "@/components/live/TradeManagementCard";
 import { Card } from "@/components/ui/card";

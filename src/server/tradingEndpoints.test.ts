@@ -233,8 +233,8 @@ describe.sequential("origem cruzada (CORS/CSRF)", () => {
   });
 });
 
-describe.sequential("separação leitura pública × escrita protegida", () => {
-  it("GETs de leitura continuam funcionando sem sessão", async () => {
+describe.sequential("leitura autenticada × escrita protegida", () => {
+  it("com token configurado, GETs de dados exigem sessão (401 sem ela)", async () => {
     for (const path of [
       "/api/trading/snapshot",
       "/api/trading/technique-current",
@@ -242,8 +242,29 @@ describe.sequential("separação leitura pública × escrita protegida", () => {
       "/api/trading/technique-history",
     ]) {
       const response = await handleTradingRequest(request(path));
+      expect(response?.status, path).toBe(401);
+    }
+  });
+
+  it("GETs de dados funcionam para o operador autenticado (sem exigir CSRF)", async () => {
+    const { cookie } = await login("operador-forte");
+    for (const path of [
+      "/api/trading/snapshot",
+      "/api/trading/technique-current",
+      "/api/trading/technique-candidates",
+      "/api/trading/technique-history",
+    ]) {
+      const response = await handleTradingRequest(request(path, { cookie }));
       expect(response?.status, path).toBe(200);
     }
+  });
+
+  it("sem token configurado, GET local continua aberto (modo desktop)", async () => {
+    delete process.env.OPERATOR_TOKEN;
+    delete process.env.ADMIN_TOKEN;
+    const response = await handleTradingRequest(request("/api/trading/snapshot"));
+    // host analisador.local sem token: authRequired=false → leitura liberada.
+    expect(response?.status).toBe(200);
   });
 
   it("status de auth informa que a credencial é exigida, sem vazá-la", async () => {

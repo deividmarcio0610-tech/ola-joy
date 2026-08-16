@@ -1,3 +1,5 @@
+import { writeHeaders } from "@/lib/tradingSession";
+
 export type RecordingUiStatus =
   | "IDLE"
   | "STARTING"
@@ -136,7 +138,8 @@ class ScreenRecordingManager {
     try {
       const response = await fetch("/api/recording/sessions", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        credentials: "same-origin",
+        headers: writeHeaders({ "content-type": "application/json" }),
         body: JSON.stringify({
           sessionId: input.sessionId,
           liveSessionId: input.liveSessionId ?? null,
@@ -216,7 +219,8 @@ class ScreenRecordingManager {
           });
           const response = await fetch(`/api/recording/chunks?${query.toString()}`, {
             method: "POST",
-            headers: { "content-type": "application/octet-stream" },
+            credentials: "same-origin",
+            headers: writeHeaders({ "content-type": "application/octet-stream" }),
             body: blob,
           });
           if (!response.ok) throw new Error(`chunk HTTP ${response.status}`);
@@ -276,7 +280,8 @@ class ScreenRecordingManager {
     try {
       await fetch("/api/recording/state", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        credentials: "same-origin",
+        headers: writeHeaders({ "content-type": "application/json" }),
         body: JSON.stringify({ sessionId: this.state.sessionId, ...patch }),
       });
     } catch {
@@ -290,7 +295,8 @@ class ScreenRecordingManager {
     if (!sessionId || !this.state.dbSessionCreated) return;
     void fetch("/api/recording/events", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      credentials: "same-origin",
+      headers: writeHeaders({ "content-type": "application/json" }),
       body: JSON.stringify({
         sessionId,
         realTimestamp: Date.now(),
@@ -321,7 +327,8 @@ class ScreenRecordingManager {
     try {
       const response = await fetch("/api/recording/stop", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        credentials: "same-origin",
+        headers: writeHeaders({ "content-type": "application/json" }),
         body: JSON.stringify({ sessionId, endedAt: Date.now() }),
       });
       const payload = (await response.json()) as { status?: string; error?: string | null };
