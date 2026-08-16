@@ -63,6 +63,7 @@ export function ManagementPanel({
   tickSize = null,
   decimals = 0,
   sessionActive = false,
+  managementPaused = null,
 }: {
   analysis: AnalysisResult | null;
   asset: string;
@@ -71,6 +72,7 @@ export function ManagementPanel({
   tickSize?: number | null;
   decimals?: number;
   sessionActive?: boolean;
+  managementPaused?: string | null;
 }) {
   const view = buildManagementView({
     sessionActive,
@@ -79,6 +81,7 @@ export function ManagementPanel({
     priceInfo,
     tickSize,
     decimals,
+    managementPaused,
   });
   const confirmed = view.status === "CONFIRMADO";
   const directionTone = view.direction === "COMPRA" ? "bull" : "bear";
@@ -142,6 +145,13 @@ export function ManagementPanel({
         </div>
         {!view.livePriceTrusted && view.priceReason && (
           <p className="basis-full text-[10px] text-warn">{view.priceReason}</p>
+        )}
+        {/* Gestão parada nunca fica muda: o card diria "operação em curso" e
+            estaria congelado sem explicar por quê. */}
+        {view.managementPausedReason && (
+          <p className="basis-full rounded border border-bear/50 bg-bear/10 px-2 py-1 text-[11px] font-semibold text-bear">
+            GESTÃO PAUSADA — stop, 3R e 5R não estão sendo avaliados. {view.managementPausedReason}
+          </p>
         )}
       </div>
 

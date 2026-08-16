@@ -47,6 +47,7 @@ import {
 import {
   assetScaleIssue,
   calibrateFromAnchors,
+  calibrationDrift,
   emptyCalibration,
   geometricCalibration,
   normalizeScaleAnchorsForAsset,
@@ -77,6 +78,20 @@ function createPersistentEventStore(asset: string): EventStore {
  */
 const liveMarketClock = new MarketClock();
 const CLOCK_EVERY_FRAMES = 4;
+/**
+ * REVALIDAÇÃO DA ESCALA AO VIVO.
+ *
+ * O Profit AUTOESCALA o eixo de preços continuamente enquanto o mercado anda:
+ * a reta pixel→preço calibrada há um minuto pode não valer mais. Antes desta
+ * versão a fila de calibração DESLIGAVA assim que calibrava (`if (usable)
+ * return`), então a deriva só era percebida quando o preço já estava errado —
+ * a mesma classe do bug "site 202xxx × gráfico 173270". Agora reconferimos com
+ * âncoras OCR frescas no mesmo ritmo do backtest e comparamos a medição NOVA
+ * com a reta VIGENTE (`calibrationDrift`): estável = refresh silencioso que
+ * PRESERVA a série; deslocada = escala vencida, série reiniciada no novo
+ * referencial.
+ */
+const CALIBRATION_REFRESH_MS = 8_000;
 
 function localTradingDate(timestamp: number): string {
   const date = new Date(timestamp);
@@ -194,6 +209,9 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
   const schedulerRef = useRef(new CalibrationScheduler());
   const calibrationBusyRef = useRef(false);
   const calibrationLogRef = useRef<string | null>(null);
+  const lastCalibrationRefreshRef = useRef(0);
+  /** Gestão pausada por preço não confiável — exibido, nunca silencioso. */
+  const [managementPaused, setManagementPaused] = useState<string | null>(null);
   const [calibrationState, setCalibrationState] = useState<CalibrationSchedulerState>(() =>
     schedulerRef.current.state(),
   );
@@ -545,9 +563,20 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
         setDecision(null);
         decisionRef.current = null;
         setLastAnalysisAt(Date.now());
+        // Uma operação CONFIRMADA em curso deixa de ser avaliada aqui (medir
+        // stop/3R/5R com preço não confiável seria pior que não medir). Isso
+        // NÃO pode ser silencioso: a UI precisa dizer que a gestão parou e
+        // por quê, senão o card fica idêntico a uma gestão saudável.
+        if (outcomeTrackerRef.current) {
+          setManagementPaused(
+            priceTrustRef.current.reason ??
+              "PREÇO NÃO CONFIÁVEL — gestão da operação pausada até a escala revalidar.",
+          );
+        }
         refreshDiagnostics();
         return;
       }
+      setManagementPaused(null);
       // §29/§63: a AUTORIDADE operacional é o BacktestDecisionEngine baseado em evidência histórica.
       const liveDecision = decide({
         analysis: adjusted,
@@ -709,6 +738,7 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
             fiveR: frozen.targetPrice,
             setup: adjusted.t4.setup,
             confirmationCandle,
+            sessionId: sessionIdRef.current,
           });
           snapshotRef.current = snapshot;
           setSignalSnapshot(snapshot);
@@ -902,6 +932,7 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
           calibration,
           price,
           frameHeight: read.height,
+          priceY: read.priceY,
           lastPrice: lastTrustedPriceRef.current,
         });
         if (!plausibility.ok) {
@@ -1218,6 +1249,15 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
         appendLog(summary, next.status === "CALIBRATED" ? "info" : "warn");
       }
     };
+    /**
+     * Falha de REVALIDAÇÃO não derruba uma régua que continua válida: um
+     * hiccup do OCR não pode apagar a calibração vigente nem pintar a UI de
+     * erro. Só a falha INICIAL (sem escala nenhuma) vira erro visível.
+     */
+    const reportFailure = (message: string, state: CalibrationSchedulerState) => {
+      if (!calibrationRefUsable.current) setAutoCalibrationError(message);
+      report(state);
+    };
     try {
       const snapshot = capturePriceScaleImage(video, scheduler.roi());
       const size = { width: snapshot.frameWidth, height: snapshot.frameHeight };
@@ -1227,26 +1267,42 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
         data: { imageDataUrl: snapshot.imageDataUrl, frameHeight: snapshot.frameHeight },
       });
       if (response.error) {
-        setAutoCalibrationError(response.error);
-        report(scheduler.fail(response.error));
+        reportFailure(response.error, scheduler.fail(response.error));
         return;
       }
       const normalizedAnchors = normalizeScaleAnchorsForAsset(asset, response.anchors);
       const next = calibrateFromAnchors(normalizedAnchors);
       if (!next.usable) {
-        setAutoCalibrationError(next.reason);
-        report(scheduler.fail(next.reason, normalizedAnchors.length));
+        reportFailure(next.reason, scheduler.fail(next.reason, normalizedAnchors.length));
         return;
       }
       const scaleIssue = assetScaleIssue(asset, normalizedAnchors);
       if (scaleIssue) {
-        setAutoCalibrationError(scaleIssue);
-        report(scheduler.fail(scaleIssue, normalizedAnchors.length));
+        reportFailure(scaleIssue, scheduler.fail(scaleIssue, normalizedAnchors.length));
         return;
       }
+      // REVALIDAÇÃO vs PRIMEIRA CALIBRAÇÃO. A medição nova (âncoras OCR
+      // frescas) é comparada com a reta VIGENTE — é a única checagem
+      // INDEPENDENTE capaz de flagrar autoescala do Profit.
+      const previousCalibration = calibrationRefFull.current;
+      const drift = previousCalibration.usable
+        ? calibrationDrift(previousCalibration, normalizedAnchors)
+        : { stale: true, maxDriftPx: Number.POSITIVE_INFINITY };
+      lastCalibrationRefreshRef.current = Date.now();
+      setAnchors(next.anchors);
+      setAutoCalibrationError(null);
+      report(scheduler.succeed(next.anchors.length));
+
+      if (previousCalibration.usable && !drift.stale) {
+        // Escala CONFIRMADA no mesmo lugar: refresh silencioso. A série, a
+        // operação em curso e o snapshot continuam intactos — recomeçar aqui
+        // seria destruir leitura boa a cada 8 s.
+        return;
+      }
+
       // A escala real entra em vigor DAQUI PARA FRENTE. Os candles lidos em
-      // modo geométrico não viram preço retroativo e nada é confirmado
-      // retroativamente: a série de preço recomeça neste instante.
+      // modo geométrico (ou sob a régua antiga) não viram preço retroativo e
+      // nada é confirmado retroativamente: a série recomeça neste instante.
       reconstructorRef.current = new CandleReconstructor(asset);
       entryMachineRef.current.reset();
       setCandles([]);
@@ -1255,9 +1311,13 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
       // primeira leitura não é comparada com a escala anterior.
       lastTrustedPriceRef.current = null;
       divergenceStreakRef.current = 0;
-      setAnchors(next.anchors);
-      setAutoCalibrationError(null);
-      report(scheduler.succeed(next.anchors.length));
+      if (previousCalibration.usable) {
+        appendLog(
+          `Autoescala do Profit detectada (desvio ${drift.maxDriftPx.toFixed(1)} px): régua atualizada por ${response.model} e série reiniciada no novo referencial.`,
+          "warn",
+        );
+        return;
+      }
       appendLog(
         `Escala calibrada por ${response.model}: ${next.anchors
           .map((anchor) => anchor.raw)
@@ -1266,8 +1326,7 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : "Falha na calibração automática.";
-      setAutoCalibrationError(message);
-      report(scheduler.fail(message));
+      reportFailure(message, scheduler.fail(message));
     } finally {
       calibrationBusyRef.current = false;
       setAutoCalibrating(false);
@@ -1307,14 +1366,32 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
     void attemptCalibration();
   }, [appendLog, attemptCalibration, chart.videoRef, timeframeConfirmed]);
 
-  /** Fila paralela de recalibração — nunca para até conseguir. */
+  /**
+   * Fila paralela da escala. Enquanto NÃO calibrada, tenta com backoff até
+   * conseguir. Depois de calibrada ela NÃO desliga: reconfere a régua a cada
+   * CALIBRATION_REFRESH_MS, porque a autoescala do Profit invalida a
+   * conversão pixel→preço sem nenhum outro sinal observável.
+   */
   useEffect(() => {
-    if (chart.status !== "capturando" || calibration.usable) return;
+    if (chart.status !== "capturando") return;
     const timer = setInterval(() => {
-      if (schedulerRef.current.shouldAttempt(Date.now())) void attemptCalibration();
+      if (calibrationBusyRef.current) return;
+      const now = Date.now();
+      if (!calibrationRefUsable.current) {
+        if (schedulerRef.current.shouldAttempt(now)) void attemptCalibration();
+        return;
+      }
+      // Revalidação periódica só faz sentido com a análise RODANDO: fora dela
+      // não há preço sendo publicado e cada tentativa custa uma chamada de
+      // visão na GPU.
+      if (!sessionActiveRef.current) return;
+      if (now - lastCalibrationRefreshRef.current >= CALIBRATION_REFRESH_MS) {
+        lastCalibrationRefreshRef.current = now;
+        void attemptCalibration();
+      }
     }, 1_000);
     return () => clearInterval(timer);
-  }, [attemptCalibration, calibration.usable, chart.status]);
+  }, [attemptCalibration, chart.status]);
 
   /** Ajuste manual da região da escala (fallback, sem travar a análise). */
   const adjustScaleRegion = useCallback(
@@ -1416,9 +1493,34 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
       store.runDailyLearning(learningDate, techniqueSnapshotRef.current);
     }
     appendLog("Sessão encerrada. Nenhuma ordem foi enviada à corretora.", "info");
+    // ENCERRAR É O FECHAMENTO EXPLÍCITO do sinal. Sem isso o Gerenciamento
+    // continuaria exibindo CONFIRMADO com entrada/stop/3R/5R congelados de uma
+    // sessão morta, e "MERCADO AGORA" mostraria o último preço lido — parado,
+    // porém ainda marcado como confiável. Dado obsoleto nunca pode se passar
+    // por dado vivo.
+    snapshotRef.current = null;
+    setSignalSnapshot(null);
+    outcomeTrackerRef.current = null;
+    confirmedAnalysisRef.current = null;
+    entryMachineRef.current.reset();
+    setEntryState(entryMachineRef.current.current());
+    setOperation(null);
+    setManagementPaused(null);
+    lastOperationStatusRef.current = null;
+    lastTrustedPriceRef.current = null;
+    lastComputedPriceRef.current = null;
+    divergenceStreakRef.current = 0;
+    clockErrorGateRef.current.reset();
+    priceErrorGateRef.current.reset();
+    publishPriceInfo({
+      price: null,
+      trusted: false,
+      reason: "Sessão encerrada — sem leitura de preço ao vivo.",
+      at: null,
+    });
     sessionIdRef.current = null;
     segmentIdRef.current = null;
-  }, [appendLog, asset]);
+  }, [appendLog, asset, publishPriceInfo]);
 
   const calibrationMarks = frameSize
     ? anchors.map((anchor) => anchor.y / Math.max(1, frameSize.height))
@@ -1437,6 +1539,8 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
     diagnostics,
     /** Preço vivo (única fonte para Gerenciamento, preview e motor — §9). */
     priceInfo,
+    /** Motivo REAL quando a gestão da operação está pausada (nunca silenciosa). */
+    managementPaused,
     marketClock: liveMarketClock.snapshot(),
     frozenEntry: entryMachineRef.current.frozenEntry(),
     chat,

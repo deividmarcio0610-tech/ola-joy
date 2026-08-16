@@ -50,6 +50,8 @@ export interface AnalysisCockpitProps {
   /** Casas decimais reconhecidas na escala. */
   decimals?: number;
   sessionActive?: boolean;
+  /** Motivo real quando a gestão da operação confirmada está pausada. */
+  managementPaused?: string | null;
 }
 
 export function AnalysisCockpit({
@@ -71,6 +73,7 @@ export function AnalysisCockpit({
   tickSize = null,
   decimals = 0,
   sessionActive = false,
+  managementPaused = null,
 }: AnalysisCockpitProps) {
   // Replay: sem feed de preço vivo dedicado, o preço do último candle fechado
   // cumpre o papel — mesma fonte que alimentou o motor.
@@ -153,6 +156,7 @@ export function AnalysisCockpit({
           tickSize={tickSize}
           decimals={decimals}
           sessionActive={sessionActive}
+          managementPaused={managementPaused}
         />
       </div>
 

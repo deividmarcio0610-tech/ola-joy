@@ -39,9 +39,18 @@ export function createSignalSnapshot(input: {
   fiveR: number;
   setup: T4SetupId;
   confirmationCandle: Candle;
+  /**
+   * Sessão que produziu o sinal. Sem ela, ativo+minuto+direção podem SE
+   * REPETIR — depois de um reset de série, ou com o relógio em fallback local
+   * — gerando o mesmo signalId para um sinal genuinamente novo. Como som e
+   * alerta visual deduplicam permanentemente por signalId, o segundo sinal
+   * ficaria MUDO e sem alerta. O sufixo de sessão elimina a colisão.
+   */
+  sessionId?: string | null;
 }): TradeSignalSnapshot {
+  const scope = input.sessionId ? `_${input.sessionId}` : "";
   const snapshot: TradeSignalSnapshot = {
-    signalId: `sig_${input.asset}_${input.chartTimestamp}_${input.direction}`,
+    signalId: `sig_${input.asset}_${input.chartTimestamp}_${input.direction}${scope}`,
     version: STRATEGY_VERSION,
     asset: input.asset,
     chartTimestamp: input.chartTimestamp,

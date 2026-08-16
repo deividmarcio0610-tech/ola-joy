@@ -509,18 +509,23 @@ export const PRICE_PLAUSIBILITY = {
 /**
  * PREÇO DO PROFIT É SOBERANO (comando ao-vivo §1).
  *
- * Mesmo com a calibração aprovada, uma escala vencida (autoescala, janela
- * trocada, OCR que leu números de outro painel) produz preços que NÃO batem
- * com o gráfico — foi exatamente o bug "site mostra 202xxx, gráfico mostra
- * 173270". Antes de qualquer amostra virar candle/entrada/stop/alvo, o preço
- * derivado precisa passar três verificações contra o próprio frame:
+ * Verificações que o preço derivado precisa passar antes de virar
+ * candle/entrada/stop/alvo:
  *
- * 1. faixa plausível do ativo (WIN/WDO);
- * 2. faixa efetivamente VISÍVEL da calibração (com margem) — o marcador de
- *    último preço está dentro do recorte, então o preço convertido também
- *    precisa estar;
- * 3. continuidade: salto acima de 2% entre leituras consecutivas denuncia
+ * 1. número finito;
+ * 2. o pixel de origem está DENTRO do frame (um `priceY` fora do recorte
+ *    denuncia leitura corrompida do marcador de último preço);
+ * 3. faixa plausível do ativo (WIN/WDO);
+ * 4. continuidade: salto acima de 2% entre leituras consecutivas denuncia
  *    divergência de escala, nunca movimento real de 1 minuto do WIN.
+ *
+ * NÃO existe aqui checagem contra `visibleRange`: como `price = priceAt(y)` e
+ * `priceAt` é LINEAR na mesma calibração, todo y dentro do frame cai por
+ * construção dentro da faixa visível dessa mesma calibração — a comparação
+ * seria tautológica e nunca reprovaria nada. A defesa real contra escala
+ * VENCIDA (autoescala do Profit) é a revalidação periódica com âncoras OCR
+ * frescas + `calibrationDrift`, que compara a reta antiga com uma medição
+ * INDEPENDENTE. Ver `useLiveSession`/`useContinuousBacktest`.
  *
  * Modo geométrico não é avaliado aqui: não é preço real por definição e já
  * fica bloqueado por `priceReliable`.
@@ -530,6 +535,8 @@ export function pricePlausibility(input: {
   calibration: Calibration;
   price: number;
   frameHeight: number;
+  /** Linha de pixel que originou o preço — validada contra o frame. */
+  priceY?: number | null;
   lastPrice?: number | null;
 }): { ok: boolean; reason: string | null } {
   const { calibration, price } = input;
@@ -537,22 +544,22 @@ export function pricePlausibility(input: {
   if (!Number.isFinite(price)) {
     return { ok: false, reason: "Preço derivado não numérico — calibração inválida." };
   }
+  const y = input.priceY;
+  if (y != null) {
+    const margin = input.frameHeight * PRICE_PLAUSIBILITY.rangeMarginFraction;
+    if (!Number.isFinite(y) || y < -margin || y > input.frameHeight + margin) {
+      return {
+        ok: false,
+        reason: `Marcador de preço lido fora do frame (y=${Math.round(y)}, altura ${Math.round(input.frameHeight)}) — leitura descartada.`,
+      };
+    }
+  }
   const expected = ASSET_PRICE_RANGES.find((range) => range.pattern.test(input.asset.trim()));
   if (expected && (price < expected.min || price > expected.max)) {
     return {
       ok: false,
       reason: `Preço ${price} fora da faixa plausível do ${expected.label} (${expected.min}–${expected.max}) — escala rejeitada.`,
     };
-  }
-  const range = visibleRange(calibration, input.frameHeight);
-  if (range) {
-    const margin = (range.max - range.min) * PRICE_PLAUSIBILITY.rangeMarginFraction;
-    if (price < range.min - margin || price > range.max + margin) {
-      return {
-        ok: false,
-        reason: `Preço ${price} fora da região visível do gráfico (${range.min}–${range.max}) — calibração vencida.`,
-      };
-    }
   }
   const last = input.lastPrice;
   if (last != null && Number.isFinite(last) && last > 0) {

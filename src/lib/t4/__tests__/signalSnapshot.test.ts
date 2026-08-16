@@ -21,6 +21,26 @@ function build() {
 }
 
 describe("TradeSignalSnapshot (comando §7)", () => {
+  it("signalId inclui a sessão: mesmo minuto+direção após reset NÃO colide", () => {
+    const base = {
+      asset: "WINFUT",
+      chartTimestamp: candle.t,
+      direction: "COMPRA" as const,
+      entry: 100,
+      initialStop: 95,
+      threeR: 115,
+      fiveR: 125,
+      setup: "TREND_FIRST_PULLBACK" as const,
+      confirmationCandle: candle,
+    };
+    const primeiro = createSignalSnapshot({ ...base, sessionId: "visual_1" });
+    const segundo = createSignalSnapshot({ ...base, sessionId: "visual_2" });
+    // Sem o escopo de sessão os dois teriam o MESMO id e o segundo sinal
+    // ficaria sem som e sem alerta visual (dedupe permanente por signalId).
+    expect(primeiro.signalId).not.toBe(segundo.signalId);
+    expect(primeiro.signalId).toContain("visual_1");
+  });
+
   it("carrega signalId, versão T4.0.0 e níveis congelados", () => {
     const snapshot = build();
     expect(snapshot.signalId).toBe(`sig_WINFUT_${candle.t}_COMPRA`);

@@ -5,6 +5,7 @@ import {
   mkdirSync,
   readFileSync,
   readdirSync,
+  realpathSync,
   statSync,
   writeFileSync,
 } from "node:fs";
@@ -46,6 +47,16 @@ export function guardPath(input: string, { forWrite = false } = {}): string {
   const target = resolve(root, input);
   if (target !== root && !target.startsWith(root + sep)) {
     throw new Error(`Caminho fora do diretório permitido do projeto: ${input}`);
+  }
+  // `resolve` é LÉXICO: não segue symlink. Sem esta checagem, um link dentro
+  // do projeto apontando para /etc, ~/.ssh ou o .env passaria no teste de
+  // prefixo acima e seria lido/escrito normalmente.
+  if (existsSync(target)) {
+    const real = realpathSync(target);
+    const realRoot = realpathSync(root);
+    if (real !== realRoot && !real.startsWith(realRoot + sep)) {
+      throw new Error(`Caminho resolve para fora do projeto (symlink): ${input}`);
+    }
   }
   const rel = relative(root, target).split(sep).join("/");
   for (const pattern of DENY_PATH_PATTERNS) {
@@ -327,10 +338,15 @@ export function applyChange(changeId: string): AdminChangeRecord {
     throw new Error(`Alteração ${changeId} não está em estado PROPOSED (${record.status}).`);
   }
   const backups = backupsDir(changeId);
-  for (const file of record.files) {
+  for (const [index, file] of record.files.entries()) {
     const target = guardPath(file.path, { forWrite: true });
     if (existsSync(target)) {
-      const backupPath = join(backups, file.path.replace(/[/\\]/g, "__"));
+      // Prefixo por índice: "a/b.ts" e "a__b.ts" achatariam para o MESMO nome
+      // e um snapshot sobrescreveria o outro.
+      const backupPath = join(
+        backups,
+        `${String(index).padStart(3, "0")}__${file.path.replace(/[/\\]/g, "__")}`,
+      );
       copyFileSync(target, backupPath);
     }
   }
@@ -358,6 +374,18 @@ export function revertChange(changeId: string): AdminChangeRecord {
   if (!record) throw new Error(`Alteração não encontrada: ${changeId}`);
   if (record.status !== "APPLIED") {
     throw new Error(`Somente alterações APPLIED podem ser revertidas (${record.status}).`);
+  }
+  // O reverter restaura o conteúdo ANTERIOR. Se o arquivo mudou depois do
+  // apply (outra alteração, edição manual, deploy), sobrescrever cegamente
+  // apagaria trabalho que ninguém pediu para descartar.
+  for (const file of record.files) {
+    const target = guardPath(file.path, { forWrite: true });
+    const current = existsSync(target) ? readFileSync(target, "utf8") : "";
+    if (current !== file.after) {
+      throw new Error(
+        `Reversão bloqueada: ${file.path} foi alterado depois desta aplicação. Revise o arquivo manualmente — reverter agora descartaria mudanças posteriores.`,
+      );
+    }
   }
   for (const file of record.files) {
     const target = guardPath(file.path, { forWrite: true });

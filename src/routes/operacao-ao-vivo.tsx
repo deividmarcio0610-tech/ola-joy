@@ -264,6 +264,7 @@ function LivePage() {
         tickSize={live.calibration.tickSize}
         decimals={live.calibration.decimals}
         sessionActive={live.sessionActive}
+        managementPaused={live.managementPaused}
         chat={live.chat}
         aiProvider={live.aiProvider}
       />

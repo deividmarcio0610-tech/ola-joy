@@ -803,6 +803,7 @@ export function useContinuousBacktest(asset: string) {
           fiveR: result.plan.target2,
           setup: result.t4.setup,
           confirmationCandle: currentCandle,
+          sessionId: segmentIdRef.current ?? sessionIdRef.current,
         });
         snapshotRef.current = snapshot;
         setSignalSnapshot(snapshot);

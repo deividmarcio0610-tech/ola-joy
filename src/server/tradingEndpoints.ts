@@ -30,6 +30,32 @@ async function body<T>(request: Request): Promise<T> {
   return (await request.json()) as T;
 }
 
+/**
+ * PROMOÇÃO DE TÉCNICA É ATO ADMINISTRATIVO.
+ *
+ * Trocar a técnica de PRODUÇÃO muda o que o motor usa para autorizar entradas,
+ * então exige o mesmo ADMIN_TOKEN de /claude e /erros. Os demais endpoints de
+ * persistência continuam abertos porque é o próprio navegador do analisador
+ * que grava sessões/candles/eventos, e ele não carrega credencial.
+ */
+function adminDenied(request: Request): Response | null {
+  const configured = process.env["ADMIN_TOKEN"]?.trim();
+  if (!configured) {
+    return json(
+      {
+        error:
+          "Promoção de técnica desativada: defina ADMIN_TOKEN no .env da VPS para autorizar mudanças na técnica de produção.",
+      },
+      503,
+    );
+  }
+  const provided = request.headers.get("x-admin-token")?.trim();
+  if (!provided || provided !== configured) {
+    return json({ error: "Não autorizado. Promoção de técnica exige token de admin." }, 401);
+  }
+  return null;
+}
+
 export async function handleTradingRequest(request: Request): Promise<Response | null> {
   const path = new URL(request.url).pathname.replace(/\/+$/, "") || "/";
   if (!path.startsWith("/api/trading/") && path !== "/api/trading") return null;
@@ -49,6 +75,8 @@ export async function handleTradingRequest(request: Request): Promise<Response |
       return json({ ok: true });
     }
     if (request.method === "POST" && path === "/api/trading/technique-promote") {
+      const denied = adminDenied(request);
+      if (denied) return denied;
       const payload = await body<{ candidateId?: string }>(request);
       if (!payload.candidateId) return json({ error: "candidateId é obrigatório." }, 400);
       return json({ ok: true, technique: promoteTechniqueCandidate(payload.candidateId) });

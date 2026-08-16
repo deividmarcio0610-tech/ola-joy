@@ -163,6 +163,35 @@ describe("gerenciamento ao vivo — view-model (comando gerenciamento §12)", ()
     expect(buildManagementView(input)).toEqual(buildManagementView(input));
   });
 
+  it("gestão pausada por preço não confiável aparece explicitamente (auditoria #4)", () => {
+    const view = buildManagementView({
+      sessionActive: true,
+      analysis: analysisWithPlan(173_500),
+      snapshot: frozenSnapshot(),
+      priceInfo: UNTRUSTED,
+      tickSize: 5,
+      decimals: 0,
+      managementPaused: "PREÇO NÃO CONFIÁVEL — gestão da operação pausada.",
+    });
+    // Os níveis congelados continuam visíveis…
+    expect(view.entry?.value).toBe("173270");
+    // …mas o card diz que stop/3R/5R NÃO estão sendo avaliados.
+    expect(view.managementPausedReason).toContain("gestão da operação pausada");
+  });
+
+  it("sem sinal confirmado não existe gestão para pausar", () => {
+    const view = buildManagementView({
+      sessionActive: true,
+      analysis: analysisWithPlan(173_250),
+      snapshot: null,
+      priceInfo: UNTRUSTED,
+      tickSize: 5,
+      decimals: 0,
+      managementPaused: "qualquer motivo",
+    });
+    expect(view.managementPausedReason).toBeNull();
+  });
+
   it("arredondamento pelo incremento real: engine e gerenciamento batem (§9)", () => {
     const view = buildManagementView({
       sessionActive: true,

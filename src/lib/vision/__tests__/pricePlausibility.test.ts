@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   calibrateFromAnchors,
+  calibrationDrift,
   geometricCalibration,
+  priceAt,
   pricePlausibility,
   roundToTick,
   type ScaleAnchor,
@@ -33,18 +35,57 @@ describe("plausibilidade do preço (comando ao-vivo §1 — escala errada)", () 
     expect(result.reason).toBeNull();
   });
 
-  it("REJEITA o bug real: site mostrando ~202xxx com gráfico em ~173270", () => {
-    // Escala vencida/errada converteria o Y do marcador para ~202000 — muito
-    // fora da região visível (~172.6k–174.1k). Nunca pode virar candle/nível.
+  it("rejeita marcador de preço lido FORA do frame (leitura corrompida)", () => {
     const result = pricePlausibility({
       asset: "WINFUT",
       calibration: winCalibration(),
-      price: 202_000,
+      price: 173_270,
       frameHeight: 600,
-      lastPrice: null,
+      priceY: 1_400, // muito além da altura do recorte
     });
     expect(result.ok).toBe(false);
-    expect(result.reason).toContain("fora da região visível");
+    expect(result.reason).toContain("fora do frame");
+  });
+
+  /**
+   * REGRESSÃO DA AUDITORIA: a antiga checagem contra `visibleRange` era
+   * TAUTOLÓGICA — como `price = priceAt(y)` é linear na MESMA calibração,
+   * todo y dentro do frame cai dentro da faixa dessa calibração. Ela nunca
+   * reprovava nada em produção (o teste antigo só passava porque injetava um
+   * preço que aquele caminho jamais produziria). A defesa real contra escala
+   * vencida é `calibrationDrift` com âncoras OCR NOVAS — medição independente.
+   */
+  it("preço derivado da própria régua está sempre na faixa dela — por isso a checagem antiga era inerte", () => {
+    const calibration = winCalibration();
+    for (const y of [0, 150, 300, 450, 600]) {
+      const price = priceAt(calibration, y)!;
+      expect(pricePlausibility({ asset: "WINFUT", calibration, price, frameHeight: 600 }).ok).toBe(
+        true,
+      );
+    }
+  });
+
+  it("DETECTA escala vencida: âncoras novas do Profit não batem com a régua antiga", () => {
+    const antiga = winCalibration();
+    // O Profit autoescalou: os mesmos preços agora aparecem em outras linhas.
+    const frescas: ScaleAnchor[] = [
+      { y: 100, price: 176_000, raw: "176.000", source: "ocr", confidence: 0.95 },
+      { y: 300, price: 175_500, raw: "175.500", source: "ocr", confidence: 0.95 },
+      { y: 500, price: 175_000, raw: "175.000", source: "ocr", confidence: 0.95 },
+    ];
+    const drift = calibrationDrift(antiga, frescas);
+    expect(drift.stale).toBe(true);
+    expect(drift.maxDriftPx).toBeGreaterThan(2.5);
+  });
+
+  it("escala ESTÁVEL não é marcada como vencida — refresh não pode reiniciar a série à toa", () => {
+    const antiga = winCalibration();
+    const frescas: ScaleAnchor[] = [
+      { y: 100.4, price: 173_900, raw: "173.900", source: "ocr", confidence: 0.95 },
+      { y: 300.2, price: 173_400, raw: "173.400", source: "ocr", confidence: 0.95 },
+      { y: 499.7, price: 172_900, raw: "172.900", source: "ocr", confidence: 0.95 },
+    ];
+    expect(calibrationDrift(antiga, frescas).stale).toBe(false);
   });
 
   it("rejeita preço fora da faixa plausível do ativo (escala de outro painel)", () => {

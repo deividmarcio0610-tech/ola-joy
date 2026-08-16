@@ -42,6 +42,12 @@ export interface ManagementViewInput {
   priceInfo: LivePriceInfo;
   tickSize: number | null;
   decimals: number;
+  /**
+   * Motivo real quando a GESTÃO da operação confirmada está pausada (preço não
+   * confiável). Enquanto pausada, o rastreador não avalia stop/3R/5R — a UI
+   * precisa dizer isso em vez de parecer uma gestão saudável.
+   */
+  managementPaused?: string | null;
 }
 
 export interface ManagementLevel {
@@ -69,6 +75,8 @@ export interface ManagementView {
   runner: string | null;
   signalId: string | null;
   setup: string | null;
+  /** Preenchido só quando existe operação confirmada com gestão pausada. */
+  managementPausedReason: string | null;
 }
 
 export function formatManagedPrice(
@@ -105,6 +113,7 @@ export function buildManagementView(input: ManagementViewInput): ManagementView 
       runner: "ESTRUTURAL",
       signalId: snapshot.signalId,
       setup: snapshot.setup,
+      managementPausedReason: input.managementPaused ?? null,
     };
   }
 
@@ -126,5 +135,7 @@ export function buildManagementView(input: ManagementViewInput): ManagementView 
     runner: null,
     signalId: null,
     setup: null,
+    // Sem sinal confirmado não existe gestão para pausar.
+    managementPausedReason: null,
   };
 }

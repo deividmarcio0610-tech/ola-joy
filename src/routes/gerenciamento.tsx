@@ -63,6 +63,7 @@ function ManagementPage() {
         tickSize={live.calibration.tickSize}
         decimals={live.calibration.decimals}
         sessionActive={live.sessionActive}
+        managementPaused={live.managementPaused}
       />
 
       <TradeManagementCard

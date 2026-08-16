@@ -87,7 +87,9 @@ export function computeT4Progress(input: ProgressInput): T4Progress {
 
   const structureRead =
     analysis !== null &&
-    analysis.evidences.some((item) => item.group === "estrutura" && item.state !== "ausente");
+    (analysis.evidences ?? []).some(
+      (item) => item.group === "estrutura" && item.state !== "ausente",
+    );
   const sequenceStages = analysis?.sequence?.stages ?? [];
   const stageMet = (stage: string) =>
     sequenceStages.some((item) => item.stage === stage && item.met);
