@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ModuleShell } from "@/components/module-shell";
 
 export const Route = createFileRoute("/_authenticated/auditoria")({
-  head: () => ({ meta: [{ title: "Auditoria · VALETECH" }] }),
+  head: () => ({ meta: [{ title: "Auditoria · VisionGuard AI" }] }),
   component: Audit,
 });
 
@@ -24,11 +24,17 @@ function Audit() {
   });
 
   return (
-    <ModuleShell icon={ScrollText} title="Auditoria" subtitle="Trilha de eventos e alterações recentes." status="operacional">
+    <ModuleShell
+      icon={ScrollText}
+      title="Auditoria"
+      subtitle="Trilha de eventos e alterações recentes."
+      status="operacional"
+    >
       <div className="rounded-xl border border-border bg-card/40">
         {isLoading ? (
           <div className="flex items-center justify-center p-10 text-muted-foreground">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />Carregando…
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Carregando…
           </div>
         ) : !data || data.length === 0 ? (
           <div className="p-10 text-center text-sm text-muted-foreground">Sem eventos.</div>
@@ -50,7 +56,9 @@ function Audit() {
                   <td className="px-4 py-2">{r.title}</td>
                   <td className="px-4 py-2 text-muted-foreground">{r.status}</td>
                   <td className="px-4 py-2 text-muted-foreground">{r.priority}</td>
-                  <td className="px-4 py-2 text-muted-foreground">{new Date(r.updated_at).toLocaleString("pt-BR")}</td>
+                  <td className="px-4 py-2 text-muted-foreground">
+                    {new Date(r.updated_at).toLocaleString("pt-BR")}
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -53,7 +53,9 @@ export function AlertList({ alerts, onAcknowledge, onResolve, onOpen }: Props) {
                   )}
                 </div>
                 <div className="mt-1 font-bold text-foreground truncate">{a.title}</div>
-                {a.message && <div className="text-[11px] opacity-80 line-clamp-2">{a.message}</div>}
+                {a.message && (
+                  <div className="text-[11px] opacity-80 line-clamp-2">{a.message}</div>
+                )}
                 <div className="mt-1 flex items-center gap-1 text-[10px] opacity-70">
                   <Clock className="h-3 w-3" />
                   {new Date(a.created_at).toLocaleTimeString("pt-BR")}

@@ -1,8 +1,28 @@
 const BANDS = [
-  { label: "Baixo", range: "0–24", tone: "bg-emerald-500", text: "text-emerald-600 dark:text-emerald-300" },
-  { label: "Médio", range: "25–49", tone: "bg-amber-500", text: "text-amber-600 dark:text-amber-300" },
-  { label: "Alto", range: "50–74", tone: "bg-orange-500", text: "text-orange-600 dark:text-orange-300" },
-  { label: "Crítico", range: "75–100", tone: "bg-rose-500", text: "text-rose-600 dark:text-rose-300" },
+  {
+    label: "Baixo",
+    range: "0–24",
+    tone: "bg-emerald-500",
+    text: "text-emerald-600 dark:text-emerald-300",
+  },
+  {
+    label: "Médio",
+    range: "25–49",
+    tone: "bg-amber-500",
+    text: "text-amber-600 dark:text-amber-300",
+  },
+  {
+    label: "Alto",
+    range: "50–74",
+    tone: "bg-orange-500",
+    text: "text-orange-600 dark:text-orange-300",
+  },
+  {
+    label: "Crítico",
+    range: "75–100",
+    tone: "bg-rose-500",
+    text: "text-rose-600 dark:text-rose-300",
+  },
 ];
 
 /**
@@ -18,9 +38,7 @@ export function riskBandForScore(score: number): (typeof BANDS)[number] {
 
 export function RiskScoreLegend({ className = "" }: { className?: string }) {
   return (
-    <div
-      className={`rounded-md border border-border/60 bg-muted/30 p-2 ${className}`}
-    >
+    <div className={`rounded-md border border-border/60 bg-muted/30 p-2 ${className}`}>
       <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
         Legenda do score de risco
       </div>

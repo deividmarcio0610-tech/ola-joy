@@ -65,10 +65,7 @@ export function ExecutiveSummaryCard({ analysis }: { analysis: AnalysisV2 }) {
                     → {riskAfter} após correções
                   </span>
                 </div>
-                <Progress
-                  value={riskScore}
-                  className="h-2 [&>div]:bg-rose-500"
-                />
+                <Progress value={riskScore} className="h-2 [&>div]:bg-rose-500" />
               </div>
               <div className="space-y-1">
                 <div className="text-xs text-muted-foreground">Pontuação geral</div>
@@ -80,7 +77,6 @@ export function ExecutiveSummaryCard({ analysis }: { analysis: AnalysisV2 }) {
         })()}
 
         <RiskScoreLegend />
-
 
         <div className="grid gap-2 text-sm sm:grid-cols-2">
           <div className="flex items-center gap-2">

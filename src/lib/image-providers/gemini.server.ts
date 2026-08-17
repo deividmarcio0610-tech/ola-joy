@@ -97,8 +97,9 @@ export class GeminiImageProvider implements ImageProvider {
         };
       }
 
-      const parts = (json as { candidates?: Array<{ content?: { parts?: Array<Record<string, unknown>> } }> })
-        ?.candidates?.[0]?.content?.parts ?? [];
+      const parts =
+        (json as { candidates?: Array<{ content?: { parts?: Array<Record<string, unknown>> } }> })
+          ?.candidates?.[0]?.content?.parts ?? [];
       const imagePart = parts.find(
         (p) =>
           (p as { inline_data?: { data?: string } }).inline_data?.data ||

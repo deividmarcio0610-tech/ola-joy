@@ -14,12 +14,7 @@ export function calculateDistanceKm(
   return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-export function calculateBearing(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number,
-): number {
+export function calculateBearing(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const toRad = (v: number) => (v * Math.PI) / 180;
   const toDeg = (v: number) => (v * 180) / Math.PI;
   const dLon = toRad(lon2 - lon1);

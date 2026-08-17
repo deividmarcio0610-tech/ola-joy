@@ -10,7 +10,7 @@ import { Sparkles, RefreshCw, Loader2, Activity, CheckCircle2, XCircle } from "l
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/image-providers")({
-  head: () => ({ meta: [{ title: "Provedores de Imagem · VALETECH" }] }),
+  head: () => ({ meta: [{ title: "Provedores de Imagem · VisionGuard AI" }] }),
   component: ImageProvidersAdmin,
 });
 
@@ -64,20 +64,31 @@ async function authHeader() {
 function ImageProvidersAdmin() {
   const qc = useQueryClient();
 
-  const { data: diag, isLoading, refetch, isFetching } = useQuery({
+  const {
+    data: diag,
+    isLoading,
+    refetch,
+    isFetching,
+  } = useQuery({
     queryKey: ["image_providers_diagnostic"],
     queryFn: async () => {
-      const headers = await authHeader();
-      const res = await fetch("/api/iris/providers-diagnostic", { headers });
-      if (!res.ok) throw new Error(await res.text());
-      const body = (await res.json()) as { providers: DiagnosticRow[] };
-      return body.providers;
+      // Diagnóstico agora vive em /admin/ia-vps (arquitetura VPS).
+      // Mantemos a listagem local via Supabase para configuração dos provedores.
+      const { data, error } = await supabase.from("image_providers").select("*");
+      if (error) throw error;
+      return (data ?? []) as unknown as DiagnosticRow[];
     },
   });
 
   const update = useMutation({
-    mutationFn: async (p: { id: string; patch: Partial<Record<string, string | number | boolean | null>> }) => {
-      const { error } = await supabase.from("image_providers").update(p.patch as never).eq("id", p.id);
+    mutationFn: async (p: {
+      id: string;
+      patch: Partial<Record<string, string | number | boolean | null>>;
+    }) => {
+      const { error } = await supabase
+        .from("image_providers")
+        .update(p.patch as never)
+        .eq("id", p.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -88,16 +99,9 @@ function ImageProvidersAdmin() {
   });
 
   const test = useMutation({
-    mutationFn: async (providerName: string) => {
-      const headers = { ...(await authHeader()), "Content-Type": "application/json" };
-      const res = await fetch("/api/iris/providers-diagnostic", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ provider: providerName }),
-      });
-      const body = (await res.json()) as ProbeInfo & { error?: string };
-      if (!res.ok) throw new Error(body.error ?? "Falha na verificação.");
-      return body;
+    mutationFn: async (providerName: string): Promise<ProbeInfo> => {
+      const { callVpsRoute } = await import("@/lib/vps-ai/call");
+      return await callVpsRoute<ProbeInfo>("/api/vps/status", { provider: providerName });
     },
     onSuccess: (r) => {
       if (r.ok) toast.success(`${r.provider.toUpperCase()}: ${r.message} (${r.durationMs}ms)`);
@@ -110,7 +114,12 @@ function ImageProvidersAdmin() {
   const resetBreaker = (id: string) =>
     update.mutate({
       id,
-      patch: { current_status: "closed", consecutive_failures: 0, blocked_until: null, last_error_type: null },
+      patch: {
+        current_status: "closed",
+        consecutive_failures: 0,
+        blocked_until: null,
+        last_error_type: null,
+      },
     });
 
   return (
@@ -124,7 +133,13 @@ function ImageProvidersAdmin() {
         <div className="text-sm text-muted-foreground">
           Status em tempo real das APIs de geração de imagem.
         </div>
-        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching} className="gap-1">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => refetch()}
+          disabled={isFetching}
+          className="gap-1"
+        >
           <RefreshCw className={`h-3 w-3 ${isFetching ? "animate-spin" : ""}`} /> Atualizar
         </Button>
       </div>
@@ -146,9 +161,13 @@ function ImageProvidersAdmin() {
                     <div className="font-semibold uppercase">{p.provider_name}</div>
                     {configured ? (
                       online ? (
-                        <Badge className="gap-1 bg-emerald-600 text-white"><CheckCircle2 className="h-3 w-3" /> Online</Badge>
+                        <Badge className="gap-1 bg-emerald-600 text-white">
+                          <CheckCircle2 className="h-3 w-3" /> Online
+                        </Badge>
                       ) : (
-                        <Badge variant="destructive" className="gap-1"><XCircle className="h-3 w-3" /> Falhando</Badge>
+                        <Badge variant="destructive" className="gap-1">
+                          <XCircle className="h-3 w-3" /> Falhando
+                        </Badge>
                       )
                     ) : (
                       <Badge variant="secondary">Sem API key</Badge>
@@ -170,7 +189,10 @@ function ImageProvidersAdmin() {
                         type="number"
                         defaultValue={p.priority}
                         onBlur={(e) =>
-                          update.mutate({ id: p.id, patch: { priority: Number(e.target.value) || 100 } })
+                          update.mutate({
+                            id: p.id,
+                            patch: { priority: Number(e.target.value) || 100 },
+                          })
                         }
                       />
                     </label>
@@ -190,7 +212,12 @@ function ImageProvidersAdmin() {
                     >
                       <Activity className="h-3 w-3" /> Testar conexão
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => resetBreaker(p.id)} className="gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => resetBreaker(p.id)}
+                      className="gap-1"
+                    >
                       <RefreshCw className="h-3 w-3" /> Reset
                     </Button>
                   </div>
@@ -207,27 +234,41 @@ function ImageProvidersAdmin() {
                   <Field label="Modelo padrão" value={p.default_model} />
                   <Field label="Prévia" value={p.preview_model} />
                   <Field label="Final" value={p.final_model} />
-                  <Field label="Sucessos / Falhas" value={`${p.total_success ?? 0} / ${p.total_failure ?? 0}`} />
+                  <Field
+                    label="Sucessos / Falhas"
+                    value={`${p.total_success ?? 0} / ${p.total_failure ?? 0}`}
+                  />
                   <Field label="Último erro" value={p.last_error_type ?? "—"} />
                   <Field
                     label="Último sucesso"
-                    value={p.last_success_at ? new Date(p.last_success_at).toLocaleString("pt-BR") : "—"}
+                    value={
+                      p.last_success_at ? new Date(p.last_success_at).toLocaleString("pt-BR") : "—"
+                    }
                   />
                   <Field
                     label="Última falha"
-                    value={p.last_failure_at ? new Date(p.last_failure_at).toLocaleString("pt-BR") : "—"}
+                    value={
+                      p.last_failure_at ? new Date(p.last_failure_at).toLocaleString("pt-BR") : "—"
+                    }
                   />
                   <Field label="Notas" value={p.notes ?? "—"} />
                 </div>
 
                 {p.recentAttempts?.length > 0 && (
                   <div className="mt-3">
-                    <div className="mb-1 text-xs font-semibold text-muted-foreground">Últimas tentativas</div>
+                    <div className="mb-1 text-xs font-semibold text-muted-foreground">
+                      Últimas tentativas
+                    </div>
                     <div className="space-y-1">
                       {p.recentAttempts.map((a, i) => (
-                        <div key={i} className="rounded-md border border-border/40 bg-background/30 p-2 text-xs">
+                        <div
+                          key={i}
+                          className="rounded-md border border-border/40 bg-background/30 p-2 text-xs"
+                        >
                           <div className="flex flex-wrap gap-2">
-                            <Badge variant={a.status === "success" ? "default" : "destructive"}>{a.status}</Badge>
+                            <Badge variant={a.status === "success" ? "default" : "destructive"}>
+                              {a.status}
+                            </Badge>
                             <span>HTTP {a.http_status ?? "?"}</span>
                             <span>{a.error_type ?? "—"}</span>
                             <span>{a.duration_ms ?? "?"}ms</span>
@@ -252,8 +293,9 @@ function ImageProvidersAdmin() {
       )}
 
       <div className="mt-6 rounded-xl border border-border bg-card/30 p-4 text-xs text-muted-foreground">
-        Para ativar Stability, fal.ai, Replicate ou OpenAI, adicione a chave correspondente nos segredos
-        do backend (STABILITY_API_KEY, FAL_API_KEY, REPLICATE_API_TOKEN, OPENAI_API_KEY) e ligue o switch acima.
+        Para ativar Stability, fal.ai, Replicate ou OpenAI, adicione a chave correspondente nos
+        segredos do backend (STABILITY_API_KEY, FAL_API_KEY, REPLICATE_API_TOKEN, OPENAI_API_KEY) e
+        ligue o switch acima.
       </div>
     </ModuleShell>
   );

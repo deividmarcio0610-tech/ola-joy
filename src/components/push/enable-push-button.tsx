@@ -8,14 +8,8 @@ import {
   deletePushSubscription,
   sendTestPushToMe,
 } from "@/lib/push/push.functions";
-import {
-  VAPID_PUBLIC_KEY,
-  urlBase64ToUint8Array,
-} from "@/lib/push/vapid-public-key";
-import {
-  ensureServiceWorker,
-  canUsePush,
-} from "@/lib/push/sw-registration";
+import { VAPID_PUBLIC_KEY, urlBase64ToUint8Array } from "@/lib/push/vapid-public-key";
+import { ensureServiceWorker, canUsePush } from "@/lib/push/sw-registration";
 
 type PushState = "unsupported" | "denied" | "granted" | "default" | "unavailable";
 
@@ -49,7 +43,9 @@ export function EnablePushButton({ compact }: { compact?: boolean }) {
     setLoading(true);
     try {
       if (!canUsePush()) {
-        toast.error("Este navegador não suporta notificações push. Abra a versão publicada em HTTPS.");
+        toast.error(
+          "Este navegador não suporta notificações push. Abra a versão publicada em HTTPS.",
+        );
         return;
       }
       const perm = await Notification.requestPermission();
@@ -60,7 +56,9 @@ export function EnablePushButton({ compact }: { compact?: boolean }) {
       }
       const reg = await ensureServiceWorker();
       if (!reg) {
-        toast.error("Service Worker indisponível. Notificações push só funcionam no app publicado.");
+        toast.error(
+          "Service Worker indisponível. Notificações push só funcionam no app publicado.",
+        );
         return;
       }
       let sub = await reg.pushManager.getSubscription();
@@ -131,11 +129,25 @@ export function EnablePushButton({ compact }: { compact?: boolean }) {
   if (subscribed) {
     return (
       <div className="flex flex-wrap gap-2">
-        <Button variant="secondary" size={compact ? "sm" : "default"} onClick={sendTest} disabled={loading}>
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <BellRing className="h-4 w-4" />}
+        <Button
+          variant="secondary"
+          size={compact ? "sm" : "default"}
+          onClick={sendTest}
+          disabled={loading}
+        >
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <BellRing className="h-4 w-4" />
+          )}
           {compact ? "Testar" : "Enviar teste para este telefone"}
         </Button>
-        <Button variant="ghost" size={compact ? "sm" : "default"} onClick={disable} disabled={loading}>
+        <Button
+          variant="ghost"
+          size={compact ? "sm" : "default"}
+          onClick={disable}
+          disabled={loading}
+        >
           <BellOff className="h-4 w-4" />
           Desativar
         </Button>

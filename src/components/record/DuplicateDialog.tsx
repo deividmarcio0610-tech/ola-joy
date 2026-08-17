@@ -76,9 +76,7 @@ export function DuplicateDialog({
                       </span>
                     )}
                   </div>
-                  <div className="truncate text-sm font-medium">
-                    {c.title ?? "(sem título)"}
-                  </div>
+                  <div className="truncate text-sm font-medium">{c.title ?? "(sem título)"}</div>
                   <div className="truncate text-xs text-muted-foreground">
                     {[c.area, c.location].filter(Boolean).join(" — ")}
                   </div>
@@ -98,9 +96,7 @@ export function DuplicateDialog({
 
         <AlertDialogFooter>
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={onCreateAnyway}>
-            Criar mesmo assim
-          </AlertDialogAction>
+          <AlertDialogAction onClick={onCreateAnyway}>Criar mesmo assim</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

@@ -16,31 +16,21 @@ export function ApprovalScoreCard({ analysis }: { analysis: AnalysisV2 }) {
             <div className="text-xs text-muted-foreground">
               Score de risco atual (quanto maior, mais crítico)
             </div>
-            <div className="text-3xl font-bold text-rose-600 dark:text-rose-400">
-              {riskNow}
-            </div>
+            <div className="text-3xl font-bold text-rose-600 dark:text-rose-400">{riskNow}</div>
             <Progress value={riskNow} className="mt-1 h-2 [&>div]:bg-rose-500" />
           </div>
           <div>
-            <div className="text-xs text-muted-foreground">
-              Score de risco após correções
-            </div>
+            <div className="text-xs text-muted-foreground">Score de risco após correções</div>
             <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
               {riskAfter}
             </div>
-            <Progress
-              value={riskAfter}
-              className="mt-1 h-2 [&>div]:bg-emerald-500"
-            />
+            <Progress value={riskAfter} className="mt-1 h-2 [&>div]:bg-emerald-500" />
           </div>
         </div>
 
         <RiskScoreLegend />
 
-        {a.justificativa && (
-          <p className="text-sm text-muted-foreground">{a.justificativa}</p>
-        )}
-
+        {a.justificativa && <p className="text-sm text-muted-foreground">{a.justificativa}</p>}
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
@@ -48,9 +38,7 @@ export function ApprovalScoreCard({ analysis }: { analysis: AnalysisV2 }) {
               Pontos fortes
             </div>
             <ul className="space-y-1 text-sm">
-              {a.pontos_fortes.length === 0 && (
-                <li className="text-muted-foreground">—</li>
-              )}
+              {a.pontos_fortes.length === 0 && <li className="text-muted-foreground">—</li>}
               {a.pontos_fortes.map((p, i) => (
                 <li key={i} className="flex items-start gap-2">
                   <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />

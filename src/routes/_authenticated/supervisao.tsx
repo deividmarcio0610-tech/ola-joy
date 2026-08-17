@@ -3,7 +3,7 @@ import { Eye } from "lucide-react";
 import { RecordModule } from "@/components/record-module";
 
 export const Route = createFileRoute("/_authenticated/supervisao")({
-  head: () => ({ meta: [{ title: "Supervisão · VALETECH" }] }),
+  head: () => ({ meta: [{ title: "Supervisão · VisionGuard AI" }] }),
   component: () => (
     <RecordModule
       moduleKey="supervision"

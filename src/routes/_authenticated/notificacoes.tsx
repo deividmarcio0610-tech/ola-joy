@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ModuleShell } from "@/components/module-shell";
 
 export const Route = createFileRoute("/_authenticated/notificacoes")({
-  head: () => ({ meta: [{ title: "Notificações · VALETECH" }] }),
+  head: () => ({ meta: [{ title: "Notificações · VisionGuard AI" }] }),
   component: Notifs,
 });
 
@@ -37,11 +37,17 @@ function Notifs() {
   });
 
   return (
-    <ModuleShell icon={Bell} title="Notificações" subtitle="Central de avisos do sistema." status="operacional">
+    <ModuleShell
+      icon={Bell}
+      title="Notificações"
+      subtitle="Central de avisos do sistema."
+      status="operacional"
+    >
       <div className="rounded-xl border border-border bg-card/40">
         {isLoading ? (
           <div className="flex items-center justify-center p-10 text-muted-foreground">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />Carregando…
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Carregando…
           </div>
         ) : !data || data.length === 0 ? (
           <div className="p-10 text-center text-sm text-muted-foreground">
@@ -50,8 +56,13 @@ function Notifs() {
         ) : (
           <ul className="divide-y divide-border">
             {data.map((n) => (
-              <li key={n.id} className={`flex items-start gap-3 p-4 ${n.read_at ? "opacity-60" : ""}`}>
-                <div className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${n.read_at ? "bg-muted-foreground" : "bg-neon shadow-[0_0_8px_var(--neon)]"}`} />
+              <li
+                key={n.id}
+                className={`flex items-start gap-3 p-4 ${n.read_at ? "opacity-60" : ""}`}
+              >
+                <div
+                  className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${n.read_at ? "bg-muted-foreground" : "bg-neon shadow-[0_0_8px_var(--neon)]"}`}
+                />
                 <div className="flex-1">
                   <div className="font-medium">{n.title}</div>
                   {n.body && <p className="text-sm text-muted-foreground">{n.body}</p>}

@@ -1,12 +1,7 @@
 // Payload universal para o Relatório Técnico Kaisen.
 // Serializável (sem funções / classes) para permitir versionamento e comparação.
 
-export type BudgetTier =
-  | "muito_baixo"
-  | "baixo"
-  | "medio"
-  | "alto"
-  | "estrategico";
+export type BudgetTier = "muito_baixo" | "baixo" | "medio" | "alto" | "estrategico";
 
 export const BUDGET_TIER_LABEL: Record<BudgetTier, string> = {
   muito_baixo: "Muito Baixo (< R$ 5 mil)",
@@ -198,8 +193,8 @@ export interface ExecutiveSummary {
 
 export interface TechnicalReport {
   // capa
-  code: string;             // número único
-  version: number;          // 1, 2, 3...
+  code: string; // número único
+  version: number; // 1, 2, 3...
   title: string;
   status: "rascunho" | "revisao" | "aprovado" | "arquivado";
   company_logo_url?: string;
@@ -209,7 +204,7 @@ export interface TechnicalReport {
   executive_summary: ExecutiveSummary;
 
   original_image_url?: string;
-  marked_image_url?: string;   // mesma imagem com marcações renderizadas
+  marked_image_url?: string; // mesma imagem com marcações renderizadas
   markings: ImageMarking[];
 
   specialties: SpecialtyAnalysis[]; // até 14
@@ -227,7 +222,12 @@ export interface TechnicalReport {
     breakdown: { item: string; tier: BudgetTier }[];
   };
 
-  attachments: { name: string; kind: "foto" | "doc" | "checklist" | "comentario" | "historico"; url?: string; note?: string }[];
+  attachments: {
+    name: string;
+    kind: "foto" | "doc" | "checklist" | "comentario" | "historico";
+    url?: string;
+    note?: string;
+  }[];
   signatures: ReportSignature[];
 
   history: ReportVersionEntry[];

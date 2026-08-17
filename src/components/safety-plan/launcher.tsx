@@ -12,7 +12,14 @@ interface Props {
   className?: string;
 }
 
-export function SafetyPlanLauncher({ moduleKey, recordId, photoUrl, title, label, className }: Props) {
+export function SafetyPlanLauncher({
+  moduleKey,
+  recordId,
+  photoUrl,
+  title,
+  label,
+  className,
+}: Props) {
   const [open, setOpen] = useState(false);
   return (
     <>

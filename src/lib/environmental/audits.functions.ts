@@ -10,50 +10,68 @@ const SaveAuditInput = z.object({
   location: z.string().nullable().optional(),
   scope: z.array(z.string()).default([]),
   environmentType: z.string().nullable().optional(),
-  criticality: z.enum(["controlada","baixa","moderada","alta","muito_alta","critica"]).nullable().optional(),
+  criticality: z
+    .enum(["controlada", "baixa", "moderada", "alta", "muito_alta", "critica"])
+    .nullable()
+    .optional(),
   overallConfidence: z.number().int().min(0).max(100).nullable().optional(),
   summary: z.string().nullable().optional(),
   aiPayload: z.record(z.string(), z.unknown()).nullable().optional(),
   originalPhotoUrl: z.string().url().nullable().optional(),
-  findings: z.array(z.object({
-    sortIndex: z.number().int().default(0),
-    l1: z.string().nullable().optional(),
-    l2: z.string().nullable().optional(),
-    l3: z.string().nullable().optional(),
-    aspect: z.string().nullable().optional(),
-    impact: z.string().nullable().optional(),
-    mediumAffected: z.array(z.string()).default([]),
-    classification: z.string().nullable().optional(),
-    criticality: z.string().nullable().optional(),
-    evidenceType: z.string().nullable().optional(),
-    severity: z.number().int().min(1).max(5).nullable().optional(),
-    probability: z.number().int().min(1).max(5).nullable().optional(),
-    controlHierarchy: z.string().nullable().optional(),
-    proposals: z.array(z.unknown()).default([]),
-    skepticNotes: z.string().nullable().optional(),
-    indicators: z.array(z.string()).default([]),
-    requires: z.array(z.string()).default([]),
-  })).default([]),
-  actions: z.array(z.object({
-    tier: z.enum(["imediata","kaisen","engenharia","inovacao"]).default("kaisen"),
-    what: z.string().min(1),
-    why: z.string().nullable().optional(),
-    where_: z.string().nullable().optional(),
-    when_: z.string().nullable().optional(),
-    who: z.string().nullable().optional(),
-    how: z.string().nullable().optional(),
-    howMuch: z.enum(["muito_baixo","baixo","medio","alto","estrategico"]).nullable().optional(),
-    priority: z.enum(["baixa","media","alta","critica"]).default("media"),
-    indicator: z.string().nullable().optional(),
-  })).default([]),
-  attachments: z.array(z.object({
-    kind: z.enum(["image","pdf","spreadsheet","video","audio","other"]),
-    path: z.string(),
-    signedUrl: z.string().nullable().optional(),
-    filename: z.string(),
-    mime: z.string().nullable().optional(),
-    size: z.number().int().nullable().optional(),
-  })).default([]),
+  findings: z
+    .array(
+      z.object({
+        sortIndex: z.number().int().default(0),
+        l1: z.string().nullable().optional(),
+        l2: z.string().nullable().optional(),
+        l3: z.string().nullable().optional(),
+        aspect: z.string().nullable().optional(),
+        impact: z.string().nullable().optional(),
+        mediumAffected: z.array(z.string()).default([]),
+        classification: z.string().nullable().optional(),
+        criticality: z.string().nullable().optional(),
+        evidenceType: z.string().nullable().optional(),
+        severity: z.number().int().min(1).max(5).nullable().optional(),
+        probability: z.number().int().min(1).max(5).nullable().optional(),
+        controlHierarchy: z.string().nullable().optional(),
+        proposals: z.array(z.unknown()).default([]),
+        skepticNotes: z.string().nullable().optional(),
+        indicators: z.array(z.string()).default([]),
+        requires: z.array(z.string()).default([]),
+      }),
+    )
+    .default([]),
+  actions: z
+    .array(
+      z.object({
+        tier: z.enum(["imediata", "kaisen", "engenharia", "inovacao"]).default("kaisen"),
+        what: z.string().min(1),
+        why: z.string().nullable().optional(),
+        where_: z.string().nullable().optional(),
+        when_: z.string().nullable().optional(),
+        who: z.string().nullable().optional(),
+        how: z.string().nullable().optional(),
+        howMuch: z
+          .enum(["muito_baixo", "baixo", "medio", "alto", "estrategico"])
+          .nullable()
+          .optional(),
+        priority: z.enum(["baixa", "media", "alta", "critica"]).default("media"),
+        indicator: z.string().nullable().optional(),
+      }),
+    )
+    .default([]),
+  attachments: z
+    .array(
+      z.object({
+        kind: z.enum(["image", "pdf", "spreadsheet", "video", "audio", "other"]),
+        path: z.string(),
+        signedUrl: z.string().nullable().optional(),
+        filename: z.string(),
+        mime: z.string().nullable().optional(),
+        size: z.number().int().nullable().optional(),
+      }),
+    )
+    .default([]),
 });
 
 export const saveEnvAudit = createServerFn({ method: "POST" })
@@ -61,7 +79,7 @@ export const saveEnvAudit = createServerFn({ method: "POST" })
   .inputValidator((v: unknown) => SaveAuditInput.parse(v))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const code = `AMB-${new Date().toISOString().slice(0,7)}-${Math.random().toString(36).slice(2,8).toUpperCase()}`;
+    const code = `AMB-${new Date().toISOString().slice(0, 7)}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
     const { data: audit, error: e1 } = await supabase
       .from("environmental_audits")
       .insert({
@@ -130,8 +148,12 @@ export const saveEnvAudit = createServerFn({ method: "POST" })
 
     if (data.attachments.length) {
       const kindMap: Record<string, string> = {
-        image: "foto", pdf: "pdf", spreadsheet: "planilha",
-        video: "video", audio: "audio", other: "outro",
+        image: "foto",
+        pdf: "pdf",
+        spreadsheet: "planilha",
+        video: "video",
+        audio: "audio",
+        other: "outro",
       };
       const rows = data.attachments.map((att) => ({
         audit_id: audit.id,
@@ -155,7 +177,9 @@ export const listEnvAudits = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("environmental_audits")
-      .select("id, code, title, area, location, status, criticality, overall_confidence, summary, created_at")
+      .select(
+        "id, code, title, area, location, status, criticality, overall_confidence, summary, created_at",
+      )
       .order("created_at", { ascending: false })
       .limit(200);
     if (error) throw new Error(error.message);
@@ -168,9 +192,21 @@ export const getEnvAudit = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const [audit, findings, actions, attachments] = await Promise.all([
       context.supabase.from("environmental_audits").select("*").eq("id", data.id).single(),
-      context.supabase.from("environmental_findings").select("*").eq("audit_id", data.id).order("sort_index"),
-      context.supabase.from("environmental_actions").select("*").eq("audit_id", data.id).order("created_at"),
-      context.supabase.from("environmental_attachments").select("*").eq("audit_id", data.id).order("created_at"),
+      context.supabase
+        .from("environmental_findings")
+        .select("*")
+        .eq("audit_id", data.id)
+        .order("sort_index"),
+      context.supabase
+        .from("environmental_actions")
+        .select("*")
+        .eq("audit_id", data.id)
+        .order("created_at"),
+      context.supabase
+        .from("environmental_attachments")
+        .select("*")
+        .eq("audit_id", data.id)
+        .order("created_at"),
     ]);
     if (audit.error) throw new Error(audit.error.message);
     return {

@@ -23,8 +23,11 @@ function InspecaoPage() {
 export const Route = createFileRoute("/_authenticated/inspecao")({
   head: () => ({
     meta: [
-      { title: "Inspeção 5S · VALETECH" },
-      { name: "description", content: "Inspeção 5S com análise automática pela IA e comparação Antes/Depois." },
+      { title: "Inspeção 5S · VisionGuard AI" },
+      {
+        name: "description",
+        content: "Inspeção 5S com análise automática pela IA e comparação Antes/Depois.",
+      },
     ],
   }),
   component: InspecaoPage,

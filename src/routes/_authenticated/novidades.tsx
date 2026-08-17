@@ -8,7 +8,7 @@ import { APP_VERSION } from "@/lib/version";
 export const Route = createFileRoute("/_authenticated/novidades")({
   head: () => ({
     meta: [
-      { title: "Novidades e Atualizações · VALETECH" },
+      { title: "Novidades e Atualizações · VisionGuard AI" },
       {
         name: "description",
         content: "Histórico completo de versões do sistema com correções, melhorias e novidades.",
@@ -31,7 +31,9 @@ function NovidadesPage() {
         <h1 className="font-display text-2xl font-semibold text-glow">Novidades e Atualizações</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Versão instalada neste navegador:{" "}
-          <span className="rounded bg-neon/10 px-1.5 py-0.5 font-mono text-neon">v{APP_VERSION}</span>
+          <span className="rounded bg-neon/10 px-1.5 py-0.5 font-mono text-neon">
+            v{APP_VERSION}
+          </span>
         </p>
       </header>
 
@@ -42,10 +44,7 @@ function NovidadesPage() {
 
       <ol className="space-y-4">
         {data?.map((v) => (
-          <li
-            key={v.id}
-            className="rounded-lg border border-border bg-card/50 p-4"
-          >
+          <li key={v.id} className="rounded-lg border border-border bg-card/50 p-4">
             <div className="flex flex-wrap items-center gap-2">
               <Package className="h-4 w-4 text-neon" />
               <span className="font-mono text-lg font-semibold">v{v.version}</span>
@@ -75,9 +74,7 @@ function NovidadesPage() {
               <Sparkles className="h-4 w-4 text-neon" />
               {v.title}
             </h3>
-            {v.description && (
-              <p className="mt-1 text-sm text-muted-foreground">{v.description}</p>
-            )}
+            {v.description && <p className="mt-1 text-sm text-muted-foreground">{v.description}</p>}
             {v.release_notes.length > 0 && (
               <ul className="mt-3 space-y-1 text-sm">
                 {v.release_notes.map((n, i) => (

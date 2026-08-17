@@ -18,12 +18,30 @@ export const Route = createFileRoute("/api/public/lightning/recent")({
           const longitude = Number(url.searchParams.get("longitude"));
           const radiusKm = Number(url.searchParams.get("radiusKm") ?? 50);
           const minutes = Number(url.searchParams.get("minutes") ?? 60);
-          if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) throw new Error("coordenadas inválidas");
+          if (
+            !Number.isFinite(latitude) ||
+            latitude < -90 ||
+            latitude > 90 ||
+            !Number.isFinite(longitude) ||
+            longitude < -180 ||
+            longitude > 180
+          ) {
+            return new Response(
+              JSON.stringify({ success: false, error: "coordenadas inválidas", strikes: [] }),
+              { status: 400, headers: { ...cors, "Content-Type": "application/json" } },
+            );
+          }
           const provider = getLightningProvider();
           const health = await provider.healthCheck();
           if (!health.ok) {
             return new Response(
-              JSON.stringify({ success: true, provider: provider.name, enabled: false, message: health.message, strikes: [] }),
+              JSON.stringify({
+                success: true,
+                provider: provider.name,
+                enabled: false,
+                message: health.message,
+                strikes: [],
+              }),
               { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
             );
           }
@@ -40,8 +58,12 @@ export const Route = createFileRoute("/api/public/lightning/recent")({
           );
         } catch (err) {
           return new Response(
-            JSON.stringify({ success: false, error: err instanceof Error ? err.message : "erro", strikes: [] }),
-            { status: 400, headers: { ...cors, "Content-Type": "application/json" } },
+            JSON.stringify({
+              success: false,
+              error: err instanceof Error ? err.message : "erro",
+              strikes: [],
+            }),
+            { status: 502, headers: { ...cors, "Content-Type": "application/json" } },
           );
         }
       },

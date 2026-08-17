@@ -1,7 +1,7 @@
 // Chat da ValeTech IA no Kaizen — Fase 1:
 // - Envia foto
-// - Conversa (Gemini) para refinar correções
-// - Botão "Gerar imagem Depois" (OpenAI Images Edit via /api/iris/generate-corrected)
+// - Conversa (Ollama/VPS) para refinar correções
+// - Botão "Gerar imagem Depois" (VPS /v1/generate-after)
 // - Mostra Antes/Depois no próprio chat com CompareSlider
 // Sem versionamento múltiplo, sem storage persistente. Erros nunca derrubam a página.
 
@@ -13,16 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import {
-  ImagePlus,
-  Send,
-  Sparkles,
-  Trash2,
-  Download,
-  RefreshCw,
-  Loader2,
-  X,
-} from "lucide-react";
+import { ImagePlus, Send, Sparkles, Trash2, Download, RefreshCw, Loader2, X } from "lucide-react";
 import { CompareSlider } from "@/components/compare-slider";
 import { cn } from "@/lib/utils";
 
@@ -47,7 +38,9 @@ const uuid = () =>
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2);
 
-async function fileToBase64(file: File): Promise<{ base64: string; mimeType: string; dataUrl: string }> {
+async function fileToBase64(
+  file: File,
+): Promise<{ base64: string; mimeType: string; dataUrl: string }> {
   return new Promise((resolve, reject) => {
     const r = new FileReader();
     r.onload = () => {
@@ -70,7 +63,9 @@ export function KaizenIrisChat({ onClose }: { onClose?: () => void }) {
     },
   ]);
   const [input, setInput] = useState("");
-  const [photo, setPhoto] = useState<{ base64: string; mimeType: string; dataUrl: string } | null>(null);
+  const [photo, setPhoto] = useState<{ base64: string; mimeType: string; dataUrl: string } | null>(
+    null,
+  );
   const [corrections, setCorrections] = useState<SafetyCorrection[]>([]);
   const [sending, setSending] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -121,27 +116,25 @@ export function KaizenIrisChat({ onClose }: { onClose?: () => void }) {
     }
 
     try {
-      const { data: session } = await supabase.auth.getSession();
-      const token = session.session?.access_token;
-      if (!token) throw new Error("Faça login novamente.");
-
-      const res = await fetch("/api/iris/kaizen-chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          messages: [...messages, { role: "user", content: text }].map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
-          corrections: corrections.map((c) => ({ standard: c.standard, description: c.description })),
-          hasImage: !!photo,
-        }),
-      });
-      const data = (await res.json().catch(() => ({}))) as {
+      const { callVpsRoute } = await import("@/lib/vps-ai/call");
+      type KaizenResp = {
         assistantMessage?: string;
-        actions?: Array<{ type: string; correction?: { standard?: string; description: string }; description?: string }>;
+        actions?: Array<{
+          type: string;
+          correction?: { standard?: string; description: string };
+          description?: string;
+        }>;
         error?: string;
       };
+      const data: KaizenResp = await callVpsRoute<KaizenResp>("/api/vps/analisar", {
+        mode: "kaizen-chat",
+        messages: [...messages, { role: "user", content: text }].map((m) => ({
+          role: m.role,
+          content: m.content,
+        })),
+        corrections: corrections.map((c) => ({ standard: c.standard, description: c.description })),
+        hasImage: !!photo,
+      }).catch((e): KaizenResp => ({ error: e instanceof Error ? e.message : "Falha" }));
       if (data.error) {
         pushMsg({ role: "assistant", content: `⚠️ ${data.error}` });
       } else {
@@ -214,15 +207,17 @@ export function KaizenIrisChat({ onClose }: { onClose?: () => void }) {
     }, 3500);
 
     try {
-      const { data: session } = await supabase.auth.getSession();
-      const token = session.session?.access_token;
-      if (!token) throw new Error("Faça login novamente.");
-
-      const res = await fetch("/api/iris/generate-corrected", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        signal: abortRef.current.signal,
-        body: JSON.stringify({
+      const { callVpsRoute } = await import("@/lib/vps-ai/call");
+      type GenResp = {
+        success?: boolean;
+        imageBase64?: string;
+        imageMimeType?: string;
+        error?: string;
+        detail?: string;
+      };
+      const data: GenResp = await callVpsRoute<GenResp>(
+        "/api/vps/generate-after",
+        {
           imageBase64: photo.base64,
           mimeType: photo.mimeType,
           corrections: selectedCorrections.map((c) => ({
@@ -230,15 +225,9 @@ export function KaizenIrisChat({ onClose }: { onClose?: () => void }) {
             description: c.description,
           })),
           instructions: userInstruction,
-        }),
-      });
-      const data = (await res.json().catch(() => ({}))) as {
-        success?: boolean;
-        imageBase64?: string;
-        imageMimeType?: string;
-        error?: string;
-        detail?: string;
-      };
+        },
+        { signal: abortRef.current.signal },
+      ).catch((e): GenResp => ({ error: e instanceof Error ? e.message : "Falha" }));
       clearInterval(interval);
 
       if (!data.success || !data.imageBase64) {
@@ -285,7 +274,13 @@ export function KaizenIrisChat({ onClose }: { onClose?: () => void }) {
     if (!description.trim()) return;
     setCorrections((prev) => [
       ...prev,
-      { id: uuid(), standard: standard.trim() || undefined, description: description.trim(), selected: true, source: "user" },
+      {
+        id: uuid(),
+        standard: standard.trim() || undefined,
+        description: description.trim(),
+        selected: true,
+        source: "user",
+      },
     ]);
   }
 
@@ -295,7 +290,9 @@ export function KaizenIrisChat({ onClose }: { onClose?: () => void }) {
         <div className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-neon" />
           <div>
-            <h2 className="font-display text-sm uppercase tracking-widest">Chat de IA — Foto Corrigida</h2>
+            <h2 className="font-display text-sm uppercase tracking-widest">
+              Chat de IA — Foto Corrigida
+            </h2>
             <p className="text-xs text-muted-foreground">Kaizen · gera imagem via OpenAI</p>
           </div>
         </div>
@@ -313,10 +310,7 @@ export function KaizenIrisChat({ onClose }: { onClose?: () => void }) {
             {messages.map((m) => (
               <div
                 key={m.id}
-                className={cn(
-                  "flex w-full",
-                  m.role === "user" ? "justify-end" : "justify-start",
-                )}
+                className={cn("flex w-full", m.role === "user" ? "justify-end" : "justify-start")}
               >
                 <div
                   className={cn(
@@ -351,14 +345,21 @@ export function KaizenIrisChat({ onClose }: { onClose?: () => void }) {
                         </a>
                         <button
                           className="inline-flex items-center gap-1 rounded border border-border px-2 py-1 text-xs hover:bg-muted"
-                          onClick={() => generate("Refazer com as mesmas correções, melhorando fidelidade ao ambiente.")}
+                          onClick={() =>
+                            generate(
+                              "Refazer com as mesmas correções, melhorando fidelidade ao ambiente.",
+                            )
+                          }
                         >
                           <RefreshCw className="h-3 w-3" /> Refazer
                         </button>
                       </div>
                       {m.generatedImage.corrections.length > 0 && (
                         <div className="text-[10px] text-muted-foreground">
-                          Aplicadas: {m.generatedImage.corrections.map((c) => c.standard ?? "livre").join(", ")}
+                          Aplicadas:{" "}
+                          {m.generatedImage.corrections
+                            .map((c) => c.standard ?? "livre")
+                            .join(", ")}
                         </div>
                       )}
                     </div>
@@ -374,7 +375,8 @@ export function KaizenIrisChat({ onClose }: { onClose?: () => void }) {
             {generating && (
               <Card className="p-3">
                 <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
-                  <Loader2 className="h-3 w-3 animate-spin" /> {progressLabel || "Gerando imagem Depois…"}
+                  <Loader2 className="h-3 w-3 animate-spin" />{" "}
+                  {progressLabel || "Gerando imagem Depois…"}
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded bg-muted">
                   <div
@@ -420,7 +422,12 @@ export function KaizenIrisChat({ onClose }: { onClose?: () => void }) {
                   }
                 }}
               />
-              <Button type="button" size="icon" onClick={sendMessage} disabled={sending || !input.trim()}>
+              <Button
+                type="button"
+                size="icon"
+                onClick={sendMessage}
+                disabled={sending || !input.trim()}
+              >
                 <Send className="h-4 w-4" />
               </Button>
             </div>
@@ -489,7 +496,11 @@ export function KaizenIrisChat({ onClose }: { onClose?: () => void }) {
                       checked={c.selected}
                       onChange={() => toggleCorrection(c.id)}
                     />
-                    {c.standard && <Badge variant="outline" className="text-[10px]">{c.standard}</Badge>}
+                    {c.standard && (
+                      <Badge variant="outline" className="text-[10px]">
+                        {c.standard}
+                      </Badge>
+                    )}
                     <span className="text-[10px] text-muted-foreground">
                       {c.source === "iris" ? "IA" : "Manual"}
                     </span>
@@ -518,7 +529,9 @@ function ManualAdder({ onAdd }: { onAdd: (standard: string, description: string)
   const [description, setDescription] = useState("");
   return (
     <div className="border-t border-border p-3 space-y-2">
-      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Adicionar correção</div>
+      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+        Adicionar correção
+      </div>
       <Input
         placeholder="Norma (ex.: NR-10, 5S)"
         value={standard}

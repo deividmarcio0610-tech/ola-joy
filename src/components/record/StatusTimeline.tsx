@@ -36,9 +36,7 @@ export function StatusTimeline({ entries }: { entries: StatusHistoryEntry[] }) {
                     })}
                   </span>
                 </div>
-                {e.note && (
-                  <p className="mt-0.5 text-sm text-muted-foreground">{e.note}</p>
-                )}
+                {e.note && <p className="mt-0.5 text-sm text-muted-foreground">{e.note}</p>}
               </div>
             </li>
           ))}

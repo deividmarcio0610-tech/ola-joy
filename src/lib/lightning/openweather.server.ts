@@ -59,13 +59,18 @@ export class OpenWeatherLightningProvider implements LightningProvider {
           };
           const storm = data.weather?.find((w) => w.id >= 200 && w.id <= 232);
           if (storm) {
-            const severity = storm.id === 202 || storm.id === 212 || storm.id === 221 || storm.id === 232 ? "severe" : "storm";
+            const severity =
+              storm.id === 202 || storm.id === 212 || storm.id === 221 || storm.id === 232
+                ? "severe"
+                : "storm";
             strikes.push({
               id: `ow-${lat.toFixed(3)}-${lon.toFixed(3)}-${data.dt ?? Date.now()}`,
               provider: "openweather",
               latitude: lat,
               longitude: lon,
-              occurredAt: new Date((data.dt ?? Math.floor(now.getTime() / 1000)) * 1000).toISOString(),
+              occurredAt: new Date(
+                (data.dt ?? Math.floor(now.getTime() / 1000)) * 1000,
+              ).toISOString(),
               receivedAt: now.toISOString(),
               distanceKm: 0,
               type: severity === "severe" ? "cloud_ground" : "unknown",

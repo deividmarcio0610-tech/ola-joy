@@ -74,9 +74,13 @@ export function Inspecao5SFlow({ images, context, initial = null, onChange }: Pr
         </div>
         <Button size="lg" disabled={running || images.length === 0} onClick={analisar}>
           {running ? (
-            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Auditando 5S…</>
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Auditando 5S…
+            </>
           ) : (
-            <><Sparkles className="w-4 h-4 mr-2" /> Analisar 5S</>
+            <>
+              <Sparkles className="w-4 h-4 mr-2" /> Analisar 5S
+            </>
           )}
         </Button>
       </div>
@@ -89,11 +93,15 @@ export function Inspecao5SFlow({ images, context, initial = null, onChange }: Pr
       <Card className="p-4 border-2 border-primary/30 bg-primary/5">
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
-            <div className="text-xs uppercase tracking-widest text-muted-foreground">Nota Final 5S</div>
+            <div className="text-xs uppercase tracking-widest text-muted-foreground">
+              Nota Final 5S
+            </div>
             <div className="flex items-baseline gap-2">
               <span className="text-4xl font-bold">{result.nota_final}</span>
               <span className="text-muted-foreground">/100</span>
-              <Badge className={`ml-2 ${corDaNota(result.nota_final)}`}>{result.classificacao}</Badge>
+              <Badge className={`ml-2 ${corDaNota(result.nota_final)}`}>
+                {result.classificacao}
+              </Badge>
             </div>
           </div>
           <div className="flex gap-2">
@@ -102,13 +110,19 @@ export function Inspecao5SFlow({ images, context, initial = null, onChange }: Pr
               Reauditar
             </Button>
             <Button size="sm" onClick={baixarPdf} disabled={pdfBusy}>
-              {pdfBusy ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Download className="w-3 h-3 mr-1" />}
+              {pdfBusy ? (
+                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+              ) : (
+                <Download className="w-3 h-3 mr-1" />
+              )}
               PDF
             </Button>
           </div>
         </div>
         {result.resumo_executivo && (
-          <p className="mt-3 text-sm bg-background/60 rounded-md p-2 border">{result.resumo_executivo}</p>
+          <p className="mt-3 text-sm bg-background/60 rounded-md p-2 border">
+            {result.resumo_executivo}
+          </p>
         )}
       </Card>
 
@@ -121,7 +135,9 @@ export function Inspecao5SFlow({ images, context, initial = null, onChange }: Pr
             <Card key={key} className="p-3 space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <div>
-                  <div className="font-bold text-sm">{meta.jp} — {meta.nome}</div>
+                  <div className="font-bold text-sm">
+                    {meta.jp} — {meta.nome}
+                  </div>
                   <div className="text-[11px] text-muted-foreground italic">{meta.desc}</div>
                 </div>
                 <Badge className={corDaNota(s.nota)}>{s.nota}/100</Badge>
@@ -130,17 +146,25 @@ export function Inspecao5SFlow({ images, context, initial = null, onChange }: Pr
               {s.observacoes && <p className="text-xs text-muted-foreground">{s.observacoes}</p>}
               {s.problemas.length > 0 && (
                 <div>
-                  <div className="text-[10px] uppercase tracking-wide font-semibold text-red-600">Problemas</div>
+                  <div className="text-[10px] uppercase tracking-wide font-semibold text-red-600">
+                    Problemas
+                  </div>
                   <ul className="text-xs list-disc pl-4 space-y-0.5">
-                    {s.problemas.map((p, i) => <li key={i}>{p}</li>)}
+                    {s.problemas.map((p, i) => (
+                      <li key={i}>{p}</li>
+                    ))}
                   </ul>
                 </div>
               )}
               {s.melhorias.length > 0 && (
                 <div>
-                  <div className="text-[10px] uppercase tracking-wide font-semibold text-emerald-600">Melhorias</div>
+                  <div className="text-[10px] uppercase tracking-wide font-semibold text-emerald-600">
+                    Melhorias
+                  </div>
                   <ul className="text-xs list-disc pl-4 space-y-0.5">
-                    {s.melhorias.map((p, i) => <li key={i}>{p}</li>)}
+                    {s.melhorias.map((p, i) => (
+                      <li key={i}>{p}</li>
+                    ))}
                   </ul>
                 </div>
               )}

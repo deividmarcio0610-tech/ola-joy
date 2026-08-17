@@ -19,7 +19,7 @@ import { Switch } from "@/components/ui/switch";
 export const Route = createFileRoute("/_authenticated/admin/versoes")({
   head: () => ({
     meta: [
-      { title: "Central de Versões · VALETECH" },
+      { title: "Central de Versões · VisionGuard AI" },
       { name: "description", content: "Publicação e monitoramento de versões do sistema." },
     ],
   }),
@@ -85,7 +85,10 @@ function AdminVersoes() {
       version,
       title,
       description,
-      release_notes: notes.split("\n").map((s) => s.trim()).filter(Boolean),
+      release_notes: notes
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean),
       is_mandatory: mandatory,
       minimum_supported_version: minSupported || null,
       rollout_percent: rollout,
@@ -247,9 +250,7 @@ function AdminVersoes() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() =>
-                    patchMut.mutate({ id: v.id, is_mandatory: !v.is_mandatory })
-                  }
+                  onClick={() => patchMut.mutate({ id: v.id, is_mandatory: !v.is_mandatory })}
                 >
                   {v.is_mandatory ? "Tornar opcional" : "Marcar obrigatória"}
                 </Button>

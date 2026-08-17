@@ -74,7 +74,7 @@ export async function exportVisionReportPdf(opts: {
     doc.setTextColor(...FG);
     doc.setFontSize(13);
     doc.setFont("helvetica", "bold");
-    doc.text("VALETECH.", margin + 32, margin + 12);
+    doc.text("VisionGuard AI.", margin + 32, margin + 12);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(...MUTED);
@@ -154,8 +154,7 @@ export async function exportVisionReportPdf(opts: {
   doc.setFontSize(8);
   doc.text("SCORE CONSOLIDADO", margin + 16, cursorY + 20);
 
-  const scoreColor =
-    report.score >= 70 ? NEON : report.score >= 40 ? YELLOW : RED;
+  const scoreColor = report.score >= 70 ? NEON : report.score >= 40 ? YELLOW : RED;
 
   doc.setTextColor(...scoreColor);
   doc.setFont("helvetica", "bold");
@@ -357,7 +356,8 @@ export async function exportVisionReportPdf(opts: {
   drawFooter(doc, pageW, pageH, margin);
 
   const filename =
-    opts.filename ?? `valetech-vision-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.pdf`;
+    opts.filename ??
+    `visionguard-vision-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.pdf`;
   doc.save(filename);
 }
 
@@ -368,7 +368,7 @@ function drawFooter(doc: jsPDF, pageW: number, pageH: number, margin: number) {
   doc.setTextColor(...MUTED);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7);
-  doc.text("VALETECH · Vision AI IA", margin, pageH - margin);
+  doc.text("VisionGuard AI · Vision AI IA", margin, pageH - margin);
   const page = doc.getNumberOfPages();
   doc.text(`Página ${page}`, pageW - margin, pageH - margin, { align: "right" });
 }

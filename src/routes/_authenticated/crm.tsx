@@ -5,13 +5,17 @@ import { Users, Camera, Sparkles, Loader2, X, AlertTriangle } from "lucide-react
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { RecordModule } from "@/components/record-module";
-import { EquipAreaFields, emptyEquipArea, equipAreaPromptSuffix } from "@/components/equip-area-fields";
+import {
+  EquipAreaFields,
+  emptyEquipArea,
+  equipAreaPromptSuffix,
+} from "@/components/equip-area-fields";
 import { toast } from "sonner";
 import { chamarIrisChat } from "@/lib/iris-analyze";
 import { handleAiError } from "@/lib/ai-credits-error";
 
 export const Route = createFileRoute("/_authenticated/crm")({
-  head: () => ({ meta: [{ title: "CRM · VALETECH" }] }),
+  head: () => ({ meta: [{ title: "CRM · VisionGuard AI" }] }),
   component: CrmPage,
 });
 
@@ -106,7 +110,11 @@ function OMAnalyzer() {
         <div>
           {image ? (
             <div className="relative">
-              <img src={image} alt="OM" className="w-full rounded-lg border border-border object-cover" />
+              <img
+                src={image}
+                alt="OM"
+                className="w-full rounded-lg border border-border object-cover"
+              />
               <button
                 type="button"
                 onClick={() => setImage(null)}
@@ -138,7 +146,11 @@ function OMAnalyzer() {
             placeholder="Contexto opcional (número da OM, observações…)"
           />
           <Button onClick={analyze} disabled={loading || !image} className="mt-3 w-full gap-2">
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="h-4 w-4" />
+            )}
             Levantar riscos com IA
           </Button>
         </div>
@@ -184,7 +196,8 @@ function OMAnalyzer() {
                 })}
               </ul>
               <p className="text-[10px] italic text-muted-foreground">
-                AVISO: As ações propostas pela IA devem ser validadas pelos responsáveis antes da execução.
+                AVISO: As ações propostas pela IA devem ser validadas pelos responsáveis antes da
+                execução.
               </p>
             </div>
           )}

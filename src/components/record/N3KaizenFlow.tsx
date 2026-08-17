@@ -5,7 +5,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, Sparkles, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import { analisarN3, gerarKaizen, type N3Result, type N3Risk, type KaizenResult } from "@/lib/n3-kaizen";
+import {
+  analisarN3,
+  gerarKaizen,
+  type N3Result,
+  type N3Risk,
+  type KaizenResult,
+} from "@/lib/n3-kaizen";
 import { N3RiskList } from "./N3RiskList";
 import { KaizenImprovementList } from "./KaizenImprovementList";
 
@@ -33,13 +39,17 @@ export function N3KaizenFlow({
   const [n3, setN3] = useState<N3Result | null>(initialN3);
   const [selectedRisk, setSelectedRisk] = useState<N3Risk | null>(
     initialN3 && initialSelectedRiskId
-      ? initialN3.riscos.find((r) => r.id === initialSelectedRiskId) ?? null
+      ? (initialN3.riscos.find((r) => r.id === initialSelectedRiskId) ?? null)
       : null,
   );
   const [kaizen, setKaizen] = useState<KaizenResult | null>(initialKaizen);
   const [running, setRunning] = useState<"none" | "n3" | "kaizen">("none");
 
-  function emit(next: { n3: N3Result | null; selectedRisk: N3Risk | null; kaizen: KaizenResult | null }) {
+  function emit(next: {
+    n3: N3Result | null;
+    selectedRisk: N3Risk | null;
+    kaizen: KaizenResult | null;
+  }) {
     onChange?.(next);
   }
 
@@ -86,11 +96,15 @@ export function N3KaizenFlow({
         <Sparkles className="w-8 h-8 text-primary" />
         <div className="text-center">
           <div className="font-bold">Fluxo N3 → Kaizen</div>
-          <div className="text-xs text-muted-foreground">O N3 identifica os riscos. Você escolhe 1. O Kaizen propõe melhorias.</div>
+          <div className="text-xs text-muted-foreground">
+            O N3 identifica os riscos. Você escolhe 1. O Kaizen propõe melhorias.
+          </div>
         </div>
         <Button size="lg" disabled={running !== "none" || images.length === 0} onClick={runN3}>
           {running === "n3" ? (
-            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Auditando…</>
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Auditando…
+            </>
           ) : (
             <>Analisar riscos (N3)</>
           )}
@@ -107,7 +121,15 @@ export function N3KaizenFlow({
           Reauditar N3
         </Button>
         {kaizen && (
-          <Button size="sm" variant="ghost" onClick={() => { setKaizen(null); setSelectedRisk(null); emit({ n3, selectedRisk: null, kaizen: null }); }}>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              setKaizen(null);
+              setSelectedRisk(null);
+              emit({ n3, selectedRisk: null, kaizen: null });
+            }}
+          >
             <ArrowLeft className="w-3 h-3 mr-1" /> Voltar aos riscos
           </Button>
         )}

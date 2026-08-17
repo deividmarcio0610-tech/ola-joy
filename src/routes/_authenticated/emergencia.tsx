@@ -9,8 +9,6 @@ import {
   Cloud,
   Loader2,
   Sparkles,
-  
-
   Camera,
   Video,
   Mic,
@@ -22,28 +20,61 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ModuleShell } from "@/components/module-shell";
-import { EquipAreaFields, emptyEquipArea, equipAreaPromptSuffix } from "@/components/equip-area-fields";
+import {
+  EquipAreaFields,
+  emptyEquipArea,
+  equipAreaPromptSuffix,
+} from "@/components/equip-area-fields";
 import { toast } from "sonner";
 import { chamarIrisChat, transcreverAudioComIris } from "@/lib/iris-analyze";
 import { handleAiError } from "@/lib/ai-credits-error";
 
 export const Route = createFileRoute("/_authenticated/emergencia")({
-  head: () => ({ meta: [{ title: "Emergência · VALETECH" }] }),
+  head: () => ({ meta: [{ title: "Emergência · VisionGuard AI" }] }),
   component: EmergenciaPage,
 });
 
 const EMERGENCY_NUMBERS = [
-  { label: "Bombeiros", number: "193", icon: Flame, color: "text-red-400", ring: "ring-red-400/40" },
+  {
+    label: "Bombeiros",
+    number: "193",
+    icon: Flame,
+    color: "text-red-400",
+    ring: "ring-red-400/40",
+  },
   { label: "SAMU", number: "192", icon: Heart, color: "text-pink-400", ring: "ring-pink-400/40" },
-  { label: "Polícia Militar", number: "190", icon: Shield, color: "text-blue-400", ring: "ring-blue-400/40" },
-  
-  { label: "CECOM Vale", number: "0800 285 0193", icon: Phone, color: "text-neon", ring: "ring-neon/40" },
-  { label: "Brigada Interna", number: "Ramal 2000", icon: Siren, color: "text-orange-400", ring: "ring-orange-400/40" },
+  {
+    label: "Polícia Militar",
+    number: "190",
+    icon: Shield,
+    color: "text-blue-400",
+    ring: "ring-blue-400/40",
+  },
+
+  {
+    label: "CECOM Vale",
+    number: "0800 285 0193",
+    icon: Phone,
+    color: "text-neon",
+    ring: "ring-neon/40",
+  },
+  {
+    label: "Brigada Interna",
+    number: "Ramal 2000",
+    icon: Siren,
+    color: "text-orange-400",
+    ring: "ring-orange-400/40",
+  },
 ];
 
 function EmergenciaPage() {
   return (
-    <ModuleShell icon={Siren} title="Emergência" subtitle="Acionamento rápido, dados de local e primeiros socorros por IA." status="operacional">
+    <ModuleShell
+      icon={Siren}
+      title="Emergência"
+      subtitle="Acionamento rápido, dados de local e primeiros socorros por IA."
+      status="operacional"
+    >
       {/* Números fixos */}
       <section>
         <h2 className="mb-3 font-display text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
@@ -56,11 +87,15 @@ function EmergenciaPage() {
               href={`tel:${e.number.replace(/\D/g, "")}`}
               className={`flex items-center gap-3 rounded-xl border border-border bg-card/60 p-4 ring-1 ${e.ring} transition hover:bg-card`}
             >
-              <div className={`flex h-11 w-11 items-center justify-center rounded-lg bg-black/40 ${e.color}`}>
+              <div
+                className={`flex h-11 w-11 items-center justify-center rounded-lg bg-black/40 ${e.color}`}
+              >
                 <e.icon className="h-5 w-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{e.label}</div>
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                  {e.label}
+                </div>
                 <div className={`font-display text-lg font-semibold ${e.color}`}>{e.number}</div>
               </div>
               <Phone className="h-4 w-4 text-muted-foreground" />
@@ -69,17 +104,11 @@ function EmergenciaPage() {
         </div>
       </section>
 
-
-
-
       {/* Primeiros socorros IA */}
       <FirstAidAI />
     </ModuleShell>
   );
 }
-
-
-
 
 function fileToDataUrl(file: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -251,8 +280,7 @@ function FirstAidAI() {
   }
 
   async function analyze() {
-    const hasEvidence =
-      symptoms.trim() || photoUrl || videoBlob || audioBlob || transcript.trim();
+    const hasEvidence = symptoms.trim() || photoUrl || videoBlob || audioBlob || transcript.trim();
     if (!hasEvidence) {
       toast.error("Descreva a situação, tire uma foto, grave um vídeo ou áudio.");
       return;
@@ -279,8 +307,7 @@ function FirstAidAI() {
 
       // 3) Build multimodal user content
       const parts: Array<
-        | { type: "text"; text: string }
-        | { type: "image_url"; image_url: { url: string } }
+        { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }
       > = [];
 
       const textBlocks: string[] = [];
@@ -362,7 +389,13 @@ function FirstAidAI() {
               <Camera className="h-4 w-4" /> Bater foto
             </Button>
             {photoUrl && (
-              <Button type="button" variant="ghost" size="sm" onClick={clearPhoto} className="gap-1 text-xs">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={clearPhoto}
+                className="gap-1 text-xs"
+              >
                 <X className="h-3 w-3" /> Remover
               </Button>
             )}
@@ -402,17 +435,18 @@ function FirstAidAI() {
                 </Button>
               </>
             ) : (
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={stopRecording}
-                className="gap-2"
-              >
+              <Button type="button" variant="destructive" onClick={stopRecording} className="gap-2">
                 <Square className="h-4 w-4" /> Parar gravação
               </Button>
             )}
             {videoUrl && (
-              <Button type="button" variant="ghost" size="sm" onClick={clearVideo} className="gap-1 text-xs">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={clearVideo}
+                className="gap-1 text-xs"
+              >
                 <X className="h-3 w-3" /> Remover
               </Button>
             )}
@@ -433,12 +467,7 @@ function FirstAidAI() {
                 <Mic className="h-4 w-4" /> Gravar relato
               </Button>
             ) : (
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={stopRecording}
-                className="gap-2"
-              >
+              <Button type="button" variant="destructive" onClick={stopRecording} className="gap-2">
                 <Square className="h-4 w-4" /> Parar gravação
               </Button>
             )}
@@ -459,14 +488,21 @@ function FirstAidAI() {
                   )}
                   Transcrever
                 </Button>
-                <Button type="button" variant="ghost" size="sm" onClick={clearAudio} className="gap-1 text-xs">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearAudio}
+                  className="gap-1 text-xs"
+                >
                   <X className="h-3 w-3" /> Remover
                 </Button>
               </>
             )}
           </div>
           <p className="mt-1 text-[10px] text-muted-foreground">
-            Peça para a pessoa descrever o ocorrido. A IA transcreve o áudio e usa o relato na análise.
+            Peça para a pessoa descrever o ocorrido. A IA transcreve o áudio e usa o relato na
+            análise.
           </p>
           {audioUrl && <audio src={audioUrl} controls className="mt-2 w-full" />}
           {transcript && (
@@ -505,7 +541,11 @@ function FirstAidAI() {
 
       <div className="mt-3 flex justify-end">
         <Button onClick={analyze} disabled={loading} className="gap-2 bg-red-500 hover:bg-red-600">
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Sparkles className="h-4 w-4" />
+          )}
           Orientar primeiros socorros
         </Button>
       </div>
@@ -518,7 +558,6 @@ function FirstAidAI() {
           <FormattedProtocol text={result} />
         </div>
       )}
-
     </section>
   );
 }
@@ -546,12 +585,18 @@ function FormattedProtocol({ text }: { text: string }) {
     .replace(/^[ \t]*\*[ \t]+/gm, "• ")
     .replace(/^---+$/gm, "");
 
-  const blocks = clean.split(/\n{2,}/).map((b) => b.trim()).filter(Boolean);
+  const blocks = clean
+    .split(/\n{2,}/)
+    .map((b) => b.trim())
+    .filter(Boolean);
 
   return (
     <div className="space-y-4 text-sm leading-relaxed text-foreground/90">
       {blocks.map((block, bi) => {
-        const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);
+        const lines = block
+          .split("\n")
+          .map((l) => l.trim())
+          .filter(Boolean);
 
         // Heading detection: "**1) TÍTULO**" or "1) TÍTULO"
         const headingMatch = lines[0]?.match(/^\*\*(.+?)\*\*$/);
@@ -573,12 +618,12 @@ function FormattedProtocol({ text }: { text: string }) {
         }
 
         // Ordered list?
-        const isOrdered = lines.every((l) => /^\d+[\.\)]\s+/.test(l));
+        const isOrdered = lines.every((l) => /^\d+[.)]\s+/.test(l));
         if (isOrdered && lines.length > 1) {
           return (
             <ol key={`ol-${bi}`} className="space-y-2 pl-1">
               {lines.map((l, i) => {
-                const m = l.match(/^(\d+)[\.\)]\s+(.*)$/);
+                const m = l.match(/^(\d+)[.)]\s+(.*)$/);
                 return (
                   <li key={i} className="flex gap-3">
                     <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-500/20 text-[11px] font-semibold text-red-300">
@@ -593,14 +638,16 @@ function FormattedProtocol({ text }: { text: string }) {
         }
 
         // Bullet list?
-        const isBullet = lines.every((l) => /^[•\-]\s+/.test(l));
+        const isBullet = lines.every((l) => /^[•-]\s+/.test(l));
         if (isBullet && lines.length > 1) {
           return (
             <ul key={`ul-${bi}`} className="space-y-1.5 pl-1">
               {lines.map((l, i) => (
                 <li key={i} className="flex gap-3">
                   <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-red-400/70" />
-                  <span className="flex-1">{renderInline(l.replace(/^[•\-]\s+/, ""), `ul-${bi}-${i}`)}</span>
+                  <span className="flex-1">
+                    {renderInline(l.replace(/^[•-]\s+/, ""), `ul-${bi}-${i}`)}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -622,4 +669,3 @@ function FormattedProtocol({ text }: { text: string }) {
     </div>
   );
 }
-

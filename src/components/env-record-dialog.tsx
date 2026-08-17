@@ -1,10 +1,27 @@
 import { useState, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Camera, Upload, Sparkles, X, MapPin, ChevronRight, ChevronLeft, Check } from "lucide-react";
+import {
+  Loader2,
+  Camera,
+  Upload,
+  Sparkles,
+  X,
+  MapPin,
+  ChevronRight,
+  ChevronLeft,
+  Check,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -16,22 +33,42 @@ import { analisarAmbienteComIris, ensureFreshSession } from "@/lib/iris-analyze"
 import { saveEnvironmentalRecord } from "@/lib/environmental/records.functions";
 
 const CATEGORIES = [
-  ["vazamento", "Vazamento"], ["derramamento", "Derramamento"],
-  ["contaminacao_solo", "Contaminação do solo"], ["contaminacao_agua", "Contaminação da água"],
-  ["emissao_atmosferica", "Emissão atmosférica"], ["poeira", "Poeira"], ["fumaca", "Fumaça"], ["gases", "Gases"],
-  ["ruido", "Ruído ambiental"], ["vibracao", "Vibração"],
-  ["residuo_perigoso", "Resíduo perigoso"], ["residuo_nao_perigoso", "Resíduo não perigoso"],
-  ["segregacao_incorreta", "Segregação incorreta"], ["armazenamento_inadequado", "Armazenamento inadequado"],
-  ["descarte_irregular", "Descarte irregular"], ["falha_contencao", "Falha em contenção"],
-  ["falha_drenagem", "Falha em drenagem"], ["efluente", "Efluente"],
-  ["produto_quimico", "Produto químico"], ["oleo", "Óleo"], ["combustivel", "Combustível"],
+  ["vazamento", "Vazamento"],
+  ["derramamento", "Derramamento"],
+  ["contaminacao_solo", "Contaminação do solo"],
+  ["contaminacao_agua", "Contaminação da água"],
+  ["emissao_atmosferica", "Emissão atmosférica"],
+  ["poeira", "Poeira"],
+  ["fumaca", "Fumaça"],
+  ["gases", "Gases"],
+  ["ruido", "Ruído ambiental"],
+  ["vibracao", "Vibração"],
+  ["residuo_perigoso", "Resíduo perigoso"],
+  ["residuo_nao_perigoso", "Resíduo não perigoso"],
+  ["segregacao_incorreta", "Segregação incorreta"],
+  ["armazenamento_inadequado", "Armazenamento inadequado"],
+  ["descarte_irregular", "Descarte irregular"],
+  ["falha_contencao", "Falha em contenção"],
+  ["falha_drenagem", "Falha em drenagem"],
+  ["efluente", "Efluente"],
+  ["produto_quimico", "Produto químico"],
+  ["oleo", "Óleo"],
+  ["combustivel", "Combustível"],
   ["material_contaminado", "Material contaminado"],
-  ["supressao_vegetal", "Supressão vegetal"], ["danos_fauna", "Danos à fauna"], ["danos_flora", "Danos à flora"],
-  ["assoreamento", "Assoreamento"], ["erosao", "Erosão"], ["obstrucao_canaleta", "Obstrução de canaleta"],
-  ["desperdicio_agua", "Desperdício de água"], ["desperdicio_energia", "Desperdício de energia"],
-  ["falha_organizacao", "Falha de organização"], ["falha_documental", "Falha documental"],
-  ["nao_conformidade", "Não conformidade ambiental"], ["oportunidade_melhoria", "Oportunidade de melhoria"],
-  ["boa_pratica", "Boa prática ambiental"], ["emergencia_ambiental", "Emergência ambiental"],
+  ["supressao_vegetal", "Supressão vegetal"],
+  ["danos_fauna", "Danos à fauna"],
+  ["danos_flora", "Danos à flora"],
+  ["assoreamento", "Assoreamento"],
+  ["erosao", "Erosão"],
+  ["obstrucao_canaleta", "Obstrução de canaleta"],
+  ["desperdicio_agua", "Desperdício de água"],
+  ["desperdicio_energia", "Desperdício de energia"],
+  ["falha_organizacao", "Falha de organização"],
+  ["falha_documental", "Falha documental"],
+  ["nao_conformidade", "Não conformidade ambiental"],
+  ["oportunidade_melhoria", "Oportunidade de melhoria"],
+  ["boa_pratica", "Boa prática ambiental"],
+  ["emergencia_ambiental", "Emergência ambiental"],
   ["outro", "Outro"],
 ] as const;
 
@@ -114,14 +151,33 @@ export function EnvRecordDialog({ open, onOpenChange }: Props) {
 
   function reset() {
     setStep(1);
-    setFiles([]); setPreviews([]); setUploaded([]); setGeo(null);
-    setTitle(""); setArea(""); setLocation(""); setEquipment("");
-    setDescription(""); setMaterial(""); setSource("");
-    setSelectedCats([]); setAspect(""); setImpactDirect(""); setImpactIndirect(""); setMedium("");
-    setSeverity(2); setProbability(2); setScope(2);
-    setPersistence(2); setSensitivity(2); setControl(2);
-    setImmediate([]); setCorrective([]); setPreventive([]);
-    setAiRaw(null); setAiNotice(null);
+    setFiles([]);
+    setPreviews([]);
+    setUploaded([]);
+    setGeo(null);
+    setTitle("");
+    setArea("");
+    setLocation("");
+    setEquipment("");
+    setDescription("");
+    setMaterial("");
+    setSource("");
+    setSelectedCats([]);
+    setAspect("");
+    setImpactDirect("");
+    setImpactIndirect("");
+    setMedium("");
+    setSeverity(2);
+    setProbability(2);
+    setScope(2);
+    setPersistence(2);
+    setSensitivity(2);
+    setControl(2);
+    setImmediate([]);
+    setCorrective([]);
+    setPreventive([]);
+    setAiRaw(null);
+    setAiNotice(null);
   }
 
   function onPickFiles(list: FileList | null) {
@@ -140,7 +196,7 @@ export function EnvRecordDialog({ open, onOpenChange }: Props) {
     navigator.geolocation.getCurrentPosition(
       (p) => setGeo({ lat: p.coords.latitude, lng: p.coords.longitude }),
       () => toast.error("Não foi possível obter localização"),
-      { timeout: 5000 }
+      { timeout: 5000 },
     );
   }
 
@@ -223,7 +279,8 @@ export function EnvRecordDialog({ open, onOpenChange }: Props) {
           area: area || null,
           location: location || null,
           equipment: equipment || null,
-          priority: score >= 21 ? "critica" : score >= 16 ? "alta" : score >= 11 ? "media" : "baixa",
+          priority:
+            score >= 21 ? "critica" : score >= 16 ? "alta" : score >= 11 ? "media" : "baixa",
           photoUrl,
           categories: selectedCats,
           aspect: aspect || null,
@@ -256,12 +313,20 @@ export function EnvRecordDialog({ open, onOpenChange }: Props) {
   });
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        onOpenChange(v);
+        if (!v) reset();
+      }}
+    >
       <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             Registrar condição ambiental
-            <Badge variant="outline" className="text-xs">Passo {step}/4</Badge>
+            <Badge variant="outline" className="text-xs">
+              Passo {step}/4
+            </Badge>
           </DialogTitle>
           <DialogDescription>
             Inspeção, auditoria e análise de impactos com apoio da IA.
@@ -271,34 +336,94 @@ export function EnvRecordDialog({ open, onOpenChange }: Props) {
         {step === 1 && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              <Button variant="outline" onClick={() => cameraRef.current?.click()} className="h-24 flex-col">
+              <Button
+                variant="outline"
+                onClick={() => cameraRef.current?.click()}
+                className="h-24 flex-col"
+              >
                 <Camera className="w-6 h-6 mb-1" /> Tirar foto
               </Button>
-              <Button variant="outline" onClick={() => galleryRef.current?.click()} className="h-24 flex-col">
+              <Button
+                variant="outline"
+                onClick={() => galleryRef.current?.click()}
+                className="h-24 flex-col"
+              >
                 <Upload className="w-6 h-6 mb-1" /> Galeria / vídeo / documento
               </Button>
             </div>
-            <input ref={cameraRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => onPickFiles(e.target.files)} />
-            <input ref={galleryRef} type="file" accept="image/*,video/*,.pdf,.xls,.xlsx,.doc,.docx" multiple hidden onChange={(e) => onPickFiles(e.target.files)} />
+            <input
+              ref={cameraRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              hidden
+              onChange={(e) => onPickFiles(e.target.files)}
+            />
+            <input
+              ref={galleryRef}
+              type="file"
+              accept="image/*,video/*,.pdf,.xls,.xlsx,.doc,.docx"
+              multiple
+              hidden
+              onChange={(e) => onPickFiles(e.target.files)}
+            />
 
             {previews.length > 0 && (
               <div className="grid grid-cols-3 gap-2">
                 {previews.map((src, i) => (
-                  <div key={i} className="relative group aspect-square rounded-md overflow-hidden ring-1 ring-border">
+                  <div
+                    key={i}
+                    className="relative group aspect-square rounded-md overflow-hidden ring-1 ring-border"
+                  >
                     <img src={src} alt={`ev-${i}`} className="w-full h-full object-cover" />
-                    <button onClick={() => { setPreviews((p) => p.filter((_, j) => j !== i)); setFiles((p) => p.filter((_, j) => j !== i)); }} className="absolute top-1 right-1 rounded-full bg-black/70 p-1 opacity-0 group-hover:opacity-100 transition"><X className="w-3 h-3" /></button>
+                    <button
+                      onClick={() => {
+                        setPreviews((p) => p.filter((_, j) => j !== i));
+                        setFiles((p) => p.filter((_, j) => j !== i));
+                      }}
+                      className="absolute top-1 right-1 rounded-full bg-black/70 p-1 opacity-0 group-hover:opacity-100 transition"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
                   </div>
                 ))}
               </div>
             )}
 
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Área</Label><Input value={area} onChange={(e) => setArea(e.target.value)} placeholder="Ex.: Oficina Mecânica" /></div>
-              <div><Label>Local</Label><Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Ex.: Baia 03" /></div>
-              <div><Label>Equipamento / estrutura</Label><Input value={equipment} onChange={(e) => setEquipment(e.target.value)} placeholder="Ex.: Escavadeira 320" /></div>
+              <div>
+                <Label>Área</Label>
+                <Input
+                  value={area}
+                  onChange={(e) => setArea(e.target.value)}
+                  placeholder="Ex.: Oficina Mecânica"
+                />
+              </div>
+              <div>
+                <Label>Local</Label>
+                <Input
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="Ex.: Baia 03"
+                />
+              </div>
+              <div>
+                <Label>Equipamento / estrutura</Label>
+                <Input
+                  value={equipment}
+                  onChange={(e) => setEquipment(e.target.value)}
+                  placeholder="Ex.: Escavadeira 320"
+                />
+              </div>
               <div>
                 <Label>Localização GPS</Label>
-                <Button type="button" variant="outline" size="sm" onClick={captureGeo} className="w-full">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={captureGeo}
+                  className="w-full"
+                >
                   <MapPin className="w-4 h-4 mr-1" />
                   {geo ? `${geo.lat.toFixed(4)}, ${geo.lng.toFixed(4)}` : "Capturar"}
                 </Button>
@@ -306,7 +431,12 @@ export function EnvRecordDialog({ open, onOpenChange }: Props) {
             </div>
             <div>
               <Label>Descrição inicial (opcional)</Label>
-              <Textarea rows={2} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Descreva brevemente o que você observou..." />
+              <Textarea
+                rows={2}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Descreva brevemente o que você observou..."
+              />
             </div>
           </div>
         )}
@@ -314,7 +444,8 @@ export function EnvRecordDialog({ open, onOpenChange }: Props) {
         {step === 2 && (
           <div className="space-y-4">
             <div className="rounded-md border border-neon/30 bg-neon/5 p-4 text-sm">
-              A IA analisará todas as evidências, sugerirá categorias, aspecto/impacto, matriz de criticidade e plano de ação. Você poderá ajustar tudo antes de salvar.
+              A IA analisará todas as evidências, sugerirá categorias, aspecto/impacto, matriz de
+              criticidade e plano de ação. Você poderá ajustar tudo antes de salvar.
             </div>
             {analyze.isPending && (
               <div className="flex items-center gap-3 justify-center py-8">
@@ -336,16 +467,32 @@ export function EnvRecordDialog({ open, onOpenChange }: Props) {
               <Label>Categorias identificadas</Label>
               <div className="flex flex-wrap gap-1.5 mt-1 max-h-32 overflow-y-auto p-1">
                 {CATEGORIES.map(([v, l]) => (
-                  <button key={v} type="button" onClick={() => setSelectedCats((c) => c.includes(v) ? c.filter((x) => x !== v) : [...c, v])} className={`text-xs px-2 py-1 rounded-full ring-1 transition ${selectedCats.includes(v) ? "bg-neon/20 text-neon ring-neon/40" : "bg-muted/40 text-muted-foreground ring-border hover:bg-muted"}`}>{l}</button>
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() =>
+                      setSelectedCats((c) => (c.includes(v) ? c.filter((x) => x !== v) : [...c, v]))
+                    }
+                    className={`text-xs px-2 py-1 rounded-full ring-1 transition ${selectedCats.includes(v) ? "bg-neon/20 text-neon ring-neon/40" : "bg-muted/40 text-muted-foreground ring-border hover:bg-muted"}`}
+                  >
+                    {l}
+                  </button>
                 ))}
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Aspecto ambiental</Label><Input value={aspect} onChange={(e) => setAspect(e.target.value)} /></div>
+              <div>
+                <Label>Aspecto ambiental</Label>
+                <Input value={aspect} onChange={(e) => setAspect(e.target.value)} />
+              </div>
               <div>
                 <Label>Meio afetado</Label>
-                <select value={medium} onChange={(e) => setMedium(e.target.value)} className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
+                <select
+                  value={medium}
+                  onChange={(e) => setMedium(e.target.value)}
+                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                >
                   <option value="">—</option>
                   <option value="solo">Solo</option>
                   <option value="agua">Água</option>
@@ -354,10 +501,30 @@ export function EnvRecordDialog({ open, onOpenChange }: Props) {
                   <option value="misto">Misto</option>
                 </select>
               </div>
-              <div><Label>Impacto direto</Label><Textarea rows={2} value={impactDirect} onChange={(e) => setImpactDirect(e.target.value)} /></div>
-              <div><Label>Impacto indireto</Label><Textarea rows={2} value={impactIndirect} onChange={(e) => setImpactIndirect(e.target.value)} /></div>
-              <div><Label>Fonte geradora</Label><Input value={source} onChange={(e) => setSource(e.target.value)} /></div>
-              <div><Label>Material</Label><Input value={material} onChange={(e) => setMaterial(e.target.value)} /></div>
+              <div>
+                <Label>Impacto direto</Label>
+                <Textarea
+                  rows={2}
+                  value={impactDirect}
+                  onChange={(e) => setImpactDirect(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label>Impacto indireto</Label>
+                <Textarea
+                  rows={2}
+                  value={impactIndirect}
+                  onChange={(e) => setImpactIndirect(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label>Fonte geradora</Label>
+                <Input value={source} onChange={(e) => setSource(e.target.value)} />
+              </div>
+              <div>
+                <Label>Material</Label>
+                <Input value={material} onChange={(e) => setMaterial(e.target.value)} />
+              </div>
             </div>
 
             <div className="border border-border rounded-lg p-4 space-y-3">
@@ -381,7 +548,13 @@ export function EnvRecordDialog({ open, onOpenChange }: Props) {
                       <span className="text-muted-foreground">{row.l}</span>
                       <span className="font-mono">{row.v}</span>
                     </div>
-                    <Slider min={1} max={5} step={1} value={[row.v]} onValueChange={(v) => row.s(v[0])} />
+                    <Slider
+                      min={1}
+                      max={5}
+                      step={1}
+                      value={[row.v]}
+                      onValueChange={(v) => row.s(v[0])}
+                    />
                   </div>
                 </div>
               ))}
@@ -394,34 +567,127 @@ export function EnvRecordDialog({ open, onOpenChange }: Props) {
             <div className="rounded-md border border-neon/30 bg-neon/5 p-3 text-xs">
               Plano de ação sugerido pela IA. Defina responsável e prazo antes de salvar.
             </div>
-            {([
-              ["Ação imediata", immediate, setImmediate],
-              ["Ação corretiva", corrective, setCorrective],
-              ["Ação preventiva", preventive, setPreventive],
-            ] as const).map(([title, arr, setArr]) => (
+            {(
+              [
+                ["Ação imediata", immediate, setImmediate],
+                ["Ação corretiva", corrective, setCorrective],
+                ["Ação preventiva", preventive, setPreventive],
+              ] as const
+            ).map(([title, arr, setArr]) => (
               <div key={title} className="border border-border rounded-lg p-3 space-y-2">
                 <div className="text-sm font-medium">{title}</div>
-                {arr.length === 0 && <div className="text-xs text-muted-foreground">Nenhuma ação sugerida.</div>}
+                {arr.length === 0 && (
+                  <div className="text-xs text-muted-foreground">Nenhuma ação sugerida.</div>
+                )}
                 {arr.map((a, i) => (
                   <div key={i} className="grid grid-cols-6 gap-2 items-start">
-                    <Textarea rows={2} value={a.description} onChange={(e) => setArr(arr.map((x, j) => j === i ? { ...x, description: e.target.value } : x))} className="col-span-6 text-xs" />
-                    <Input placeholder="Responsável" value={a.responsible} onChange={(e) => setArr(arr.map((x, j) => j === i ? { ...x, responsible: e.target.value } : x))} className="col-span-3 h-8 text-xs" />
-                    <Input placeholder="Prazo" type="date" value={a.deadline} onChange={(e) => setArr(arr.map((x, j) => j === i ? { ...x, deadline: e.target.value } : x))} className="col-span-2 h-8 text-xs" />
-                    <Button variant="ghost" size="sm" onClick={() => setArr(arr.filter((_, j) => j !== i))} className="col-span-1 h-8 p-0"><X className="w-3 h-3" /></Button>
+                    <Textarea
+                      rows={2}
+                      value={a.description}
+                      onChange={(e) =>
+                        setArr(
+                          arr.map((x, j) => (j === i ? { ...x, description: e.target.value } : x)),
+                        )
+                      }
+                      className="col-span-6 text-xs"
+                    />
+                    <Input
+                      placeholder="Responsável"
+                      value={a.responsible}
+                      onChange={(e) =>
+                        setArr(
+                          arr.map((x, j) => (j === i ? { ...x, responsible: e.target.value } : x)),
+                        )
+                      }
+                      className="col-span-3 h-8 text-xs"
+                    />
+                    <Input
+                      placeholder="Prazo"
+                      type="date"
+                      value={a.deadline}
+                      onChange={(e) =>
+                        setArr(
+                          arr.map((x, j) => (j === i ? { ...x, deadline: e.target.value } : x)),
+                        )
+                      }
+                      className="col-span-2 h-8 text-xs"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setArr(arr.filter((_, j) => j !== i))}
+                      className="col-span-1 h-8 p-0"
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
                   </div>
                 ))}
-                <Button variant="outline" size="sm" onClick={() => setArr([...arr, { description: "", responsible: "", deadline: "", priority: "media", evidence_required: "" }])} className="w-full h-7 text-xs">+ Adicionar</Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setArr([
+                      ...arr,
+                      {
+                        description: "",
+                        responsible: "",
+                        deadline: "",
+                        priority: "media",
+                        evidence_required: "",
+                      },
+                    ])
+                  }
+                  className="w-full h-7 text-xs"
+                >
+                  + Adicionar
+                </Button>
               </div>
             ))}
           </div>
         )}
 
         <DialogFooter className="gap-2">
-          {step > 1 && <Button variant="outline" onClick={() => setStep(step - 1)}><ChevronLeft className="w-4 h-4 mr-1" />Voltar</Button>}
-          {step === 1 && <Button onClick={() => { if (files.length === 0) { toast.error("Anexe ao menos uma imagem"); return; } setStep(2); analyze.mutate(); }} disabled={files.length === 0}><Sparkles className="w-4 h-4 mr-1" />Analisar com a IA</Button>}
-          {step === 2 && <Button disabled variant="outline"><Loader2 className="w-4 h-4 mr-1 animate-spin" />Aguarde</Button>}
-          {step === 3 && <Button onClick={() => setStep(4)}>Plano de ação<ChevronRight className="w-4 h-4 ml-1" /></Button>}
-          {step === 4 && <Button onClick={() => save.mutate()} disabled={save.isPending}>{save.isPending && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}<Check className="w-4 h-4 mr-1" />Salvar registro</Button>}
+          {step > 1 && (
+            <Button variant="outline" onClick={() => setStep(step - 1)}>
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Voltar
+            </Button>
+          )}
+          {step === 1 && (
+            <Button
+              onClick={() => {
+                if (files.length === 0) {
+                  toast.error("Anexe ao menos uma imagem");
+                  return;
+                }
+                setStep(2);
+                analyze.mutate();
+              }}
+              disabled={files.length === 0}
+            >
+              <Sparkles className="w-4 h-4 mr-1" />
+              Analisar com a IA
+            </Button>
+          )}
+          {step === 2 && (
+            <Button disabled variant="outline">
+              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+              Aguarde
+            </Button>
+          )}
+          {step === 3 && (
+            <Button onClick={() => setStep(4)}>
+              Plano de ação
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          )}
+          {step === 4 && (
+            <Button onClick={() => save.mutate()} disabled={save.isPending}>
+              {save.isPending && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
+              <Check className="w-4 h-4 mr-1" />
+              Salvar registro
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

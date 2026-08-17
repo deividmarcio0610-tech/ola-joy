@@ -8,8 +8,8 @@ import { handleAiError } from "@/lib/ai-credits-error";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
-const SYSTEM_PROMPT = `Você é NOVA, a IA assistente do VALETECH — plataforma corporativa para mineração, siderurgia, energia e indústria pesada.
-Diferente da IA (especialista técnica de visão/segurança), a NOVA responde dúvidas sobre COMO USAR o aplicativo VALETECH, seus módulos e recursos.
+const SYSTEM_PROMPT = `Você é NOVA, a IA assistente do VisionGuard AI — plataforma corporativa para mineração, siderurgia, energia e indústria pesada.
+Diferente da IA (especialista técnica de visão/segurança), a NOVA responde dúvidas sobre COMO USAR o aplicativo VisionGuard AI, seus módulos e recursos.
 
 Módulos disponíveis:
 - Dashboard: visão geral, KPIs e cards rápidos
@@ -97,7 +97,7 @@ export function FloatingChat() {
             {messages.length === 0 && (
               <div className="rounded-lg border border-dashed border-border bg-background/40 p-3 text-xs text-muted-foreground">
                 Sou a <span className="text-neon">NOVA</span>. Pergunte como usar qualquer módulo do
-                VALETECH — Vision, Câmera 360°, Emergência, CRM…
+                VisionGuard AI — Vision, Câmera 360°, Emergência, CRM…
               </div>
             )}
             {messages.map((m, i) => (

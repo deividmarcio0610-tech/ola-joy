@@ -5,7 +5,10 @@ import type { TDocumentDefinitions, Content } from "pdfmake/interfaces";
 import type { EnvAnalysisResult } from "./schema";
 
 const anyPdfMake = pdfMake as unknown as { vfs?: Record<string, string> };
-const anyFonts = pdfFonts as unknown as { vfs?: Record<string, string>; pdfMake?: { vfs?: Record<string, string> } };
+const anyFonts = pdfFonts as unknown as {
+  vfs?: Record<string, string>;
+  pdfMake?: { vfs?: Record<string, string> };
+};
 anyPdfMake.vfs = anyFonts.pdfMake?.vfs ?? anyFonts.vfs ?? anyPdfMake.vfs;
 
 const PRIMARY = "#0f172a";
@@ -28,7 +31,8 @@ function section(title: string): Content {
 }
 
 function actionsTable(items?: EnvAnalysisResult["acoes_imediatas"]): Content {
-  if (!items?.length) return { text: "Sem ações registradas.", italics: true, color: MUTED, fontSize: 9 };
+  if (!items?.length)
+    return { text: "Sem ações registradas.", italics: true, color: MUTED, fontSize: 9 };
   return {
     table: {
       widths: ["*", 70, 70, 60, 60],
@@ -42,7 +46,12 @@ function actionsTable(items?: EnvAnalysisResult["acoes_imediatas"]): Content {
           { text: "Controle", bold: true, fillColor: PRIMARY, color: "#fff" },
         ],
         ...items.map((a) => [
-          { text: [{ text: a.o_que || a.descricao, bold: true }, { text: `\n${a.como ?? ""}`, color: MUTED, fontSize: 8 }] },
+          {
+            text: [
+              { text: a.o_que || a.descricao, bold: true },
+              { text: `\n${a.como ?? ""}`, color: MUTED, fontSize: 8 },
+            ],
+          },
           { text: a.quem ?? "—", fontSize: 9 },
           { text: a.quando ?? "—", fontSize: 9 },
           { text: a.prioridade ?? "—", fontSize: 9 },
@@ -55,7 +64,14 @@ function actionsTable(items?: EnvAnalysisResult["acoes_imediatas"]): Content {
   };
 }
 
-function scenarioBlock(label: string, s?: EnvAnalysisResult["cenarios"] extends infer T ? (T extends { economica: infer U } ? U : never) : never): Content {
+function scenarioBlock(
+  label: string,
+  s?: EnvAnalysisResult["cenarios"] extends infer T
+    ? T extends { economica: infer U }
+      ? U
+      : never
+    : never,
+): Content {
   if (!s) return { text: "" };
   return {
     stack: [
@@ -78,7 +94,11 @@ function scenarioBlock(label: string, s?: EnvAnalysisResult["cenarios"] extends 
         fontSize: 9,
       },
       { text: [{ text: "Benefício: ", color: MUTED }, s.beneficio], fontSize: 9 },
-      { text: [{ text: "Replicação: ", color: MUTED }, s.replicacao], fontSize: 9, margin: [0, 0, 0, 6] },
+      {
+        text: [{ text: "Replicação: ", color: MUTED }, s.replicacao],
+        fontSize: 9,
+        margin: [0, 0, 0, 6],
+      },
     ],
     margin: [0, 4, 0, 4],
   };
@@ -103,7 +123,11 @@ export async function buildEnvReportPdf(
     footer: (currentPage, pageCount) => ({
       columns: [
         { text: `${opts?.empresa ?? ""} · ${opts?.area ?? ""}`, color: MUTED },
-        { text: `Página ${currentPage} de ${pageCount} · ${now.toLocaleString("pt-BR")}`, alignment: "right", color: MUTED },
+        {
+          text: `Página ${currentPage} de ${pageCount} · ${now.toLocaleString("pt-BR")}`,
+          alignment: "right",
+          color: MUTED,
+        },
       ],
       margin: [36, 12, 36, 20],
       fontSize: 8,
@@ -142,12 +166,27 @@ export async function buildEnvReportPdf(
         table: {
           widths: ["*", "*", "*", "*", "*", "*"],
           body: [
-            ["Severidade", "Probabilidade", "Abrangência", "Persistência", "Sensibilidade", "Controle"].map((t) => ({
-              text: t, bold: true, fillColor: PRIMARY, color: "#fff", fontSize: 9,
+            [
+              "Severidade",
+              "Probabilidade",
+              "Abrangência",
+              "Persistência",
+              "Sensibilidade",
+              "Controle",
+            ].map((t) => ({
+              text: t,
+              bold: true,
+              fillColor: PRIMARY,
+              color: "#fff",
+              fontSize: 9,
             })),
             [
-              a.matriz?.severidade, a.matriz?.probabilidade, a.matriz?.abrangencia,
-              a.matriz?.persistencia, a.matriz?.sensibilidade, a.matriz?.controle,
+              a.matriz?.severidade,
+              a.matriz?.probabilidade,
+              a.matriz?.abrangencia,
+              a.matriz?.persistencia,
+              a.matriz?.sensibilidade,
+              a.matriz?.controle,
             ].map((v) => ({ text: String(v ?? "—"), alignment: "center" })),
           ],
         },
@@ -167,12 +206,26 @@ export async function buildEnvReportPdf(
                   widths: ["*", "*", "*", 40, 40, 40, 40],
                   headerRows: 1,
                   body: [
-                    ["Atividade", "Aspecto", "Impacto", "Cond.", "Freq.", "Sev.", "Signif."].map((t) => ({
-                      text: t, bold: true, fillColor: PRIMARY, color: "#fff", fontSize: 8,
-                    })),
-                    ...a.aspectos_impactos.map((r) => [
-                      r.atividade, r.aspecto, r.impacto, r.condicao, r.frequencia, r.severidade, r.significancia,
-                    ].map((v) => ({ text: String(v ?? "—"), fontSize: 8 }))),
+                    ["Atividade", "Aspecto", "Impacto", "Cond.", "Freq.", "Sev.", "Signif."].map(
+                      (t) => ({
+                        text: t,
+                        bold: true,
+                        fillColor: PRIMARY,
+                        color: "#fff",
+                        fontSize: 8,
+                      }),
+                    ),
+                    ...a.aspectos_impactos.map((r) =>
+                      [
+                        r.atividade,
+                        r.aspecto,
+                        r.impacto,
+                        r.condicao,
+                        r.frequencia,
+                        r.severidade,
+                        r.significancia,
+                      ].map((v) => ({ text: String(v ?? "—"), fontSize: 8 })),
+                    ),
                   ],
                 },
                 layout: "lightHorizontalLines",
@@ -187,7 +240,11 @@ export async function buildEnvReportPdf(
               section("Requisitos Legais Aplicáveis"),
               {
                 ul: a.requisitos_legais.map((r) => ({
-                  text: [{ text: r.norma, bold: true }, r.artigo ? ` · ${r.artigo}` : "", ` — ${r.descricao}`],
+                  text: [
+                    { text: r.norma, bold: true },
+                    r.artigo ? ` · ${r.artigo}` : "",
+                    ` — ${r.descricao}`,
+                  ],
                 })),
                 fontSize: 9,
               },
@@ -242,7 +299,9 @@ export async function buildEnvReportPdf(
             stack: [
               section("Limitações e Validação Necessária"),
               {
-                text: a.motivo_evidencia_insuficiente ?? "Necessária validação em campo por profissional habilitado.",
+                text:
+                  a.motivo_evidencia_insuficiente ??
+                  "Necessária validação em campo por profissional habilitado.",
                 color: DANGER,
                 fontSize: 9,
               },
@@ -265,20 +324,28 @@ export async function buildEnvReportPdf(
   };
 
   return new Promise((resolve) => {
-    (pdfMake.createPdf(doc) as unknown as { getBlob: (cb: (b: Blob) => void) => void })
-      .getBlob((blob: Blob) => resolve(blob));
+    (pdfMake.createPdf(doc) as unknown as { getBlob: (cb: (b: Blob) => void) => void }).getBlob(
+      (blob: Blob) => resolve(blob),
+    );
   });
 }
 
 export async function downloadEnvReport(
   a: EnvAnalysisResult,
-  opts?: { code?: string; imageDataUrl?: string; empresa?: string; area?: string; filename?: string },
+  opts?: {
+    code?: string;
+    imageDataUrl?: string;
+    empresa?: string;
+    area?: string;
+    filename?: string;
+  },
 ) {
   const blob = await buildEnvReportPdf(a, opts);
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = opts?.filename ?? `auditoria-ambiental-${(opts?.code ?? Date.now()).toString()}.pdf`;
+  link.download =
+    opts?.filename ?? `auditoria-ambiental-${(opts?.code ?? Date.now()).toString()}.pdf`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

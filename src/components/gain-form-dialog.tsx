@@ -139,7 +139,9 @@ export function GainFormDialog({ open, onOpenChange, record }: Props) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("gains")
-        .select("id, code, gain_type, period_start, period_end, status, value_estimated, value_validated")
+        .select(
+          "id, code, gain_type, period_start, period_end, status, value_estimated, value_validated",
+        )
         .eq("record_id", record.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -215,8 +217,15 @@ export function GainFormDialog({ open, onOpenChange, record }: Props) {
         `Custo/consumo atual: ${fmtBRL(material_cost_after)}`,
         `Economia: ${fmtBRL(valueMonth)}`,
       ].join("\n");
-    } else if (gainType === "financeiro" || gainType === "operacional" || gainType === "produtividade" || gainType === "qualidade" || gainType === "disponibilidade") {
-      valueMonth = manHoursMonth * hourly_cost + Math.max(material_cost_before - material_cost_after, 0);
+    } else if (
+      gainType === "financeiro" ||
+      gainType === "operacional" ||
+      gainType === "produtividade" ||
+      gainType === "qualidade" ||
+      gainType === "disponibilidade"
+    ) {
+      valueMonth =
+        manHoursMonth * hourly_cost + Math.max(material_cost_before - material_cost_after, 0);
       formula = "Ganho = horas-homem economizadas × valor/hora + (custo anterior - custo atual)";
       memory = [
         `Horas-homem/mês: ${manHoursMonth.toFixed(2)} HH`,
@@ -304,7 +313,7 @@ Termine com: "AVISO: Validação humana obrigatória antes de contabilizar o gan
           {
             role: "system",
             content:
-              "Você é IA, IA técnica do VALETECH em Controle de Ganhos. Age como Engenheiro de Segurança, Especialista em Produtividade e Controller. Nunca inventa dados de custo, salário, produção ou tempo. Português técnico e objetivo.",
+              "Você é IA, IA técnica do VisionGuard AI em Controle de Ganhos. Age como Engenheiro de Segurança, Especialista em Produtividade e Controller. Nunca inventa dados de custo, salário, produção ou tempo. Português técnico e objetivo.",
           },
           { role: "user", content: prompt },
         ],
@@ -422,10 +431,14 @@ Termine com: "AVISO: Validação humana obrigatória antes de contabilizar o gan
           </Field>
           <Field label="Tipo de ganho">
             <Select value={gainType} onValueChange={(v) => setGainType(v as GainType)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {GAIN_TYPES.map((t) => (
-                  <SelectItem key={t.v} value={t.v}>{t.l}</SelectItem>
+                  <SelectItem key={t.v} value={t.v}>
+                    {t.l}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -441,25 +454,43 @@ Termine com: "AVISO: Validação humana obrigatória antes de contabilizar o gan
           </Field>
           <Field label="Situação">
             <Select value={status} onValueChange={(v) => setStatus(v as GainStatus)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {GAIN_STATUSES.map((s) => (
-                  <SelectItem key={s.v} value={s.v}>{s.l}</SelectItem>
+                  <SelectItem key={s.v} value={s.v}>
+                    {s.l}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </Field>
           <Field label="Período">
             <Select value={periodKind} onValueChange={setPeriodKind}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
-                {PERIOD_KINDS.map((p) => <SelectItem key={p.v} value={p.v}>{p.l}</SelectItem>)}
+                {PERIOD_KINDS.map((p) => (
+                  <SelectItem key={p.v} value={p.v}>
+                    {p.l}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </Field>
           <div className="grid grid-cols-2 gap-2">
-            <Field label="Início"><Input type="date" value={periodStart} onChange={(e) => setPeriodStart(e.target.value)} /></Field>
-            <Field label="Fim"><Input type="date" value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)} /></Field>
+            <Field label="Início">
+              <Input
+                type="date"
+                value={periodStart}
+                onChange={(e) => setPeriodStart(e.target.value)}
+              />
+            </Field>
+            <Field label="Fim">
+              <Input type="date" value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)} />
+            </Field>
           </div>
         </div>
 
@@ -475,34 +506,73 @@ Termine com: "AVISO: Validação humana obrigatória antes de contabilizar o gan
           {gainType === "seguranca" ? (
             <div className="grid gap-2 md:grid-cols-3">
               <NumField label="Riscos eliminados" onChange={(v) => setI("risks_eliminated", v)} />
-              <NumField label="Pessoas expostas (antes)" onChange={(v) => setI("people_exposed_before", v)} />
-              <NumField label="Pessoas expostas (depois)" onChange={(v) => setI("people_exposed_after", v)} />
+              <NumField
+                label="Pessoas expostas (antes)"
+                onChange={(v) => setI("people_exposed_before", v)}
+              />
+              <NumField
+                label="Pessoas expostas (depois)"
+                onChange={(v) => setI("people_exposed_after", v)}
+              />
               <Field label="Criticidade antes">
-                <Input onChange={(e) => setInputs((s) => ({ ...s, criticality_before: e.target.value }))} />
+                <Input
+                  onChange={(e) => setInputs((s) => ({ ...s, criticality_before: e.target.value }))}
+                />
               </Field>
               <Field label="Criticidade depois">
-                <Input onChange={(e) => setInputs((s) => ({ ...s, criticality_after: e.target.value }))} />
+                <Input
+                  onChange={(e) => setInputs((s) => ({ ...s, criticality_after: e.target.value }))}
+                />
               </Field>
-              <NumField label="Reincidências evitadas" onChange={(v) => setI("recurrences_avoided", v)} />
+              <NumField
+                label="Reincidências evitadas"
+                onChange={(v) => setI("recurrences_avoided", v)}
+              />
             </div>
           ) : (
             <div className="grid gap-2 md:grid-cols-3">
-              <NumField label="Tempo antes (min/exec)" onChange={(v) => setI("time_before_min", v)} />
-              <NumField label="Tempo depois (min/exec)" onChange={(v) => setI("time_after_min", v)} />
-              <NumField label="Execuções por mês" onChange={(v) => setI("executions_per_month", v)} />
+              <NumField
+                label="Tempo antes (min/exec)"
+                onChange={(v) => setI("time_before_min", v)}
+              />
+              <NumField
+                label="Tempo depois (min/exec)"
+                onChange={(v) => setI("time_after_min", v)}
+              />
+              <NumField
+                label="Execuções por mês"
+                onChange={(v) => setI("executions_per_month", v)}
+              />
               <NumField label="Pessoas envolvidas" onChange={(v) => setI("people_count", v)} />
               <NumField label="Valor da hora (R$)" onChange={(v) => setI("hourly_cost", v)} />
-              <NumField label="Custo/consumo anterior (R$)" onChange={(v) => setI("material_cost_before", v)} />
-              <NumField label="Custo/consumo atual (R$)" onChange={(v) => setI("material_cost_after", v)} />
-              <NumField label="Horas de parada evitadas" onChange={(v) => setI("downtime_hours_avoided", v)} />
-              <NumField label="Custo por hora parada (R$)" onChange={(v) => setI("downtime_hourly_cost", v)} />
+              <NumField
+                label="Custo/consumo anterior (R$)"
+                onChange={(v) => setI("material_cost_before", v)}
+              />
+              <NumField
+                label="Custo/consumo atual (R$)"
+                onChange={(v) => setI("material_cost_after", v)}
+              />
+              <NumField
+                label="Horas de parada evitadas"
+                onChange={(v) => setI("downtime_hours_avoided", v)}
+              />
+              <NumField
+                label="Custo por hora parada (R$)"
+                onChange={(v) => setI("downtime_hourly_cost", v)}
+              />
             </div>
           )}
         </div>
 
         <div className="grid gap-3 md:grid-cols-2">
           <Field label="Custo da implementação (R$)">
-            <Input type="number" step="0.01" value={implementationCost} onChange={(e) => setImplementationCost(e.target.value)} />
+            <Input
+              type="number"
+              step="0.01"
+              value={implementationCost}
+              onChange={(e) => setImplementationCost(e.target.value)}
+            />
           </Field>
           <Field label="Observação da validação (obrigatória para Validado)">
             <Input value={validationNote} onChange={(e) => setValidationNote(e.target.value)} />
@@ -515,24 +585,38 @@ Termine com: "AVISO: Validação humana obrigatória antes de contabilizar o gan
               <ShieldCheck className="h-4 w-4" /> Ganho de segurança
             </div>
             <div className="mt-1 text-amber-100/80">
-              Métricas físicas exibidas separadamente. Não há conversão automática em R$ sem metodologia cadastrada e validada.
+              Métricas físicas exibidas separadamente. Não há conversão automática em R$ sem
+              metodologia cadastrada e validada.
             </div>
           </div>
         ) : (
           <div className="rounded-lg border border-border bg-card/40 p-3 text-sm">
-            <div className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">Memória de cálculo</div>
-            <pre className="whitespace-pre-wrap font-mono text-xs text-foreground">{calc.memory || "(informe os dados)"}</pre>
-            <div className="mt-2 text-[11px] italic text-muted-foreground">Fórmula: {calc.formula || "-"}</div>
+            <div className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">
+              Memória de cálculo
+            </div>
+            <pre className="whitespace-pre-wrap font-mono text-xs text-foreground">
+              {calc.memory || "(informe os dados)"}
+            </pre>
+            <div className="mt-2 text-[11px] italic text-muted-foreground">
+              Fórmula: {calc.formula || "-"}
+            </div>
             <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4">
               <Stat label="Mensal" value={fmtBRL(calc.valueMonth)} />
               <Stat label="Anual (projeção)" value={fmtBRL(calc.valueYear)} highlight />
               <Stat label="Retorno líquido" value={fmtBRL(calc.netReturn)} />
               <Stat label="ROI" value={calc.roi != null ? `${calc.roi.toFixed(1)}%` : "—"} />
-              <Stat label="Payback (meses)" value={calc.payback != null ? calc.payback.toFixed(1) : "—"} />
-              <Stat label="HH/mês" value={calc.manHoursMonth ? calc.manHoursMonth.toFixed(1) : "—"} />
+              <Stat
+                label="Payback (meses)"
+                value={calc.payback != null ? calc.payback.toFixed(1) : "—"}
+              />
+              <Stat
+                label="HH/mês"
+                value={calc.manHoursMonth ? calc.manHoursMonth.toFixed(1) : "—"}
+              />
             </div>
             <div className="mt-2 text-[10px] text-muted-foreground">
-              Projeção anual = média do período medido × 12. Valores só entram no dashboard oficial quando o status for "Validado".
+              Projeção anual = média do período medido × 12. Valores só entram no dashboard oficial
+              quando o status for "Validado".
             </div>
           </div>
         )}
@@ -548,12 +632,16 @@ Termine com: "AVISO: Validação humana obrigatória antes de contabilizar o gan
             </Button>
           </div>
           {irisResult && (
-            <pre className="mt-2 max-h-64 overflow-y-auto whitespace-pre-wrap text-xs text-foreground">{irisResult}</pre>
+            <pre className="mt-2 max-h-64 overflow-y-auto whitespace-pre-wrap text-xs text-foreground">
+              {irisResult}
+            </pre>
           )}
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
           <Button
             onClick={() => {
               if (status === "validado" && !validationNote) {
@@ -595,7 +683,11 @@ function Stat({ label, value, highlight }: { label: string; value: string; highl
   return (
     <div className="rounded-md border border-border bg-background/40 p-2">
       <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div className={`mt-1 font-display text-sm font-semibold ${highlight ? "text-neon" : "text-foreground"}`}>{value}</div>
+      <div
+        className={`mt-1 font-display text-sm font-semibold ${highlight ? "text-neon" : "text-foreground"}`}
+      >
+        {value}
+      </div>
     </div>
   );
 }

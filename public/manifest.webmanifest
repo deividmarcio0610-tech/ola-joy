@@ -1,6 +1,6 @@
 {
-  "name": "VALETECH Vision AI",
-  "short_name": "VALETECH",
+  "name": "VisionGuard AI",
+  "short_name": "VisionGuard",
   "description": "Plataforma corporativa de Segurança, Supervisão, Meio Ambiente e IA ÍRIS.",
   "start_url": "/dashboard",
   "scope": "/",

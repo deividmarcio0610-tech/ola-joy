@@ -12,13 +12,7 @@ export type EnvControlLevel =
   | "administrativo"
   | "epi";
 
-export type EnvMedium =
-  | "solo"
-  | "agua"
-  | "ar"
-  | "flora_fauna"
-  | "misto"
-  | "nao_identificado";
+export type EnvMedium = "solo" | "agua" | "ar" | "flora_fauna" | "misto" | "nao_identificado";
 
 export type EnvActionPriority = "baixa" | "media" | "alta" | "critica";
 export type EnvActionStatus = "pendente" | "em_andamento" | "concluida" | "cancelada";
@@ -39,16 +33,43 @@ export type EnvSpecialist = (typeof ENV_SPECIALISTS)[number];
 
 // Categorias de aspecto/impacto ambiental usadas em findings.
 export const ENV_CATEGORIES = [
-  "vazamento","derramamento","contaminacao_solo","contaminacao_agua",
-  "emissao_atmosferica","poeira","fumaca","gases","ruido","vibracao",
-  "residuo_perigoso","residuo_nao_perigoso","segregacao_incorreta",
-  "armazenamento_inadequado","descarte_irregular","falha_contencao",
-  "falha_drenagem","efluente","produto_quimico","oleo","combustivel",
-  "material_contaminado","supressao_vegetal","danos_fauna","danos_flora",
-  "assoreamento","erosao","obstrucao_canaleta","desperdicio_agua",
-  "desperdicio_energia","falha_organizacao","falha_documental",
-  "nao_conformidade","oportunidade_melhoria","boa_pratica",
-  "emergencia_ambiental","outro",
+  "vazamento",
+  "derramamento",
+  "contaminacao_solo",
+  "contaminacao_agua",
+  "emissao_atmosferica",
+  "poeira",
+  "fumaca",
+  "gases",
+  "ruido",
+  "vibracao",
+  "residuo_perigoso",
+  "residuo_nao_perigoso",
+  "segregacao_incorreta",
+  "armazenamento_inadequado",
+  "descarte_irregular",
+  "falha_contencao",
+  "falha_drenagem",
+  "efluente",
+  "produto_quimico",
+  "oleo",
+  "combustivel",
+  "material_contaminado",
+  "supressao_vegetal",
+  "danos_fauna",
+  "danos_flora",
+  "assoreamento",
+  "erosao",
+  "obstrucao_canaleta",
+  "desperdicio_agua",
+  "desperdicio_energia",
+  "falha_organizacao",
+  "falha_documental",
+  "nao_conformidade",
+  "oportunidade_melhoria",
+  "boa_pratica",
+  "emergencia_ambiental",
+  "outro",
 ] as const;
 export type EnvCategory = (typeof ENV_CATEGORIES)[number];
 
@@ -188,6 +209,7 @@ export function classifyAttachment(file: File): EnvAttachmentKind {
     mt === "text/csv" ||
     file.name.toLowerCase().endsWith(".csv") ||
     file.name.toLowerCase().endsWith(".xlsx")
-  ) return "spreadsheet";
+  )
+    return "spreadsheet";
   return "other";
 }

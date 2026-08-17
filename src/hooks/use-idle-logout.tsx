@@ -19,17 +19,23 @@ export function useIdleLogout() {
     const reset = () => {
       if (timerRef.current) clearTimeout(timerRef.current);
       if (warnRef.current) clearTimeout(warnRef.current);
-      warnRef.current = setTimeout(() => {
-        toast.warning("Sessão expira em 1 minuto por inatividade", {
-          description: "Mova o mouse ou toque na tela para continuar.",
-        });
-      }, (IDLE_MINUTES * 60 - WARN_BEFORE_SECONDS) * 1000);
-      timerRef.current = setTimeout(async () => {
-        await logAudit("idle_logout");
-        await supabase.auth.signOut();
-        toast.error("Sessão encerrada por inatividade");
-        navigate({ to: "/auth", replace: true });
-      }, IDLE_MINUTES * 60 * 1000);
+      warnRef.current = setTimeout(
+        () => {
+          toast.warning("Sessão expira em 1 minuto por inatividade", {
+            description: "Mova o mouse ou toque na tela para continuar.",
+          });
+        },
+        (IDLE_MINUTES * 60 - WARN_BEFORE_SECONDS) * 1000,
+      );
+      timerRef.current = setTimeout(
+        async () => {
+          await logAudit("idle_logout");
+          await supabase.auth.signOut();
+          toast.error("Sessão encerrada por inatividade");
+          navigate({ to: "/auth", replace: true });
+        },
+        IDLE_MINUTES * 60 * 1000,
+      );
     };
 
     const events = ["mousemove", "keydown", "click", "touchstart", "scroll"];

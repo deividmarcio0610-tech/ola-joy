@@ -8,7 +8,10 @@ function hamming(a: string, b: string): number {
   let d = 0;
   for (let i = 0; i < a.length; i++) {
     let x = parseInt(a[i], 16) ^ parseInt(b[i], 16);
-    while (x) { d += x & 1; x >>= 1; }
+    while (x) {
+      d += x & 1;
+      x >>= 1;
+    }
   }
   return d;
 }
@@ -39,7 +42,9 @@ const FindSimilarInput = z.object({
   location: z.string().nullable().optional(),
   equipment: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
-  module: z.enum(["n3", "crm", "kaizen", "environment", "emergency", "gain", "supervision"]).optional(),
+  module: z
+    .enum(["n3", "crm", "kaizen", "environment", "emergency", "gain", "supervision"])
+    .optional(),
   onlySent: z.boolean().optional(),
   excludeId: z.string().uuid().optional(),
 });
@@ -51,7 +56,9 @@ export const findSimilar = createServerFn({ method: "POST" })
     const { supabase } = context;
     let q = supabase
       .from("records")
-      .select("id, internal_code, vale_protocol, vale_status, title, description, area, location, equipment, status, photo_url, image_hash, image_phash, user_id, created_at, module")
+      .select(
+        "id, internal_code, vale_protocol, vale_status, title, description, area, location, equipment, status, photo_url, image_hash, image_phash, user_id, created_at, module",
+      )
       .order("created_at", { ascending: false })
       .limit(200);
     if (data.module) q = q.eq("module", data.module);
@@ -76,23 +83,24 @@ export const findSimilar = createServerFn({ method: "POST" })
       return inter / Math.max(A.size, B.size);
     }
 
-    const scored = cand.map((r) => {
-      // image score
-      let imgScore = 0;
-      if (data.imageHash && r.image_hash && data.imageHash === r.image_hash) imgScore = 1;
-      else if (data.imagePhash && r.image_phash) {
-        const h = hamming(data.imagePhash, r.image_phash);
-        imgScore = Math.max(0, 1 - h / 16); // 0 dist → 1; ≥16 → 0
-      }
-      // context score
-      const areaScore = area && r.area ? (area === r.area.toLowerCase() ? 1 : 0) : 0;
-      const locScore = loc && r.location ? textSim(loc, r.location.toLowerCase()) : 0;
-      const equipScore = equip && r.equipment ? textSim(equip, r.equipment.toLowerCase()) : 0;
-      const ctxScore = Math.max(areaScore * 0.5 + locScore * 0.3 + equipScore * 0.2, 0);
-      const descScore = desc && r.description ? textSim(desc, r.description.toLowerCase()) : 0;
-      const score = imgScore * 0.5 + ctxScore * 0.25 + descScore * 0.25;
-      return { record: r, score, imgScore, ctxScore, descScore };
-    })
+    const scored = cand
+      .map((r) => {
+        // image score
+        let imgScore = 0;
+        if (data.imageHash && r.image_hash && data.imageHash === r.image_hash) imgScore = 1;
+        else if (data.imagePhash && r.image_phash) {
+          const h = hamming(data.imagePhash, r.image_phash);
+          imgScore = Math.max(0, 1 - h / 16); // 0 dist → 1; ≥16 → 0
+        }
+        // context score
+        const areaScore = area && r.area ? (area === r.area.toLowerCase() ? 1 : 0) : 0;
+        const locScore = loc && r.location ? textSim(loc, r.location.toLowerCase()) : 0;
+        const equipScore = equip && r.equipment ? textSim(equip, r.equipment.toLowerCase()) : 0;
+        const ctxScore = Math.max(areaScore * 0.5 + locScore * 0.3 + equipScore * 0.2, 0);
+        const descScore = desc && r.description ? textSim(desc, r.description.toLowerCase()) : 0;
+        const score = imgScore * 0.5 + ctxScore * 0.25 + descScore * 0.25;
+        return { record: r, score, imgScore, ctxScore, descScore };
+      })
       .filter((s) => s.score >= 0.3)
       .sort((a, b) => b.score - a.score)
       .slice(0, 5)
@@ -146,7 +154,8 @@ export const createRecordWithCode = createServerFn({ method: "POST" })
         .maybeSingle();
       if (parent) {
         parentCode = (parent as { internal_code: string | null }).internal_code;
-        recurrenceIndex = ((parent as { recurrence_index: number | null }).recurrence_index ?? 0) + 1;
+        recurrenceIndex =
+          ((parent as { recurrence_index: number | null }).recurrence_index ?? 0) + 1;
       }
     }
 
@@ -242,7 +251,9 @@ export const confirmValeSend = createServerFn({ method: "POST" })
       .neq("id", data.record_id)
       .limit(1);
     if (dupProto && dupProto.length && !data.override_duplicate) {
-      throw new Error(`Protocolo já usado no registro ${(dupProto[0] as { internal_code: string }).internal_code}`);
+      throw new Error(
+        `Protocolo já usado no registro ${(dupProto[0] as { internal_code: string }).internal_code}`,
+      );
     }
 
     const { data: prev } = await supabase
@@ -274,7 +285,11 @@ export const confirmValeSend = createServerFn({ method: "POST" })
       to_status: "sent",
       justification: data.duplicate_justification ?? data.send_note ?? null,
       proof_url: data.send_proof_url ?? null,
-      meta: { vale_protocol: data.vale_protocol, vale_code: data.vale_code, channel: data.sent_channel } as never,
+      meta: {
+        vale_protocol: data.vale_protocol,
+        vale_code: data.vale_code,
+        channel: data.sent_channel,
+      } as never,
     } as never);
 
     return { ok: true };
@@ -283,9 +298,18 @@ export const confirmValeSend = createServerFn({ method: "POST" })
 const UpdateValeStatusInput = z.object({
   record_id: z.string().uuid(),
   vale_status: z.enum([
-    "draft", "awaiting_review", "ready", "sent", "awaiting_return",
-    "accepted", "rejected", "needs_fix", "in_treatment",
-    "awaiting_evidence", "awaiting_validation", "closed",
+    "draft",
+    "awaiting_review",
+    "ready",
+    "sent",
+    "awaiting_return",
+    "accepted",
+    "rejected",
+    "needs_fix",
+    "in_treatment",
+    "awaiting_evidence",
+    "awaiting_validation",
+    "closed",
   ]),
   justification: z.string().nullable().optional(),
 });
@@ -295,7 +319,11 @@ export const updateValeStatus = createServerFn({ method: "POST" })
   .inputValidator((v: unknown) => UpdateValeStatusInput.parse(v))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { data: prev } = await supabase.from("records").select("vale_status").eq("id", data.record_id).single();
+    const { data: prev } = await supabase
+      .from("records")
+      .select("vale_status")
+      .eq("id", data.record_id)
+      .single();
     const { error } = await supabase
       .from("records")
       .update({ vale_status: data.vale_status } as never)
@@ -320,7 +348,7 @@ export const listMonitoring = createServerFn({ method: "GET" })
     const { data, error } = await supabase
       .from("records")
       .select(
-        "id, internal_code, vale_protocol, vale_code, vale_status, vale_result, vale_result_at, vale_result_note, vale_reject_category, vale_reject_reason, vale_result_proof_url, vale_result_document_url, vale_version, vale_root_id, vale_channel, vale_deadline, module, title, description, area, location, equipment, status, priority, financial_value, photo_url, sent_at, sent_channel, send_proof_url, parent_record_id, recurrence_index, created_at, updated_at, user_id, meta"
+        "id, internal_code, vale_protocol, vale_code, vale_status, vale_result, vale_result_at, vale_result_note, vale_reject_category, vale_reject_reason, vale_result_proof_url, vale_result_document_url, vale_version, vale_root_id, vale_channel, vale_deadline, module, title, description, area, location, equipment, status, priority, financial_value, photo_url, sent_at, sent_channel, send_proof_url, parent_record_id, recurrence_index, created_at, updated_at, user_id, meta",
       )
       .order("created_at", { ascending: false })
       .limit(2000);
@@ -562,17 +590,25 @@ export const generateValeInsights = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     if (data.stats.total === 0) {
       return {
-        text:
-          "Dados insuficientes para gerar insights no período selecionado. Ajuste os filtros ou registre mais eventos.",
+        text: "Dados insuficientes para gerar insights no período selecionado. Ajuste os filtros ou registre mais eventos.",
         base: data.stats,
       };
     }
-    const rejectEntries = Object.entries(data.stats.reject_by_category ?? {}).sort((a, b) => b[1] - a[1]);
-    const approvalEntries = Object.entries(data.stats.approval_by_module ?? {}).sort((a, b) => b[1] - a[1]);
-    const pendingEntries = Object.entries(data.stats.pendings_by_area ?? {}).sort((a, b) => b[1] - a[1]);
-    const approvalRate = data.stats.sent > 0 ? Math.round((data.stats.approved / data.stats.sent) * 100) : null;
-    const rejectionRate = data.stats.sent > 0 ? Math.round((data.stats.rejected / data.stats.sent) * 100) : null;
-    const confidence = data.stats.total >= 100 ? "Alta" : data.stats.total >= 30 ? "Média" : "Baixa";
+    const rejectEntries = Object.entries(data.stats.reject_by_category ?? {}).sort(
+      (a, b) => b[1] - a[1],
+    );
+    const approvalEntries = Object.entries(data.stats.approval_by_module ?? {}).sort(
+      (a, b) => b[1] - a[1],
+    );
+    const pendingEntries = Object.entries(data.stats.pendings_by_area ?? {}).sort(
+      (a, b) => b[1] - a[1],
+    );
+    const approvalRate =
+      data.stats.sent > 0 ? Math.round((data.stats.approved / data.stats.sent) * 100) : null;
+    const rejectionRate =
+      data.stats.sent > 0 ? Math.round((data.stats.rejected / data.stats.sent) * 100) : null;
+    const confidence =
+      data.stats.total >= 100 ? "Alta" : data.stats.total >= 30 ? "Média" : "Baixa";
     const text = [
       `Período analisado: ${data.period_from ?? "—"} a ${data.period_to ?? "—"}`,
       `Base: ${data.stats.total} registro(s); ${data.stats.sent} enviado(s); ${data.stats.pending_result} aguardando retorno.`,
@@ -582,9 +618,30 @@ export const generateValeInsights = createServerFn({ method: "POST" })
       rejectionRate == null
         ? "Reprovação: sem dados suficientes."
         : `Reprovação: ${rejectionRate}% (${data.stats.rejected} reprovado(s)).`,
-      `Principais motivos de reprovação: ${rejectEntries.length ? rejectEntries.slice(0, 3).map(([k, v]) => `${k} (${v})`).join(", ") : "sem dados suficientes"}.`,
-      `Módulos com maior aprovação: ${approvalEntries.length ? approvalEntries.slice(0, 3).map(([k, v]) => `${k} (${v}%)`).join(", ") : "sem dados suficientes"}.`,
-      `Áreas com mais pendências: ${pendingEntries.length ? pendingEntries.slice(0, 3).map(([k, v]) => `${k} (${v})`).join(", ") : "sem dados suficientes"}.`,
+      `Principais motivos de reprovação: ${
+        rejectEntries.length
+          ? rejectEntries
+              .slice(0, 3)
+              .map(([k, v]) => `${k} (${v})`)
+              .join(", ")
+          : "sem dados suficientes"
+      }.`,
+      `Módulos com maior aprovação: ${
+        approvalEntries.length
+          ? approvalEntries
+              .slice(0, 3)
+              .map(([k, v]) => `${k} (${v}%)`)
+              .join(", ")
+          : "sem dados suficientes"
+      }.`,
+      `Áreas com mais pendências: ${
+        pendingEntries.length
+          ? pendingEntries
+              .slice(0, 3)
+              .map(([k, v]) => `${k} (${v})`)
+              .join(", ")
+          : "sem dados suficientes"
+      }.`,
       data.stats.avg_response_days == null
         ? "Tempo médio de resposta: sem dados suficientes."
         : `Tempo médio de resposta: ${data.stats.avg_response_days.toFixed(1)} dia(s).`,
@@ -630,7 +687,10 @@ export const updateRecordStatus = createServerFn({ method: "POST" })
     const history = Array.isArray((prev as { status_history?: unknown } | null)?.status_history)
       ? ((prev as { status_history: unknown[] }).status_history as unknown[])
       : [];
-    const meta = ((prev as { meta?: Record<string, unknown> } | null)?.meta ?? {}) as Record<string, unknown>;
+    const meta = ((prev as { meta?: Record<string, unknown> } | null)?.meta ?? {}) as Record<
+      string,
+      unknown
+    >;
     const fromStatus = (meta.status_v2 as string | undefined) ?? null;
 
     const entry = {

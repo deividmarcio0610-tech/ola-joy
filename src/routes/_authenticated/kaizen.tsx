@@ -22,6 +22,6 @@ function KaizenPage() {
 }
 
 export const Route = createFileRoute("/_authenticated/kaizen")({
-  head: () => ({ meta: [{ title: "Kaizen · VALETECH" }] }),
+  head: () => ({ meta: [{ title: "Kaizen · VisionGuard AI" }] }),
   component: KaizenPage,
 });

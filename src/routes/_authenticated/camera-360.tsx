@@ -14,7 +14,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ModuleShell } from "@/components/module-shell";
-import { EquipAreaFields, emptyEquipArea, equipAreaPromptSuffix } from "@/components/equip-area-fields";
+import {
+  EquipAreaFields,
+  emptyEquipArea,
+  equipAreaPromptSuffix,
+} from "@/components/equip-area-fields";
 import { toast } from "sonner";
 import { chamarIrisChat } from "@/lib/iris-analyze";
 import { handleAiError } from "@/lib/ai-credits-error";
@@ -23,7 +27,7 @@ export const Route = createFileRoute("/_authenticated/camera-360")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Câmera 360° · VALETECH" },
+      { title: "Câmera 360° · VisionGuard AI" },
       {
         name: "description",
         content:
@@ -198,7 +202,9 @@ function Camera360Page() {
             <label className="flex h-56 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-black/30 text-sm text-muted-foreground hover:border-neon/50 hover:text-foreground">
               <Upload className="h-8 w-8" />
               <span>Enviar / gravar vídeo</span>
-              <span className="text-[10px] text-muted-foreground">MP4, MOV, WEBM · até 60s · 60MB</span>
+              <span className="text-[10px] text-muted-foreground">
+                MP4, MOV, WEBM · até 60s · 60MB
+              </span>
               <input
                 ref={inputRef}
                 type="file"
@@ -232,11 +238,7 @@ function Camera360Page() {
             onChange={(e) => setNote(e.target.value)}
             placeholder="Contexto adicional (turno, observações…) — opcional"
           />
-          <Button
-            onClick={analyze}
-            disabled={loading || !url}
-            className="mt-3 w-full gap-2"
-          >
+          <Button onClick={analyze} disabled={loading || !url} className="mt-3 w-full gap-2">
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" /> {progress || "Analisando…"}
@@ -255,7 +257,12 @@ function Camera360Page() {
               </div>
               <div className="grid grid-cols-4 gap-2">
                 {frames.map((f, i) => (
-                  <img key={i} src={f} alt={`frame-${i}`} className="rounded border border-border object-cover" />
+                  <img
+                    key={i}
+                    src={f}
+                    alt={`frame-${i}`}
+                    className="rounded border border-border object-cover"
+                  />
                 ))}
               </div>
             </div>
@@ -292,7 +299,11 @@ function Camera360Page() {
                   </div>
                   <div
                     className={`font-display text-3xl font-semibold ${
-                      report.score >= 70 ? "text-neon" : report.score >= 40 ? "text-yellow-400" : "text-red-400"
+                      report.score >= 70
+                        ? "text-neon"
+                        : report.score >= 40
+                          ? "text-yellow-400"
+                          : "text-red-400"
                     }`}
                   >
                     {report.score}
@@ -308,7 +319,10 @@ function Camera360Page() {
                 </h3>
                 <ul className="space-y-1.5">
                   {report.improvements.map((imp, i) => (
-                    <li key={i} className="flex gap-2 rounded-md border border-neon/30 bg-neon/5 px-3 py-1.5 text-xs">
+                    <li
+                      key={i}
+                      className="flex gap-2 rounded-md border border-neon/30 bg-neon/5 px-3 py-1.5 text-xs"
+                    >
                       <span className="text-neon">✓</span>
                       <span className="text-foreground/90">{imp}</span>
                     </li>
@@ -351,7 +365,8 @@ function Camera360Page() {
               </div>
 
               <p className="text-[10px] italic text-muted-foreground">
-                AVISO: As ações propostas pela IA devem ser validadas pelos responsáveis antes da execução.
+                AVISO: As ações propostas pela IA devem ser validadas pelos responsáveis antes da
+                execução.
               </p>
             </div>
           )}

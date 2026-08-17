@@ -203,7 +203,14 @@ function toPriority(r: RiskLevel): Priority {
 
 export function fromLegacyAnalysis(
   a: IrisAnalysis,
-  ctx?: { area?: string; local?: string; responsavel?: string; hasBefore?: boolean; hasAfter?: boolean; simulated?: boolean },
+  ctx?: {
+    area?: string;
+    local?: string;
+    responsavel?: string;
+    hasBefore?: boolean;
+    hasAfter?: boolean;
+    simulated?: boolean;
+  },
 ): AnalysisV2 {
   const tipo: ClassificationType = LEGACY_TYPE_TO_V2[a.tipo_registro] ?? "n3";
   const risco = toRiskLevel(a.nivel_risco);

@@ -110,9 +110,7 @@ export function VersionUpdateBanner() {
       <Dialog open={notesOpen} onOpenChange={setNotesOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>
-              Novidades — v{v.version}
-            </DialogTitle>
+            <DialogTitle>Novidades — v{v.version}</DialogTitle>
             <DialogDescription>{v.title}</DialogDescription>
           </DialogHeader>
           {v.description && <p className="text-sm text-muted-foreground">{v.description}</p>}

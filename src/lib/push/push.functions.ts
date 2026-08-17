@@ -2,6 +2,29 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+/**
+ * Sem o par VAPID configurado, `buildPushPayload` falha por assinatura e cada
+ * envio vira um "failed" opaco. Falhar aqui aponta direto para a variável ausente.
+ */
+function requireVapid() {
+  const publicKey = process.env.VAPID_PUBLIC_KEY;
+  const privateKey = process.env.VAPID_PRIVATE_KEY;
+  if (!publicKey || !privateKey) {
+    const missing = [
+      ...(!publicKey ? ["VAPID_PUBLIC_KEY"] : []),
+      ...(!privateKey ? ["VAPID_PRIVATE_KEY"] : []),
+    ].join(", ");
+    throw new Error(
+      `Push não configurado no servidor: ${missing}. Gere o par com "npx web-push generate-vapid-keys".`,
+    );
+  }
+  return {
+    subject: process.env.VAPID_SUBJECT || "mailto:alertas@visionai.dvdswap.com.br",
+    publicKey,
+    privateKey,
+  };
+}
+
 const SubscriptionSchema = z.object({
   endpoint: z.string().url(),
   keys: z.object({ p256dh: z.string().min(1), auth: z.string().min(1) }),
@@ -71,7 +94,9 @@ export const listMyPushSubscriptions = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("push_subscriptions")
-      .select("id, endpoint, user_agent, platform, enabled, last_success_at, last_failure_at, failure_count, created_at")
+      .select(
+        "id, endpoint, user_agent, platform, enabled, last_success_at, last_failure_at, failure_count, created_at",
+      )
       .eq("user_id", context.userId)
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
@@ -88,21 +113,18 @@ export const sendTestPushToMe = createServerFn({ method: "POST" })
       .eq("user_id", userId)
       .eq("enabled", true);
     if (error) throw new Error(error.message);
-    if (!subs || subs.length === 0) return { sent: 0, failed: 0, message: "Nenhum dispositivo cadastrado" };
+    if (!subs || subs.length === 0)
+      return { sent: 0, failed: 0, message: "Nenhum dispositivo cadastrado" };
 
     const { buildPushPayload } = await import("@block65/webcrypto-web-push");
 
-    const vapid = {
-      subject: process.env.VAPID_SUBJECT || "mailto:alertas@valetech.app",
-      publicKey: process.env.VAPID_PUBLIC_KEY!,
-      privateKey: process.env.VAPID_PRIVATE_KEY!,
-    };
+    const vapid = requireVapid();
 
     const payloadData = {
-      title: "TESTE — ALERTA VALETECH IA",
+      title: "TESTE — ALERTA VisionGuard AI IA",
       body: "Teste de notificação, som e vibração realizado com sucesso.",
       severity: "critical",
-      tag: "valetech-test",
+      tag: "visionguard-test",
       test: true,
       url: "/intemperies/notificacoes",
       timestamp: Date.now(),
@@ -116,7 +138,11 @@ export const sendTestPushToMe = createServerFn({ method: "POST" })
       try {
         const built = await buildPushPayload(
           { data: payloadData, options: { ttl: 60, urgency: "high" } },
-          { endpoint: sub.endpoint, expirationTime: null, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+          {
+            endpoint: sub.endpoint,
+            expirationTime: null,
+            keys: { p256dh: sub.p256dh, auth: sub.auth },
+          },
           vapid,
         );
         const res = await fetch(sub.endpoint, {
@@ -145,10 +171,10 @@ export const sendTestPushToMe = createServerFn({ method: "POST" })
         await supabaseAdmin.from("push_deliveries").insert({
           subscription_id: sub.id,
           user_id: userId,
-          title: "TESTE — ALERTA VALETECH IA",
+          title: "TESTE — ALERTA VisionGuard AI IA",
           body: "Teste de notificação",
           severity: "critical",
-          tag: "valetech-test",
+          tag: "visionguard-test",
           is_test: true,
           status: ok ? "sent" : "failed",
           http_status: res.status,
@@ -159,9 +185,9 @@ export const sendTestPushToMe = createServerFn({ method: "POST" })
         await supabaseAdmin.from("push_deliveries").insert({
           subscription_id: sub.id,
           user_id: userId,
-          title: "TESTE — ALERTA VALETECH IA",
+          title: "TESTE — ALERTA VisionGuard AI IA",
           severity: "critical",
-          tag: "valetech-test",
+          tag: "visionguard-test",
           is_test: true,
           status: "error",
           error: err instanceof Error ? err.message : String(err),

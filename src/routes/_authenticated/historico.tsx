@@ -10,8 +10,11 @@ import { useEffect, useState } from "react";
 export const Route = createFileRoute("/_authenticated/historico")({
   head: () => ({
     meta: [
-      { title: "Histórico de Scans · VALETECH" },
-      { name: "description", content: "Todas as inspeções Vision AI IA salvas com score, data e status." },
+      { title: "Histórico de Scans · VisionGuard AI" },
+      {
+        name: "description",
+        content: "Todas as inspeções Vision AI IA salvas com score, data e status.",
+      },
     ],
   }),
   component: HistoricoPage,
@@ -56,9 +59,7 @@ function HistoricoPage() {
           </div>
           <div>
             <h1 className="font-display text-xl font-semibold">Histórico de Scans</h1>
-            <p className="text-xs text-muted-foreground">
-              Inspeções Vision AI IA salvas.
-            </p>
+            <p className="text-xs text-muted-foreground">Inspeções Vision AI IA salvas.</p>
           </div>
         </div>
         <Button asChild className="gap-2">
@@ -211,7 +212,9 @@ function HistoryRow({ inspection }: { inspection: Inspection }) {
         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
           <span>{new Date(inspection.created_at).toLocaleString("pt-BR")}</span>
           {inspection.location && <span>· {inspection.location}</span>}
-          <span>· {dets} {dets === 1 ? "detecção" : "detecções"}</span>
+          <span>
+            · {dets} {dets === 1 ? "detecção" : "detecções"}
+          </span>
         </div>
       </div>
 
@@ -219,9 +222,7 @@ function HistoryRow({ inspection }: { inspection: Inspection }) {
         <div className={`font-display text-2xl font-semibold leading-none ${scoreColor}`}>
           {score ?? "—"}
         </div>
-        <div className="text-[9px] uppercase tracking-widest text-muted-foreground">
-          Score IA
-        </div>
+        <div className="text-[9px] uppercase tracking-widest text-muted-foreground">Score IA</div>
       </div>
 
       <Button

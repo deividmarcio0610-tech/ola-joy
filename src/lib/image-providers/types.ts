@@ -49,10 +49,7 @@ export interface ImageProvider {
 }
 
 // Classifica erros HTTP e mensagens em ProviderErrorType.
-export function classifyHttpError(
-  status: number | undefined,
-  bodyText: string,
-): ProviderErrorType {
+export function classifyHttpError(status: number | undefined, bodyText: string): ProviderErrorType {
   const t = bodyText.toLowerCase();
   if (
     t.includes("content_moderation") ||

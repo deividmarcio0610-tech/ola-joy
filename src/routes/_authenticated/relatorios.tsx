@@ -22,7 +22,7 @@ import {
 } from "recharts";
 
 export const Route = createFileRoute("/_authenticated/relatorios")({
-  head: () => ({ meta: [{ title: "Relatórios · VALETECH" }] }),
+  head: () => ({ meta: [{ title: "Relatórios · VisionGuard AI" }] }),
   component: Reports,
 });
 
@@ -121,16 +121,12 @@ function Reports() {
       doc.setTextColor(57, 255, 20);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(28);
-      doc.text("VALETECH", margin, 140);
+      doc.text("VisionGuard AI", margin, 140);
       doc.setFontSize(14);
       doc.setTextColor(200, 200, 200);
       doc.text("Relatório Gerencial · Modo Executivo", margin, 168);
       doc.setFontSize(10);
-      doc.text(
-        `Emitido em ${new Date().toLocaleString("pt-BR")}`,
-        margin,
-        pageH - margin,
-      );
+      doc.text(`Emitido em ${new Date().toLocaleString("pt-BR")}`, margin, pageH - margin);
       doc.setTextColor(57, 255, 20);
       doc.setFontSize(11);
       doc.text("Análise IA · Antes / Depois com IA", margin, pageH - margin - 18);
@@ -146,14 +142,8 @@ function Reports() {
 
       const kpis: [string, string][] = [
         ["Registros totais", String(data.length)],
-        [
-          "Concluídos",
-          String(data.filter((r) => r.status === "concluido").length),
-        ],
-        [
-          "Críticos",
-          String(data.filter((r) => r.priority === "critica").length),
-        ],
+        ["Concluídos", String(data.filter((r) => r.status === "concluido").length)],
+        ["Críticos", String(data.filter((r) => r.priority === "critica").length)],
         [
           "Ganho consolidado",
           `R$ ${totalValor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`,
@@ -300,8 +290,7 @@ function Reports() {
         if (iris.risk) lines.push(`Risco: ${iris.risk}`);
         if (iris.immediate_action) lines.push(`Ação imediata: ${iris.immediate_action}`);
         if (iris.final_action) lines.push(`Ação definitiva: ${iris.final_action}`);
-        if (iris.suggested_responsible)
-          lines.push(`Responsável: ${iris.suggested_responsible}`);
+        if (iris.suggested_responsible) lines.push(`Responsável: ${iris.suggested_responsible}`);
         if (r.description) lines.push(`Descrição: ${r.description}`);
         const wrapped = doc.splitTextToSize(lines.join("\n"), infoW);
         doc.text(wrapped.slice(0, 12), infoX, imgY + 8);
@@ -319,7 +308,7 @@ function Reports() {
         y += cardH + 10;
       }
 
-      doc.save(`valetech-gerencial-${Date.now()}.pdf`);
+      doc.save(`visionguard-gerencial-${Date.now()}.pdf`);
       toast.success("PDF gerencial gerado.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao gerar PDF.");
@@ -349,12 +338,7 @@ function Reports() {
           )}
           PDF Gerencial (Antes/Depois)
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => window.print()}
-          className="gap-2"
-        >
+        <Button variant="outline" size="sm" onClick={() => window.print()} className="gap-2">
           <FileDown className="h-4 w-4" /> Imprimir visão
         </Button>
       </div>

@@ -34,12 +34,7 @@ export function HumanReviewBar({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Button
-        size="sm"
-        onClick={() => onAction("aprovada")}
-        disabled={disabled}
-        className="gap-1"
-      >
+      <Button size="sm" onClick={() => onAction("aprovada")} disabled={disabled} className="gap-1">
         <CheckCircle2 className="h-4 w-4" />
         Aprovar análise
       </Button>

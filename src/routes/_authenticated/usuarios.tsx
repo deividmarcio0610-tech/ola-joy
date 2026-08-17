@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ModuleShell } from "@/components/module-shell";
 
 export const Route = createFileRoute("/_authenticated/usuarios")({
-  head: () => ({ meta: [{ title: "Usuários · VALETECH" }] }),
+  head: () => ({ meta: [{ title: "Usuários · VisionGuard AI" }] }),
   component: Usuarios,
 });
 
@@ -29,14 +29,22 @@ function Usuarios() {
   });
 
   return (
-    <ModuleShell icon={UserCog} title="Usuários" subtitle="Perfis e papéis do sistema." status="operacional">
+    <ModuleShell
+      icon={UserCog}
+      title="Usuários"
+      subtitle="Perfis e papéis do sistema."
+      status="operacional"
+    >
       <div className="rounded-xl border border-border bg-card/40">
         {isLoading ? (
           <div className="flex items-center justify-center p-10 text-muted-foreground">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />Carregando…
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Carregando…
           </div>
         ) : !data || data.length === 0 ? (
-          <div className="p-10 text-center text-sm text-muted-foreground">Nenhum usuário visível.</div>
+          <div className="p-10 text-center text-sm text-muted-foreground">
+            Nenhum usuário visível.
+          </div>
         ) : (
           <ul className="divide-y divide-border">
             {data.map((u) => (
@@ -47,10 +55,15 @@ function Usuarios() {
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {u.roles.length === 0 ? (
-                    <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">sem papel</span>
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+                      sem papel
+                    </span>
                   ) : (
                     u.roles.map((r: string) => (
-                      <span key={r} className="rounded-full bg-neon/15 px-2 py-0.5 text-[10px] uppercase tracking-widest text-neon ring-1 ring-neon/30">
+                      <span
+                        key={r}
+                        className="rounded-full bg-neon/15 px-2 py-0.5 text-[10px] uppercase tracking-widest text-neon ring-1 ring-neon/30"
+                      >
                         {r}
                       </span>
                     ))
@@ -62,7 +75,8 @@ function Usuarios() {
         )}
       </div>
       <p className="text-xs text-muted-foreground">
-        Somente administradores visualizam todos os usuários. Operadores veem apenas o próprio perfil.
+        Somente administradores visualizam todos os usuários. Operadores veem apenas o próprio
+        perfil.
       </p>
     </ModuleShell>
   );

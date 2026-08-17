@@ -23,9 +23,7 @@ export async function renderPlanToPng(
   const scale = Math.min(scaleX, scaleY);
 
   const wrapped = `<svg xmlns="http://www.w3.org/2000/svg" width="${viewBoxW * scale}" height="${viewBoxH * scale}" viewBox="0 0 ${viewBoxW} ${viewBoxH}">${svgMarkup}</svg>`;
-  const svgImg = await loadImage(
-    "data:image/svg+xml;charset=utf-8," + encodeURIComponent(wrapped),
-  );
+  const svgImg = await loadImage("data:image/svg+xml;charset=utf-8," + encodeURIComponent(wrapped));
   const offsetX = (img.naturalWidth - viewBoxW * scale) / 2;
   const offsetY = (img.naturalHeight - viewBoxH * scale) / 2;
   ctx.drawImage(svgImg, offsetX, offsetY, viewBoxW * scale, viewBoxH * scale);

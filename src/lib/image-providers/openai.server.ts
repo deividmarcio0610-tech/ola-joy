@@ -26,7 +26,9 @@ export class OpenAIImageProvider implements ImageProvider {
     const key = process.env.OPENAI_API_KEY;
     if (!key) {
       return {
-        provider: this.name, model, success: false,
+        provider: this.name,
+        model,
+        success: false,
         errorType: "AUTHENTICATION_ERROR",
         errorMessage: "OPENAI_API_KEY não configurado.",
         durationMs: Date.now() - t0,
@@ -36,7 +38,11 @@ export class OpenAIImageProvider implements ImageProvider {
     const prompt = buildEditPrompt(req);
     const form = new FormData();
     const bytes = base64ToBytes(req.originalImageBase64);
-    form.append("image", new Blob([bytes.buffer as ArrayBuffer], { type: req.mimeType }), "input.png");
+    form.append(
+      "image",
+      new Blob([bytes.buffer as ArrayBuffer], { type: req.mimeType }),
+      "input.png",
+    );
     form.append("prompt", prompt);
     form.append("model", model);
     form.append("size", "1024x1024");
@@ -55,7 +61,9 @@ export class OpenAIImageProvider implements ImageProvider {
       const text = await res.text();
       if (!res.ok) {
         return {
-          provider: this.name, model, success: false,
+          provider: this.name,
+          model,
+          success: false,
           httpStatus: res.status,
           errorType: classifyHttpError(res.status, text),
           errorMessage: text.slice(0, 500),
@@ -67,7 +75,9 @@ export class OpenAIImageProvider implements ImageProvider {
       const item = json.data?.[0];
       if (item?.b64_json) {
         return {
-          provider: this.name, model, success: true,
+          provider: this.name,
+          model,
+          success: true,
           imageBase64: item.b64_json,
           imageMimeType: "image/png",
           durationMs: Date.now() - t0,
@@ -77,14 +87,18 @@ export class OpenAIImageProvider implements ImageProvider {
         const dl = await fetch(item.url);
         const buf = new Uint8Array(await dl.arrayBuffer());
         return {
-          provider: this.name, model, success: true,
+          provider: this.name,
+          model,
+          success: true,
           imageBase64: bytesToBase64(buf),
           imageMimeType: dl.headers.get("Content-Type") ?? "image/png",
           durationMs: Date.now() - t0,
         };
       }
       return {
-        provider: this.name, model, success: false,
+        provider: this.name,
+        model,
+        success: false,
         errorType: "UNKNOWN_ERROR",
         errorMessage: "OpenAI não retornou imagem.",
         durationMs: Date.now() - t0,
@@ -92,7 +106,9 @@ export class OpenAIImageProvider implements ImageProvider {
     } catch (e) {
       const isAbort = e instanceof Error && e.name === "AbortError";
       return {
-        provider: this.name, model, success: false,
+        provider: this.name,
+        model,
+        success: false,
         errorType: isAbort ? "TIMEOUT" : "UNKNOWN_ERROR",
         errorMessage: e instanceof Error ? e.message : String(e),
         durationMs: Date.now() - t0,

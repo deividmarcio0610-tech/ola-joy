@@ -51,9 +51,12 @@ export function evaluateStatus(input: {
 
   // Raios (quando fonte ativa)
   if (input.lightningEnabled && typeof input.nearestLightningKm === "number") {
-    if (input.nearestLightningKm <= 10) bump("EMERGENCIA", `Raio a ${input.nearestLightningKm.toFixed(1)} km.`);
-    else if (input.nearestLightningKm <= 20) bump("SUSPENSAO", `Raio a ${input.nearestLightningKm.toFixed(1)} km.`);
-    else if (input.nearestLightningKm <= 30) bump("ALERTA", `Raio a ${input.nearestLightningKm.toFixed(1)} km.`);
+    if (input.nearestLightningKm <= 10)
+      bump("EMERGENCIA", `Raio a ${input.nearestLightningKm.toFixed(1)} km.`);
+    else if (input.nearestLightningKm <= 20)
+      bump("SUSPENSAO", `Raio a ${input.nearestLightningKm.toFixed(1)} km.`);
+    else if (input.nearestLightningKm <= 30)
+      bump("ALERTA", `Raio a ${input.nearestLightningKm.toFixed(1)} km.`);
     else bump("ATENCAO", `Raio a ${input.nearestLightningKm.toFixed(1)} km.`);
   }
 
@@ -65,7 +68,8 @@ export function evaluateStatus(input: {
     else if (risk >= 30) bump("ATENCAO", `Risco moderado de raios (índice ${risk}).`);
   }
 
-  if (STORM_CODES.has(c.weather_code)) bump("ALERTA", "Trovoada em curso segundo modelo Open-Meteo.");
+  if (STORM_CODES.has(c.weather_code))
+    bump("ALERTA", "Trovoada em curso segundo modelo Open-Meteo.");
 
   const gust = c.wind_gusts_10m;
   if (gust >= 90) bump("EMERGENCIA", `Rajadas de ${gust.toFixed(0)} km/h.`);
@@ -73,9 +77,12 @@ export function evaluateStatus(input: {
   else if (gust >= 50) bump("ALERTA", `Rajadas de ${gust.toFixed(0)} km/h.`);
   else if (gust >= 40) bump("ATENCAO", `Rajadas de ${gust.toFixed(0)} km/h.`);
 
-  if (c.precipitation >= 25) bump("SUSPENSAO", `Chuva intensa (${c.precipitation.toFixed(1)} mm/h).`);
-  else if (c.precipitation >= 10) bump("ALERTA", `Chuva forte (${c.precipitation.toFixed(1)} mm/h).`);
-  else if (c.precipitation >= 2) bump("ATENCAO", `Chuva moderada (${c.precipitation.toFixed(1)} mm/h).`);
+  if (c.precipitation >= 25)
+    bump("SUSPENSAO", `Chuva intensa (${c.precipitation.toFixed(1)} mm/h).`);
+  else if (c.precipitation >= 10)
+    bump("ALERTA", `Chuva forte (${c.precipitation.toFixed(1)} mm/h).`);
+  else if (c.precipitation >= 2)
+    bump("ATENCAO", `Chuva moderada (${c.precipitation.toFixed(1)} mm/h).`);
 
   // Probabilidade próxima 3h
   if (input.hourly) {

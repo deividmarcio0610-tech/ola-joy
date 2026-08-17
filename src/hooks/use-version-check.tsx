@@ -2,11 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { APP_VERSION, bucketFromId, compareVersions } from "@/lib/version";
-import {
-  getLatestVersion,
-  recordInstall,
-  type AppVersion,
-} from "@/lib/version.functions";
+import { getLatestVersion, recordInstall, type AppVersion } from "@/lib/version.functions";
 
 const POLL_INTERVAL = 5 * 60 * 1000; // 5 min
 const DISMISS_KEY = "app-version:dismissed";
@@ -160,6 +156,9 @@ export function useVersionCheck(onNotes?: () => void): VersionState {
     } catch {
       setDismissed(false);
     }
+    // Depende só da string da versão, de propósito: `latest` troca de identidade a cada
+    // refetch e reexecutaria isto sem que a versão remota tenha mudado.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [latest?.version]);
 
   const isNewer = latest ? compareVersions(latest.version, APP_VERSION) > 0 : false;
@@ -173,13 +172,15 @@ export function useVersionCheck(onNotes?: () => void): VersionState {
     if (hasUpdate && latest) {
       notifyNewVersion(latest.version, latest.title || "Atualização disponível");
     }
+    // Idem: incluir `latest` dispararia a notificação do SO de novo a cada refetch,
+    // mesmo sem versão nova.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasUpdate, latest?.version, latest?.title]);
 
   // Atualização obrigatória se: is_mandatory=true, ou versão atual < minimum_supported_version
-  const belowMin =
-    latest?.minimum_supported_version
-      ? compareVersions(APP_VERSION, latest.minimum_supported_version) < 0
-      : false;
+  const belowMin = latest?.minimum_supported_version
+    ? compareVersions(APP_VERSION, latest.minimum_supported_version) < 0
+    : false;
   const isMandatory = Boolean(hasUpdate && (latest?.is_mandatory || belowMin));
 
   const dismiss = useCallback(() => {

@@ -1,4 +1,4 @@
-/* ValeTech IA — Service Worker de Push Notifications
+/* VisionGuard AI — Service Worker de Push Notifications
  * Não faz cache do app shell (Lovable serve HTML com headers de revalidação).
  * Foco: receber Push, exibir notificação, direcionar clique.
  */
@@ -33,15 +33,15 @@ self.addEventListener("push", (event) => {
   try {
     data = event.data ? event.data.json() : {};
   } catch {
-    data = { title: "ValeTech IA", body: event.data ? event.data.text() : "" };
+    data = { title: "VisionGuard AI", body: event.data ? event.data.text() : "" };
   }
 
-  const title = data.title || "ValeTech IA";
+  const title = data.title || "VisionGuard AI";
   const options = {
     body: data.body || "",
     icon: pickIcon(),
     badge: "/icon-192.png",
-    tag: data.tag || "valetech-alert",
+    tag: data.tag || "visionguard-alert",
     renotify: true,
     requireInteraction: data.severity === "critical",
     vibrate: vibrationFor(data.severity),

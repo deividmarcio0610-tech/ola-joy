@@ -15,15 +15,26 @@ export function GainBreakdown({ gains }: { gains: GainType }) {
     <Card>
       <CardContent className="space-y-4 p-4">
         {!gains.dados_suficientes_financeiro && (
-          <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300">
+          <Badge
+            variant="outline"
+            className="border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+          >
             Dados insuficientes para estimar o ganho financeiro
           </Badge>
         )}
 
         <div className="grid gap-3 sm:grid-cols-2">
           <Row title="Redução de risco" desc={gains.reducao_risco.descricao} />
-          <Row title="Tempo economizado" desc={gains.tempo_economizado.descricao} value={fmt(gains.tempo_economizado.horas, "hours")} />
-          <Row title="Custo evitado" desc={gains.custo_evitado.descricao} value={fmt(gains.custo_evitado.valor, "money")} />
+          <Row
+            title="Tempo economizado"
+            desc={gains.tempo_economizado.descricao}
+            value={fmt(gains.tempo_economizado.horas, "hours")}
+          />
+          <Row
+            title="Custo evitado"
+            desc={gains.custo_evitado.descricao}
+            value={fmt(gains.custo_evitado.valor, "money")}
+          />
           <Row title="Melhoria operacional" desc={gains.melhoria_operacional} />
           <Row title="Redução de retrabalho" desc={gains.reducao_retrabalho} />
           <Row title="Redução de exposição" desc={gains.reducao_exposicao} />

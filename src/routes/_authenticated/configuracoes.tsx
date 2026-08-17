@@ -9,7 +9,7 @@ import { ModuleShell } from "@/components/module-shell";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/configuracoes")({
-  head: () => ({ meta: [{ title: "Configurações · VALETECH" }] }),
+  head: () => ({ meta: [{ title: "Configurações · VisionGuard AI" }] }),
   component: SettingsPage,
 });
 
@@ -23,7 +23,9 @@ function SettingsPage() {
 
   useEffect(() => {
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
       setEmail(user.email ?? "");
       const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
@@ -38,7 +40,9 @@ function SettingsPage() {
 
   async function save() {
     setSaving(true);
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return;
     const { error } = await supabase
       .from("profiles")
@@ -50,9 +54,17 @@ function SettingsPage() {
   }
 
   return (
-    <ModuleShell icon={Settings} title="Configurações" subtitle="Perfil e preferências." status="operacional">
+    <ModuleShell
+      icon={Settings}
+      title="Configurações"
+      subtitle="Perfil e preferências."
+      status="operacional"
+    >
       {loading ? (
-        <div className="flex items-center gap-2 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Carregando…</div>
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Carregando…
+        </div>
       ) : (
         <div className="max-w-xl space-y-4 rounded-xl border border-border bg-card/40 p-6">
           <div className="grid gap-1.5">
@@ -69,7 +81,11 @@ function SettingsPage() {
           </div>
           <div className="grid gap-1.5">
             <Label>URL do avatar</Label>
-            <Input value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} placeholder="https://…" />
+            <Input
+              value={avatarUrl}
+              onChange={(e) => setAvatarUrl(e.target.value)}
+              placeholder="https://…"
+            />
           </div>
           <Button onClick={save} disabled={saving}>
             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Salvar

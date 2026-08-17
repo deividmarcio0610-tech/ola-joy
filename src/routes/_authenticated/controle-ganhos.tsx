@@ -30,7 +30,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/_authenticated/controle-ganhos")({
   head: () => ({
     meta: [
-      { title: "Controle de Ganhos · VALETECH" },
+      { title: "Controle de Ganhos · VisionGuard AI" },
       {
         name: "description",
         content:
@@ -84,7 +84,10 @@ function ControleGanhosPage() {
 
   const filtered = useMemo(() => {
     return (gains ?? []).filter((g) => {
-      if (q && !`${g.title} ${g.code} ${g.description ?? ""}`.toLowerCase().includes(q.toLowerCase()))
+      if (
+        q &&
+        !`${g.title} ${g.code} ${g.description ?? ""}`.toLowerCase().includes(q.toLowerCase())
+      )
         return false;
       if (fArea !== "all" && g.area !== fArea) return false;
       if (fType !== "all" && g.gain_type !== fType) return false;
@@ -160,7 +163,11 @@ function ControleGanhosPage() {
         <Kpi label="Horas economizadas" value={totals.hoursSaved.toFixed(1)} tone="muted" />
         <Kpi label="Horas-homem" value={totals.hh.toFixed(1)} tone="muted" />
         <Kpi label="Custo implementação" value={fmt(totals.cost)} tone="muted" />
-        <Kpi label="Aguardando validação" value={String(totals.countPendentesValidacao)} tone="muted" />
+        <Kpi
+          label="Aguardando validação"
+          value={String(totals.countPendentesValidacao)}
+          tone="muted"
+        />
         <Kpi label="Sem medição" value={String(totals.countSemMedicao)} tone="muted" />
       </div>
 
@@ -172,21 +179,44 @@ function ControleGanhosPage() {
         <div className="grid gap-2 md:grid-cols-5">
           <div>
             <Label className="text-[10px] uppercase text-muted-foreground">Buscar</Label>
-            <Input placeholder="código, título, descrição…" value={q} onChange={(e) => setQ(e.target.value)} />
+            <Input
+              placeholder="código, título, descrição…"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+            />
           </div>
-          <FilterSelect label="Área" value={fArea} onChange={setFArea}
-            options={[{ v: "all", l: "Todas" }, ...areas.map((a) => ({ v: a, l: a }))]} />
-          <FilterSelect label="Tipo de ganho" value={fType} onChange={setFType}
-            options={[{ v: "all", l: "Todos" }, ...GAIN_TYPES.map((t) => ({ v: t.v, l: t.l }))]} />
-          <FilterSelect label="Módulo de origem" value={fModule} onChange={setFModule}
+          <FilterSelect
+            label="Área"
+            value={fArea}
+            onChange={setFArea}
+            options={[{ v: "all", l: "Todas" }, ...areas.map((a) => ({ v: a, l: a }))]}
+          />
+          <FilterSelect
+            label="Tipo de ganho"
+            value={fType}
+            onChange={setFType}
+            options={[{ v: "all", l: "Todos" }, ...GAIN_TYPES.map((t) => ({ v: t.v, l: t.l }))]}
+          />
+          <FilterSelect
+            label="Módulo de origem"
+            value={fModule}
+            onChange={setFModule}
             options={[
               { v: "all", l: "Todos" },
-              { v: "n3", l: "N3" }, { v: "crm", l: "CRM" }, { v: "kaizen", l: "Kaizen" },
-              { v: "environment", l: "Meio Ambiente" }, { v: "supervision", l: "Supervisão" },
+              { v: "n3", l: "N3" },
+              { v: "crm", l: "CRM" },
+              { v: "kaizen", l: "Kaizen" },
+              { v: "environment", l: "Meio Ambiente" },
+              { v: "supervision", l: "Supervisão" },
               { v: "emergency", l: "Emergência" },
-            ]} />
-          <FilterSelect label="Situação" value={fStatus} onChange={setFStatus}
-            options={[{ v: "all", l: "Todas" }, ...GAIN_STATUSES.map((s) => ({ v: s.v, l: s.l }))]} />
+            ]}
+          />
+          <FilterSelect
+            label="Situação"
+            value={fStatus}
+            onChange={setFStatus}
+            options={[{ v: "all", l: "Todas" }, ...GAIN_STATUSES.map((s) => ({ v: s.v, l: s.l }))]}
+          />
         </div>
       </div>
 
@@ -202,15 +232,27 @@ function ControleGanhosPage() {
           <TabsTrigger value="evolucao">Evolução mensal</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="vinculados"><GainList items={filtered} onOpen={setDetail} isLoading={isLoading} /></TabsContent>
-        <TabsContent value="em_medicao"><GainList items={filtered.filter((g) => g.status === "em_medicao")} onOpen={setDetail} /></TabsContent>
-        <TabsContent value="aguardando"><GainList items={filtered.filter((g) => g.status === "realizado")} onOpen={setDetail} /></TabsContent>
-        <TabsContent value="validados"><GainList items={filtered.filter((g) => g.status === "validado")} onOpen={setDetail} /></TabsContent>
-        <TabsContent value="rejeitados"><GainList items={filtered.filter((g) => g.status === "rejeitado")} onOpen={setDetail} /></TabsContent>
+        <TabsContent value="vinculados">
+          <GainList items={filtered} onOpen={setDetail} isLoading={isLoading} />
+        </TabsContent>
+        <TabsContent value="em_medicao">
+          <GainList items={filtered.filter((g) => g.status === "em_medicao")} onOpen={setDetail} />
+        </TabsContent>
+        <TabsContent value="aguardando">
+          <GainList items={filtered.filter((g) => g.status === "realizado")} onOpen={setDetail} />
+        </TabsContent>
+        <TabsContent value="validados">
+          <GainList items={filtered.filter((g) => g.status === "validado")} onOpen={setDetail} />
+        </TabsContent>
+        <TabsContent value="rejeitados">
+          <GainList items={filtered.filter((g) => g.status === "rejeitado")} onOpen={setDetail} />
+        </TabsContent>
         <TabsContent value="ranking">
           <div className="rounded-xl border border-border bg-card/40 p-4">
             {rankingArea.length === 0 ? (
-              <div className="p-8 text-center text-sm text-muted-foreground">Sem ganhos validados para ranquear.</div>
+              <div className="p-8 text-center text-sm text-muted-foreground">
+                Sem ganhos validados para ranquear.
+              </div>
             ) : (
               <ul className="space-y-2">
                 {rankingArea.map(([area, val], i) => {
@@ -218,11 +260,16 @@ function ControleGanhosPage() {
                   return (
                     <li key={area}>
                       <div className="mb-1 flex items-center justify-between text-sm">
-                        <span className="font-medium">{i + 1}. {area}</span>
+                        <span className="font-medium">
+                          {i + 1}. {area}
+                        </span>
                         <span className="text-neon">{fmt(val)}</span>
                       </div>
                       <div className="h-2 overflow-hidden rounded-full bg-background/50">
-                        <div className="h-full bg-neon" style={{ width: `${(val / max) * 100}%` }} />
+                        <div
+                          className="h-full bg-neon"
+                          style={{ width: `${(val / max) * 100}%` }}
+                        />
                       </div>
                     </li>
                   );
@@ -234,7 +281,9 @@ function ControleGanhosPage() {
         <TabsContent value="evolucao">
           <div className="rounded-xl border border-border bg-card/40 p-4">
             {byMonth.length === 0 ? (
-              <div className="p-8 text-center text-sm text-muted-foreground">Sem histórico validado.</div>
+              <div className="p-8 text-center text-sm text-muted-foreground">
+                Sem histórico validado.
+              </div>
             ) : (
               <ul className="space-y-2">
                 {byMonth.map(([m, v]) => {
@@ -262,8 +311,14 @@ function ControleGanhosPage() {
           <ShieldCheck className="h-4 w-4" /> Regras oficiais
         </div>
         <ul className="mt-1 list-disc pl-5 text-amber-100/80">
-          <li>Todo ganho precisa estar vinculado a um registro real (N3, CRM, Inspeção, Kaizen, Meio Ambiente, APR).</li>
-          <li>Somente ganhos <strong>Validados</strong> compõem o total oficial. Estimados e em medição são exibidos separadamente.</li>
+          <li>
+            Todo ganho precisa estar vinculado a um registro real (N3, CRM, Inspeção, Kaizen, Meio
+            Ambiente, APR).
+          </li>
+          <li>
+            Somente ganhos <strong>Validados</strong> compõem o total oficial. Estimados e em
+            medição são exibidos separadamente.
+          </li>
           <li>Ganho de segurança não é convertido em R$ automaticamente.</li>
           <li>Duplicidade por registro + tipo + período é bloqueada no formulário.</li>
         </ul>
@@ -274,7 +329,15 @@ function ControleGanhosPage() {
   );
 }
 
-function Kpi({ label, value, tone = "muted" }: { label: string; value: string; tone?: "neon" | "blue" | "yellow" | "cyan" | "muted" }) {
+function Kpi({
+  label,
+  value,
+  tone = "muted",
+}: {
+  label: string;
+  value: string;
+  tone?: "neon" | "blue" | "yellow" | "cyan" | "muted";
+}) {
   const cls = {
     neon: "border-neon/40 bg-neon/5 text-neon",
     blue: "border-blue-400/30 bg-blue-400/5 text-blue-300",
@@ -305,9 +368,15 @@ function FilterSelect({
     <div>
       <Label className="text-[10px] uppercase text-muted-foreground">{label}</Label>
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger><SelectValue /></SelectTrigger>
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
         <SelectContent>
-          {options.map((o) => <SelectItem key={o.v} value={o.v}>{o.l}</SelectItem>)}
+          {options.map((o) => (
+            <SelectItem key={o.v} value={o.v}>
+              {o.l}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </div>
@@ -333,8 +402,8 @@ function GainList({
   if (items.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-card/40 p-10 text-center text-sm text-muted-foreground">
-        Nenhum ganho encontrado. Abra um registro (N3, Kaizen, Inspeção…) e use o botão
-        "Registrar ganho desta ação".
+        Nenhum ganho encontrado. Abra um registro (N3, Kaizen, Inspeção…) e use o botão "Registrar
+        ganho desta ação".
       </div>
     );
   }
@@ -344,15 +413,22 @@ function GainList({
         const typeLabel = GAIN_TYPES.find((t) => t.v === g.gain_type)?.l ?? g.gain_type;
         const statusLabel = GAIN_STATUSES.find((s) => s.v === g.status)?.l ?? g.status;
         const displayValue =
-          g.status === "validado" ? g.value_validated :
-          g.status === "estimado" ? g.value_estimated :
-          g.value_realized;
+          g.status === "validado"
+            ? g.value_validated
+            : g.status === "estimado"
+              ? g.value_estimated
+              : g.value_realized;
         return (
-          <li key={g.id} className="flex flex-col gap-2 p-4 md:flex-row md:items-center md:justify-between">
+          <li
+            key={g.id}
+            className="flex flex-col gap-2 p-4 md:flex-row md:items-center md:justify-between"
+          >
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-mono text-[10px] text-muted-foreground">{g.code}</span>
-                <span className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-widest ring-1 ${STATUS_COLOR[g.status]}`}>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-widest ring-1 ${STATUS_COLOR[g.status]}`}
+                >
                   {statusLabel}
                 </span>
                 <span className="rounded-full bg-neon/15 px-2 py-0.5 font-display text-[10px] font-bold uppercase tracking-widest text-neon">
@@ -374,12 +450,20 @@ function GainList({
             <div className="flex items-center gap-3">
               <div className="text-right">
                 <div className="text-[10px] uppercase text-muted-foreground">Valor</div>
-                <div className={`font-display text-lg font-semibold ${g.status === "validado" ? "text-neon" : "text-foreground"}`}>
+                <div
+                  className={`font-display text-lg font-semibold ${g.status === "validado" ? "text-neon" : "text-foreground"}`}
+                >
                   {g.gain_type === "seguranca" ? "—" : fmt(displayValue)}
                 </div>
-                {g.roi != null && <div className="text-[10px] text-muted-foreground">ROI {Number(g.roi).toFixed(1)}%</div>}
+                {g.roi != null && (
+                  <div className="text-[10px] text-muted-foreground">
+                    ROI {Number(g.roi).toFixed(1)}%
+                  </div>
+                )}
               </div>
-              <Button size="sm" variant="outline" onClick={() => onOpen(g)}>Detalhes</Button>
+              <Button size="sm" variant="outline" onClick={() => onOpen(g)}>
+                Detalhes
+              </Button>
             </div>
           </li>
         );
@@ -394,7 +478,9 @@ function GainDetailDialog({ gain, onClose }: { gain: GainRow; onClose: () => voi
     queryFn: async () => {
       const { data, error } = await supabase
         .from("records")
-        .select("id, title, description, area, equipment, status, priority, photo_url, internal_code, module")
+        .select(
+          "id, title, description, area, equipment, status, priority, photo_url, internal_code, module",
+        )
         .eq("id", gain.record_id)
         .maybeSingle();
       if (error) throw error;
@@ -438,9 +524,11 @@ function GainDetailDialog({ gain, onClose }: { gain: GainRow; onClose: () => voi
       .eq("id", gain.id);
     setSaving(false);
     if (error) {
-      toast.error(error.message.includes("row-level")
-        ? "Somente supervisor/admin pode validar."
-        : error.message);
+      toast.error(
+        error.message.includes("row-level")
+          ? "Somente supervisor/admin pode validar."
+          : error.message,
+      );
       return;
     }
     toast.success("Ganho validado");
@@ -472,24 +560,39 @@ function GainDetailDialog({ gain, onClose }: { gain: GainRow; onClose: () => voi
           <DialogTitle className="flex items-center gap-2 text-neon">
             <TrendingUp className="h-5 w-5" /> {gain.code} — {gain.title}
           </DialogTitle>
-          <DialogDescription>Detalhes, memória de cálculo, evidências e histórico.</DialogDescription>
+          <DialogDescription>
+            Detalhes, memória de cálculo, evidências e histórico.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-3 md:grid-cols-2">
-          <Info label="Tipo de ganho" value={GAIN_TYPES.find((t) => t.v === gain.gain_type)?.l ?? gain.gain_type} />
-          <Info label="Situação" value={GAIN_STATUSES.find((s) => s.v === gain.status)?.l ?? gain.status} />
+          <Info
+            label="Tipo de ganho"
+            value={GAIN_TYPES.find((t) => t.v === gain.gain_type)?.l ?? gain.gain_type}
+          />
+          <Info
+            label="Situação"
+            value={GAIN_STATUSES.find((s) => s.v === gain.status)?.l ?? gain.status}
+          />
           <Info label="Área" value={gain.area ?? "—"} />
           <Info label="Equipamento" value={gain.equipment ?? "—"} />
           <Info label="Responsável" value={gain.responsible ?? "—"} />
-          <Info label="Período" value={`${gain.period_kind} — ${gain.period_start ?? "?"} → ${gain.period_end ?? "?"}`} />
+          <Info
+            label="Período"
+            value={`${gain.period_kind} — ${gain.period_start ?? "?"} → ${gain.period_end ?? "?"}`}
+          />
         </div>
 
         <div className="rounded-lg border border-border bg-card/40 p-3">
-          <div className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">Registro de origem</div>
+          <div className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">
+            Registro de origem
+          </div>
           {origin ? (
             <div className="space-y-1 text-sm">
               <div className="flex items-center gap-2">
-                <span className="rounded bg-neon/15 px-2 py-0.5 font-mono text-[10px] text-neon">{origin.internal_code ?? origin.module}</span>
+                <span className="rounded bg-neon/15 px-2 py-0.5 font-mono text-[10px] text-neon">
+                  {origin.internal_code ?? origin.module}
+                </span>
                 <span className="font-medium">{origin.title}</span>
               </div>
               {origin.description && <p className="text-muted-foreground">{origin.description}</p>}
@@ -500,14 +603,22 @@ function GainDetailDialog({ gain, onClose }: { gain: GainRow; onClose: () => voi
               </div>
             </div>
           ) : (
-            <div className="text-sm text-muted-foreground">Registro não encontrado ou sem acesso.</div>
+            <div className="text-sm text-muted-foreground">
+              Registro não encontrado ou sem acesso.
+            </div>
           )}
         </div>
 
         <div className="rounded-lg border border-border bg-card/40 p-3">
-          <div className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">Memória de cálculo</div>
-          <pre className="whitespace-pre-wrap font-mono text-xs text-foreground">{gain.calc_memory ?? "—"}</pre>
-          <div className="mt-2 text-[11px] italic text-muted-foreground">Fórmula: {gain.formula ?? "—"}</div>
+          <div className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">
+            Memória de cálculo
+          </div>
+          <pre className="whitespace-pre-wrap font-mono text-xs text-foreground">
+            {gain.calc_memory ?? "—"}
+          </pre>
+          <div className="mt-2 text-[11px] italic text-muted-foreground">
+            Fórmula: {gain.formula ?? "—"}
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
@@ -516,9 +627,20 @@ function GainDetailDialog({ gain, onClose }: { gain: GainRow; onClose: () => voi
           <Info label="Validado" value={fmt(gain.value_validated)} />
           <Info label="Custo implementação" value={fmt(gain.implementation_cost)} />
           <Info label="ROI" value={gain.roi != null ? `${Number(gain.roi).toFixed(1)}%` : "—"} />
-          <Info label="Payback (meses)" value={gain.payback_months != null ? Number(gain.payback_months).toFixed(1) : "—"} />
-          <Info label="Horas economizadas" value={gain.hours_saved != null ? `${Number(gain.hours_saved).toFixed(1)} h` : "—"} />
-          <Info label="Horas-homem" value={gain.manhours_saved != null ? `${Number(gain.manhours_saved).toFixed(1)} HH` : "—"} />
+          <Info
+            label="Payback (meses)"
+            value={gain.payback_months != null ? Number(gain.payback_months).toFixed(1) : "—"}
+          />
+          <Info
+            label="Horas economizadas"
+            value={gain.hours_saved != null ? `${Number(gain.hours_saved).toFixed(1)} h` : "—"}
+          />
+          <Info
+            label="Horas-homem"
+            value={
+              gain.manhours_saved != null ? `${Number(gain.manhours_saved).toFixed(1)} HH` : "—"
+            }
+          />
         </div>
 
         {iris?.text && (
@@ -531,14 +653,18 @@ function GainDetailDialog({ gain, onClose }: { gain: GainRow; onClose: () => voi
         )}
 
         <div className="rounded-lg border border-border bg-card/40 p-3">
-          <div className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">Histórico</div>
+          <div className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">
+            Histórico
+          </div>
           {!history || history.length === 0 ? (
             <div className="text-sm text-muted-foreground">Sem alterações registradas.</div>
           ) : (
             <ul className="space-y-1 text-xs">
               {history.map((h) => (
                 <li key={h.id} className="flex items-start gap-2">
-                  <span className="font-mono text-muted-foreground">{new Date(h.created_at).toLocaleString("pt-BR")}</span>
+                  <span className="font-mono text-muted-foreground">
+                    {new Date(h.created_at).toLocaleString("pt-BR")}
+                  </span>
                   <span className="font-medium">{h.action}</span>
                   {h.field && <span className="text-muted-foreground">campo: {h.field}</span>}
                 </li>
@@ -549,7 +675,9 @@ function GainDetailDialog({ gain, onClose }: { gain: GainRow; onClose: () => voi
 
         {gain.status !== "validado" && gain.status !== "rejeitado" && (
           <div className="rounded-lg border border-neon/30 bg-card/40 p-3">
-            <div className="mb-2 text-xs uppercase tracking-widest text-neon">Validação (supervisor / admin)</div>
+            <div className="mb-2 text-xs uppercase tracking-widest text-neon">
+              Validação (supervisor / admin)
+            </div>
             <Input
               placeholder="Justificativa da validação ou motivo de rejeição"
               value={validationNote}
@@ -559,7 +687,9 @@ function GainDetailDialog({ gain, onClose }: { gain: GainRow; onClose: () => voi
               <Button onClick={validate} disabled={saving} className="gap-2">
                 {saving && <Loader2 className="h-4 w-4 animate-spin" />} Validar
               </Button>
-              <Button variant="outline" onClick={reject} disabled={saving}>Rejeitar</Button>
+              <Button variant="outline" onClick={reject} disabled={saving}>
+                Rejeitar
+              </Button>
             </div>
           </div>
         )}

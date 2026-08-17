@@ -32,7 +32,11 @@ type BlitzMsg = {
   status?: number;
 };
 
-const SERVERS = ["wss://ws1.blitzortung.org/", "wss://ws7.blitzortung.org/", "wss://ws8.blitzortung.org/"];
+const SERVERS = [
+  "wss://ws1.blitzortung.org/",
+  "wss://ws7.blitzortung.org/",
+  "wss://ws8.blitzortung.org/",
+];
 
 // Coleta strikes por ~2.5s numa janela ao redor do ponto. Best-effort:
 // se o WebSocket não estiver disponível no runtime, retorna [] sem erro.
@@ -68,7 +72,11 @@ export class BlitzortungLightningProvider implements LightningProvider {
           return;
         }
         const done = () => {
-          try { ws.close(); } catch { /* ignore */ }
+          try {
+            ws.close();
+          } catch {
+            /* ignore */
+          }
           resolve();
         };
         const timer = setTimeout(done, 2500);
@@ -77,13 +85,17 @@ export class BlitzortungLightningProvider implements LightningProvider {
             // Área geográfica: bbox aproximada ao redor do ponto.
             const dLat = radiusKm / 111;
             const dLon = radiusKm / (111 * Math.cos((latitude * Math.PI) / 180));
-            ws.send(JSON.stringify({
-              west: longitude - dLon,
-              east: longitude + dLon,
-              north: latitude + dLat,
-              south: latitude - dLat,
-            }));
-          } catch { /* ignore */ }
+            ws.send(
+              JSON.stringify({
+                west: longitude - dLon,
+                east: longitude + dLon,
+                north: latitude + dLat,
+                south: latitude - dLat,
+              }),
+            );
+          } catch {
+            /* ignore */
+          }
         };
         ws.onmessage = (ev: MessageEvent) => {
           try {
@@ -91,7 +103,12 @@ export class BlitzortungLightningProvider implements LightningProvider {
             if (!raw) return;
             const decoded = lzwDecode(raw);
             const msg = JSON.parse(decoded) as BlitzMsg;
-            if (typeof msg.lat !== "number" || typeof msg.lon !== "number" || typeof msg.time !== "number") return;
+            if (
+              typeof msg.lat !== "number" ||
+              typeof msg.lon !== "number" ||
+              typeof msg.time !== "number"
+            )
+              return;
             const dist = calculateDistanceKm(latitude, longitude, msg.lat, msg.lon);
             if (dist > radiusKm) return;
             const occurredAtMs = Math.floor(msg.time / 1_000_000);
@@ -107,10 +124,18 @@ export class BlitzortungLightningProvider implements LightningProvider {
               polarity: msg.pol === 1 ? "positive" : msg.pol === -1 ? "negative" : "unknown",
               quality: typeof msg.mds === "number" ? Math.min(1, msg.mds / 10000) : 0.7,
             });
-          } catch { /* ignore malformed frame */ }
+          } catch {
+            /* ignore malformed frame */
+          }
         };
-        ws.onerror = () => { clearTimeout(timer); done(); };
-        ws.onclose = () => { clearTimeout(timer); resolve(); };
+        ws.onerror = () => {
+          clearTimeout(timer);
+          done();
+        };
+        ws.onclose = () => {
+          clearTimeout(timer);
+          resolve();
+        };
       });
 
     // Tenta apenas um servidor por request para minimizar latência.

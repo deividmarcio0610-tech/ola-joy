@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import {
   Bell,
-
   ScanLine,
   Zap,
   CloudRain,
@@ -31,11 +30,10 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "Painel · VALETECH" },
+      { title: "Painel · VisionGuard AI" },
       {
         name: "description",
-        content:
-          "Inspeções, riscos, cultura e emergências em tempo real com apoio de IA.",
+        content: "Inspeções, riscos, cultura e emergências em tempo real com apoio de IA.",
       },
     ],
   }),
@@ -61,16 +59,40 @@ type QuickCard = {
 };
 
 const quickCards: QuickCard[] = [
-  { title: "5S", subtitle: "Registros", url: "/inspecao", icon: LayoutGrid, countKey: "inspections" },
+  {
+    title: "5S",
+    subtitle: "Registros",
+    url: "/inspecao",
+    icon: LayoutGrid,
+    countKey: "inspections",
+  },
   { title: "N3", subtitle: "Registros", url: "/n3", icon: ShieldAlert, countKey: "n3" },
-  { title: "Inspeções", subtitle: "Realizadas", url: "/inspecao", icon: ClipboardCheck, countKey: "inspections" },
-  { title: "Meio Ambiente", subtitle: "Auditorias", url: "/meio-ambiente", icon: Leaf, countKey: "environment" },
+  {
+    title: "Inspeções",
+    subtitle: "Realizadas",
+    url: "/inspecao",
+    icon: ClipboardCheck,
+    countKey: "inspections",
+  },
+  {
+    title: "Meio Ambiente",
+    subtitle: "Auditorias",
+    url: "/meio-ambiente",
+    icon: Leaf,
+    countKey: "environment",
+  },
   { title: "Kaizen", subtitle: "Ideias", url: "/kaizen", icon: Lightbulb, countKey: "kaizen" },
   { title: "CRM", subtitle: "Checklists", url: "/crm", icon: Users, countKey: "crm" },
   { title: "Câmera 360°", subtitle: "Vídeo + IA", url: "/camera-360", icon: Camera },
-  { title: "CECOM", subtitle: "Emergência", url: "/emergencia", icon: Headphones, hint: "0800 285 0193", emergency: true },
+  {
+    title: "CECOM",
+    subtitle: "Emergência",
+    url: "/emergencia",
+    icon: Headphones,
+    hint: "0800 285 0193",
+    emergency: true,
+  },
 ];
-
 
 function Dashboard() {
   const [greeting, setGreeting] = useState<string>("");
@@ -100,12 +122,9 @@ function Dashboard() {
       const rows = records.data ?? [];
       const byModule = (m: string) => rows.filter((r) => r.module === m).length;
       const sumBy = (m: string) =>
-        rows
-          .filter((r) => r.module === m)
-          .reduce((s, r) => s + Number(r.financial_value ?? 0), 0);
+        rows.filter((r) => r.module === m).reduce((s, r) => s + Number(r.financial_value ?? 0), 0);
 
-      const totalGain =
-        sumBy("gain") + sumBy("n3") + sumBy("kaizen");
+      const totalGain = sumBy("gain") + sumBy("n3") + sumBy("kaizen");
 
       return {
         n3: byModule("n3"),
@@ -134,11 +153,9 @@ function Dashboard() {
 
         <div className="text-center leading-tight">
           <div className="font-display text-lg font-bold tracking-widest text-foreground">
-            VALETECH<span className="text-neon">.</span>
+            VisionGuard AI<span className="text-neon">.</span>
           </div>
-          <div className="text-[10px] uppercase tracking-[0.3em] text-neon">
-            Vision AI · IA
-          </div>
+          <div className="text-[10px] uppercase tracking-[0.3em] text-neon">Vision AI · IA</div>
         </div>
         <div className="flex items-center gap-2">
           <Link to="/notificacoes" className="relative rounded-md p-2 hover:bg-card">
@@ -209,7 +226,15 @@ function Dashboard() {
                 { name: "Inspeções", value: counts?.inspections ?? 0 },
                 { name: "Ganhos", value: counts?.gain ?? 0 },
               ].filter((d) => d.value > 0);
-              const COLORS = ["#39ff14", "#22c55e", "#84cc16", "#10b981", "#4ade80", "#a3e635", "#eab308"];
+              const COLORS = [
+                "#39ff14",
+                "#22c55e",
+                "#84cc16",
+                "#10b981",
+                "#4ade80",
+                "#a3e635",
+                "#eab308",
+              ];
               if (pieData.length === 0) {
                 return (
                   <div className="mt-4 flex h-[160px] items-center justify-center text-[11px] text-muted-foreground">
@@ -235,7 +260,11 @@ function Dashboard() {
                       ))}
                     </Pie>
                     <Tooltip
-                      contentStyle={{ background: "#0a0a0a", border: "1px solid #222", fontSize: 11 }}
+                      contentStyle={{
+                        background: "#0a0a0a",
+                        border: "1px solid #222",
+                        fontSize: 11,
+                      }}
                     />
                     <Legend
                       layout="vertical"
@@ -305,9 +334,7 @@ function Dashboard() {
                 <div className="mt-2 font-display text-[11px] font-semibold leading-tight text-foreground">
                   {c.title}
                 </div>
-                <div className="text-[9px] leading-tight text-muted-foreground">
-                  {c.subtitle}
-                </div>
+                <div className="text-[9px] leading-tight text-muted-foreground">{c.subtitle}</div>
                 {c.emergency && c.hint ? (
                   <div className="mt-0.5 text-[10px] font-bold text-red-400">{c.hint}</div>
                 ) : (
@@ -351,13 +378,16 @@ function Dashboard() {
             </div>
           </div>
 
-
           <div className="rounded-xl border border-border bg-background/40 p-3">
             <div className="mb-2 text-[10px] uppercase tracking-widest text-muted-foreground">
               Resumo de ganhos <span className="text-neon">(este mês)</span>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center">
-              <MiniStat icon={DollarSign} value={fmtBRL(counts?.totalGain ?? 45680)} label="Economia financeira" />
+              <MiniStat
+                icon={DollarSign}
+                value={fmtBRL(counts?.totalGain ?? 45680)}
+                label="Economia financeira"
+              />
               <MiniStat icon={Clock} value="128h" label="Tempo economizado" />
               <MiniStat icon={ShieldCheck} value="32" label="Riscos evitados (potenciais)" />
             </div>
@@ -376,14 +406,41 @@ function Dashboard() {
               Novo
             </span>
           </div>
-          <Link to="/controle-ganhos" className="flex items-center gap-1 text-[11px] text-neon hover:underline">
+          <Link
+            to="/controle-ganhos"
+            className="flex items-center gap-1 text-[11px] text-neon hover:underline"
+          >
             Ver detalhes <TrendingUp className="h-3 w-3" />
           </Link>
         </div>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-          <GainCard icon={ShieldAlert} title="N3" count={counts?.n3 ?? 7} value={counts?.n3Value ?? 18250} time="32h" label="Registros efetivados" gainLabel="Economia gerada" />
-          <GainCard icon={ClipboardCheck} title="Inspeções" count={counts?.inspections ?? 18} value={counts?.inspValue ?? 16430} time="54h" label="Registros efetivados" gainLabel="Economia gerada" />
-          <GainCard icon={Lightbulb} title="Kaizen" count={counts?.kaizen ?? 5} value={counts?.kaizenValue ?? 11000} time="42h" label="Ideias implementadas" gainLabel="Economia gerada" />
+          <GainCard
+            icon={ShieldAlert}
+            title="N3"
+            count={counts?.n3 ?? 7}
+            value={counts?.n3Value ?? 18250}
+            time="32h"
+            label="Registros efetivados"
+            gainLabel="Economia gerada"
+          />
+          <GainCard
+            icon={ClipboardCheck}
+            title="Inspeções"
+            count={counts?.inspections ?? 18}
+            value={counts?.inspValue ?? 16430}
+            time="54h"
+            label="Registros efetivados"
+            gainLabel="Economia gerada"
+          />
+          <GainCard
+            icon={Lightbulb}
+            title="Kaizen"
+            count={counts?.kaizen ?? 5}
+            value={counts?.kaizenValue ?? 11000}
+            time="42h"
+            label="Ideias implementadas"
+            gainLabel="Economia gerada"
+          />
         </div>
         <p className="mt-3 text-[10px] text-muted-foreground">
           Cálculos baseados em dados reais inseridos e validados no sistema.
@@ -404,7 +461,6 @@ function Dashboard() {
         <NavIcon to="/n3" icon={ShieldAlert} label="N3" />
         <NavIcon to="/kaizen" icon={Lightbulb} label="Kaizen" />
       </nav>
-
     </div>
   );
 }

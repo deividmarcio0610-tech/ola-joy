@@ -24,7 +24,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { IconSvg, LIBRARY, CATEGORY_LABEL } from "@/lib/safety-plan/icons";
@@ -40,7 +46,12 @@ import {
   type SafetyPlanState,
   type ShapeKind,
 } from "@/lib/safety-plan/types";
-import { exportPlanToPdf, renderPlanToPng, downloadBlob, downloadDataUrl } from "@/lib/safety-plan/export";
+import {
+  exportPlanToPdf,
+  renderPlanToPng,
+  downloadBlob,
+  downloadDataUrl,
+} from "@/lib/safety-plan/export";
 import { saveSafetyPlan } from "@/lib/safety-plan/safety-plans.functions";
 
 const VB_W = 1600;
@@ -83,7 +94,9 @@ export function SafetyPlanEditorDialog({
   const [tab, setTab] = useState<"projeto" | "antes">("projeto");
   const [saving, setSaving] = useState(false);
   const [planId, setPlanId] = useState<string | null>(null);
-  const [drawing, setDrawing] = useState<null | { start: { x: number; y: number }; id: string }>(null);
+  const [drawing, setDrawing] = useState<null | { start: { x: number; y: number }; id: string }>(
+    null,
+  );
   const [routePoints, setRoutePoints] = useState<number[]>([]);
   const [history, setHistory] = useState<ProjectIntervention[][]>([]);
   const [future, setFuture] = useState<ProjectIntervention[][]>([]);
@@ -103,11 +116,14 @@ export function SafetyPlanEditorDialog({
     }
   }, [open, initialPhoto]);
 
-  const pushHistory = useCallback((next: ProjectIntervention[]) => {
-    setHistory((h) => [...h, interventions]);
-    setFuture([]);
-    setInterventions(next);
-  }, [interventions]);
+  const pushHistory = useCallback(
+    (next: ProjectIntervention[]) => {
+      setHistory((h) => [...h, interventions]);
+      setFuture([]);
+      setInterventions(next);
+    },
+    [interventions],
+  );
 
   const undo = () => {
     setHistory((h) => {
@@ -194,18 +210,41 @@ export function SafetyPlanEditorDialog({
       setRoutePoints(next);
       return;
     }
-    if (tool.kind === "rect" || tool.kind === "remove" || tool.kind === "relocate" || tool.kind === "arrow") {
+    if (
+      tool.kind === "rect" ||
+      tool.kind === "remove" ||
+      tool.kind === "relocate" ||
+      tool.kind === "arrow"
+    ) {
       const id = cryptoId();
       setDrawing({ start: { x, y }, id });
-      const color = tool.kind === "remove" ? PALETTE.vermelho : tool.kind === "relocate" ? PALETTE.laranja : tool.color;
+      const color =
+        tool.kind === "remove"
+          ? PALETTE.vermelho
+          : tool.kind === "relocate"
+            ? PALETTE.laranja
+            : tool.color;
       const kind: ShapeKind =
-        tool.kind === "remove" ? "remove" : tool.kind === "relocate" ? "relocate" : tool.kind === "arrow" ? "arrow" : "rect";
+        tool.kind === "remove"
+          ? "remove"
+          : tool.kind === "relocate"
+            ? "relocate"
+            : tool.kind === "arrow"
+              ? "arrow"
+              : "rect";
       const it: ProjectIntervention = {
         id,
         number: nextNumber(),
         category: kind === "remove" ? "circulacao" : "sinalizacao",
         elementType: kind,
-        title: kind === "remove" ? "Remover item" : kind === "relocate" ? "Realocar item" : kind === "arrow" ? "Indicação" : "Área",
+        title:
+          kind === "remove"
+            ? "Remover item"
+            : kind === "relocate"
+              ? "Realocar item"
+              : kind === "arrow"
+                ? "Indicação"
+                : "Área",
         description: "",
         text: kind === "remove" ? "REMOVER" : kind === "relocate" ? "REALOCAR" : undefined,
         priority: kind === "remove" ? "alta" : "média",
@@ -270,7 +309,11 @@ export function SafetyPlanEditorDialog({
         height: Math.max(...ys) - Math.min(...ys),
         points: routePoints,
       },
-      style: { stroke: (tool as { color?: string }).color ?? PALETTE.verde, strokeWidth: 6, opacity: 0.9 },
+      style: {
+        stroke: (tool as { color?: string }).color ?? PALETTE.verde,
+        strokeWidth: 6,
+        opacity: 0.9,
+      },
       createdAt: new Date().toISOString(),
     };
     pushHistory([...interventions, it]);
@@ -287,7 +330,11 @@ export function SafetyPlanEditorDialog({
 
   const deleteSelected = () => {
     if (!selected) return;
-    pushHistory(interventions.filter((i) => i.id !== selected.id).map((i, idx) => ({ ...i, number: idx + 1 })));
+    pushHistory(
+      interventions
+        .filter((i) => i.id !== selected.id)
+        .map((i, idx) => ({ ...i, number: idx + 1 })),
+    );
     setSelectedId(null);
   };
 
@@ -306,13 +353,20 @@ export function SafetyPlanEditorDialog({
   const handleExportPdf = async (format: "a4-portrait" | "a4-landscape" | "a3-landscape") => {
     if (!photoUrl) return toast.error("Carregue uma fotografia primeiro.");
     try {
-      const blob = await exportPlanToPdf(photoUrl, svgMarkup, VB_W, VB_H, { interventions, meta }, {
-        title: title ?? "Projeto Executivo",
-        local: meta.local,
-        responsavel: meta.responsavel,
-        data: meta.data,
-        format,
-      });
+      const blob = await exportPlanToPdf(
+        photoUrl,
+        svgMarkup,
+        VB_W,
+        VB_H,
+        { interventions, meta },
+        {
+          title: title ?? "Projeto Executivo",
+          local: meta.local,
+          responsavel: meta.responsavel,
+          data: meta.data,
+          format,
+        },
+      );
       downloadBlob(blob, `projeto-executivo-${Date.now()}.pdf`);
     } catch (e) {
       toast.error("Falha ao gerar PDF.");
@@ -358,7 +412,11 @@ export function SafetyPlanEditorDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs value={tab} onValueChange={(v) => setTab(v as "projeto" | "antes")} className="flex-1 flex flex-col min-h-0">
+        <Tabs
+          value={tab}
+          onValueChange={(v) => setTab(v as "projeto" | "antes")}
+          className="flex-1 flex flex-col min-h-0"
+        >
           <div className="px-4 pt-2 flex items-center gap-2 flex-wrap">
             <TabsList>
               <TabsTrigger value="antes">Antes</TabsTrigger>
@@ -396,7 +454,11 @@ export function SafetyPlanEditorDialog({
 
           <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[220px_1fr_320px] gap-0">
             <TabsContent value="projeto" className="contents">
-              <Library onPick={(li) => setTool({ kind: "icon", iconKey: li.key, color: li.color, category: li.category })} />
+              <Library
+                onPick={(li) =>
+                  setTool({ kind: "icon", iconKey: li.key, color: li.color, category: li.category })
+                }
+              />
               <Canvas
                 svgRef={svgRef}
                 photoUrl={photoUrl}
@@ -432,7 +494,7 @@ export function SafetyPlanEditorDialog({
 }
 
 function cryptoId() {
-  return (crypto.randomUUID?.() ?? Math.random().toString(36).slice(2));
+  return crypto.randomUUID?.() ?? Math.random().toString(36).slice(2);
 }
 
 /* ---------------- subcomponents ---------------- */
@@ -467,33 +529,74 @@ function Toolbar({
   const btn = (active: boolean) => `h-8 px-2 ${active ? "bg-primary text-primary-foreground" : ""}`;
   return (
     <div className="flex flex-wrap items-center gap-1">
-      <Button size="sm" variant="outline" className={btn(tool.kind === "select")} onClick={() => setTool({ kind: "select" })}>
+      <Button
+        size="sm"
+        variant="outline"
+        className={btn(tool.kind === "select")}
+        onClick={() => setTool({ kind: "select" })}
+      >
         Selecionar
       </Button>
-      <Button size="sm" variant="outline" className={btn(tool.kind === "rect")} onClick={() => setTool({ kind: "rect", color: PALETTE.amarelo })}>
+      <Button
+        size="sm"
+        variant="outline"
+        className={btn(tool.kind === "rect")}
+        onClick={() => setTool({ kind: "rect", color: PALETTE.amarelo })}
+      >
         <Square className="h-4 w-4" /> Área
       </Button>
-      <Button size="sm" variant="outline" className={btn(tool.kind === "arrow")} onClick={() => setTool({ kind: "arrow", color: PALETTE.azul })}>
+      <Button
+        size="sm"
+        variant="outline"
+        className={btn(tool.kind === "arrow")}
+        onClick={() => setTool({ kind: "arrow", color: PALETTE.azul })}
+      >
         <ArrowRight className="h-4 w-4" /> Seta
       </Button>
-      <Button size="sm" variant="outline" className={btn(tool.kind === "remove")} onClick={() => setTool({ kind: "remove" })}>
+      <Button
+        size="sm"
+        variant="outline"
+        className={btn(tool.kind === "remove")}
+        onClick={() => setTool({ kind: "remove" })}
+      >
         <Ban className="h-4 w-4" /> Remover
       </Button>
-      <Button size="sm" variant="outline" className={btn(tool.kind === "relocate")} onClick={() => setTool({ kind: "relocate" })}>
+      <Button
+        size="sm"
+        variant="outline"
+        className={btn(tool.kind === "relocate")}
+        onClick={() => setTool({ kind: "relocate" })}
+      >
         <MoveRight className="h-4 w-4" /> Realocar
       </Button>
-      <Button size="sm" variant="outline" className={btn(tool.kind === "route")} onClick={() => setTool({ kind: "route", color: PALETTE.verde })}>
+      <Button
+        size="sm"
+        variant="outline"
+        className={btn(tool.kind === "route")}
+        onClick={() => setTool({ kind: "route", color: PALETTE.verde })}
+      >
         <Waypoints className="h-4 w-4" /> Rota
       </Button>
       {routeActive && (
-        <Button size="sm" onClick={onFinishRoute}>Concluir rota</Button>
+        <Button size="sm" onClick={onFinishRoute}>
+          Concluir rota
+        </Button>
       )}
-      <Button size="sm" variant="outline" className={btn(tool.kind === "text")} onClick={() => setTool({ kind: "text", color: "#111827" })}>
+      <Button
+        size="sm"
+        variant="outline"
+        className={btn(tool.kind === "text")}
+        onClick={() => setTool({ kind: "text", color: "#111827" })}
+      >
         <Type className="h-4 w-4" /> Texto
       </Button>
       <Separator orientation="vertical" className="h-6 mx-1" />
-      <Button size="sm" variant="ghost" onClick={onUndo} disabled={!canUndo}><Undo2 className="h-4 w-4" /></Button>
-      <Button size="sm" variant="ghost" onClick={onRedo} disabled={!canRedo}><Redo2 className="h-4 w-4" /></Button>
+      <Button size="sm" variant="ghost" onClick={onUndo} disabled={!canUndo}>
+        <Undo2 className="h-4 w-4" />
+      </Button>
+      <Button size="sm" variant="ghost" onClick={onRedo} disabled={!canRedo}>
+        <Redo2 className="h-4 w-4" />
+      </Button>
       <Separator orientation="vertical" className="h-6 mx-1" />
       <Button size="sm" onClick={onSave} disabled={saving}>
         <Save className="h-4 w-4" /> {saving ? "Salvando…" : "Salvar"}
@@ -501,8 +604,12 @@ function Toolbar({
       <Button size="sm" variant="outline" onClick={onExportPng}>
         <Download className="h-4 w-4" /> PNG
       </Button>
-      <Select onValueChange={(v) => onExportPdf(v as "a4-portrait" | "a4-landscape" | "a3-landscape")}>
-        <SelectTrigger className="h-8 w-[130px]"><SelectValue placeholder="Exportar PDF" /></SelectTrigger>
+      <Select
+        onValueChange={(v) => onExportPdf(v as "a4-portrait" | "a4-landscape" | "a3-landscape")}
+      >
+        <SelectTrigger className="h-8 w-[130px]">
+          <SelectValue placeholder="Exportar PDF" />
+        </SelectTrigger>
         <SelectContent>
           <SelectItem value="a4-landscape">PDF A4 paisagem</SelectItem>
           <SelectItem value="a4-portrait">PDF A4 retrato</SelectItem>
@@ -514,10 +621,13 @@ function Toolbar({
 }
 
 function Library({ onPick }: { onPick: (li: (typeof LIBRARY)[number]) => void }) {
-  const grouped = LIBRARY.reduce<Record<CategoryKey, typeof LIBRARY>>((acc, i) => {
-    (acc[i.category] ||= [] as typeof LIBRARY).push(i);
-    return acc;
-  }, {} as Record<CategoryKey, typeof LIBRARY>);
+  const grouped = LIBRARY.reduce<Record<CategoryKey, typeof LIBRARY>>(
+    (acc, i) => {
+      (acc[i.category] ||= [] as typeof LIBRARY).push(i);
+      return acc;
+    },
+    {} as Record<CategoryKey, typeof LIBRARY>,
+  );
   return (
     <ScrollArea className="border-r hidden md:block">
       <div className="p-2 space-y-3">
@@ -587,17 +697,42 @@ function Canvas({
             if (e.target === e.currentTarget) onSelect(null);
           }}
         >
-          <image href={photoUrl} x={0} y={0} width={VB_W} height={VB_H} preserveAspectRatio="xMidYMid slice" />
+          <image
+            href={photoUrl}
+            x={0}
+            y={0}
+            width={VB_W}
+            height={VB_H}
+            preserveAspectRatio="xMidYMid slice"
+          />
           <defs>
-            <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+            <marker
+              id="arrowhead"
+              markerWidth="10"
+              markerHeight="10"
+              refX="8"
+              refY="5"
+              orient="auto"
+            >
               <polygon points="0 0, 10 5, 0 10" fill="context-stroke" />
             </marker>
-            <pattern id="hatchRed" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <pattern
+              id="hatchRed"
+              width="14"
+              height="14"
+              patternUnits="userSpaceOnUse"
+              patternTransform="rotate(45)"
+            >
               <line x1="0" y1="0" x2="0" y2="14" stroke="#ef4444" strokeWidth="4" />
             </pattern>
           </defs>
           {interventions.map((it) => (
-            <ShapeNode key={it.id} it={it} selected={it.id === selectedId} onSelect={() => onSelect(it.id)} />
+            <ShapeNode
+              key={it.id}
+              it={it}
+              selected={it.id === selectedId}
+              onSelect={() => onSelect(it.id)}
+            />
           ))}
           {previewRoute.length >= 2 && (
             <polyline
@@ -615,7 +750,15 @@ function Canvas({
   );
 }
 
-function ShapeNode({ it, selected, onSelect }: { it: ProjectIntervention; selected: boolean; onSelect: () => void }) {
+function ShapeNode({
+  it,
+  selected,
+  onSelect,
+}: {
+  it: ProjectIntervention;
+  selected: boolean;
+  onSelect: () => void;
+}) {
   const { x, y, width = 0, height = 0, points } = it.position;
   const stroke = it.style.stroke;
   const sw = it.style.strokeWidth ?? 4;
@@ -636,7 +779,16 @@ function ShapeNode({ it, selected, onSelect }: { it: ProjectIntervention; select
   if (it.elementType === "rect") {
     return (
       <g onClick={click} style={outline}>
-        <rect x={x} y={y} width={width} height={height} fill={it.style.fill ?? stroke + "55"} stroke={stroke} strokeWidth={sw} opacity={it.style.opacity ?? 0.4} />
+        <rect
+          x={x}
+          y={y}
+          width={width}
+          height={height}
+          fill={it.style.fill ?? stroke + "55"}
+          stroke={stroke}
+          strokeWidth={sw}
+          opacity={it.style.opacity ?? 0.4}
+        />
         {num}
       </g>
     );
@@ -645,8 +797,26 @@ function ShapeNode({ it, selected, onSelect }: { it: ProjectIntervention; select
     return (
       <g onClick={click} style={outline}>
         <rect x={x} y={y} width={width} height={height} fill="url(#hatchRed)" opacity={0.5} />
-        <rect x={x} y={y} width={width} height={height} fill="none" stroke={PALETTE.vermelho} strokeWidth={sw} />
-        <text x={x + width / 2} y={y + height / 2} textAnchor="middle" fontSize={26} fontWeight={800} fill={PALETTE.vermelho} stroke="#fff" strokeWidth={4} paintOrder="stroke">
+        <rect
+          x={x}
+          y={y}
+          width={width}
+          height={height}
+          fill="none"
+          stroke={PALETTE.vermelho}
+          strokeWidth={sw}
+        />
+        <text
+          x={x + width / 2}
+          y={y + height / 2}
+          textAnchor="middle"
+          fontSize={26}
+          fontWeight={800}
+          fill={PALETTE.vermelho}
+          stroke="#fff"
+          strokeWidth={4}
+          paintOrder="stroke"
+        >
           REMOVER
         </text>
         {num}
@@ -656,8 +826,27 @@ function ShapeNode({ it, selected, onSelect }: { it: ProjectIntervention; select
   if (it.elementType === "relocate") {
     return (
       <g onClick={click} style={outline}>
-        <rect x={x} y={y} width={width} height={height} fill={PALETTE.laranja + "44"} stroke={PALETTE.laranja} strokeWidth={sw} strokeDasharray="10 6" />
-        <text x={x + width / 2} y={y + height / 2} textAnchor="middle" fontSize={22} fontWeight={800} fill={PALETTE.laranja} stroke="#fff" strokeWidth={3} paintOrder="stroke">
+        <rect
+          x={x}
+          y={y}
+          width={width}
+          height={height}
+          fill={PALETTE.laranja + "44"}
+          stroke={PALETTE.laranja}
+          strokeWidth={sw}
+          strokeDasharray="10 6"
+        />
+        <text
+          x={x + width / 2}
+          y={y + height / 2}
+          textAnchor="middle"
+          fontSize={22}
+          fontWeight={800}
+          fill={PALETTE.laranja}
+          stroke="#fff"
+          strokeWidth={3}
+          paintOrder="stroke"
+        >
           REALOCAR
         </text>
         {num}
@@ -667,7 +856,15 @@ function ShapeNode({ it, selected, onSelect }: { it: ProjectIntervention; select
   if (it.elementType === "arrow") {
     return (
       <g onClick={click} style={outline}>
-        <line x1={x} y1={y} x2={x + width} y2={y + height} stroke={stroke} strokeWidth={sw} markerEnd="url(#arrowhead)" />
+        <line
+          x1={x}
+          y1={y}
+          x2={x + width}
+          y2={y + height}
+          stroke={stroke}
+          strokeWidth={sw}
+          markerEnd="url(#arrowhead)"
+        />
         {num}
       </g>
     );
@@ -683,7 +880,16 @@ function ShapeNode({ it, selected, onSelect }: { it: ProjectIntervention; select
   if (it.elementType === "text") {
     return (
       <g onClick={click} style={outline}>
-        <rect x={x} y={y} width={width} height={height} fill="#ffffffcc" stroke={stroke} strokeWidth={1} rx={4} />
+        <rect
+          x={x}
+          y={y}
+          width={width}
+          height={height}
+          fill="#ffffffcc"
+          stroke={stroke}
+          strokeWidth={1}
+          rx={4}
+        />
         <text x={x + 10} y={y + (height ?? 30) / 2 + 6} fontSize={18} fill="#111">
           {it.text || it.title}
         </text>
@@ -732,15 +938,27 @@ function PropertiesPanel({
           <div className="grid grid-cols-1 gap-2">
             <div>
               <Label className="text-[11px]">Local</Label>
-              <Input className="h-8" value={meta.local ?? ""} onChange={(e) => onMetaChange({ ...meta, local: e.target.value })} />
+              <Input
+                className="h-8"
+                value={meta.local ?? ""}
+                onChange={(e) => onMetaChange({ ...meta, local: e.target.value })}
+              />
             </div>
             <div>
               <Label className="text-[11px]">Responsável</Label>
-              <Input className="h-8" value={meta.responsavel ?? ""} onChange={(e) => onMetaChange({ ...meta, responsavel: e.target.value })} />
+              <Input
+                className="h-8"
+                value={meta.responsavel ?? ""}
+                onChange={(e) => onMetaChange({ ...meta, responsavel: e.target.value })}
+              />
             </div>
             <div>
               <Label className="text-[11px]">Data</Label>
-              <Input className="h-8" value={meta.data ?? ""} onChange={(e) => onMetaChange({ ...meta, data: e.target.value })} />
+              <Input
+                className="h-8"
+                value={meta.data ?? ""}
+                onChange={(e) => onMetaChange({ ...meta, data: e.target.value })}
+              />
             </div>
           </div>
         </div>
@@ -750,46 +968,100 @@ function PropertiesPanel({
         {selected ? (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold">Intervenção #{String(selected.number).padStart(2, "0")}</p>
-              <Button size="sm" variant="ghost" onClick={onDelete}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+              <p className="text-xs font-semibold">
+                Intervenção #{String(selected.number).padStart(2, "0")}
+              </p>
+              <Button size="sm" variant="ghost" onClick={onDelete}>
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
             </div>
             <div>
               <Label className="text-[11px]">Título</Label>
-              <Input className="h-8" value={selected.title} onChange={(e) => onChange({ title: e.target.value })} />
+              <Input
+                className="h-8"
+                value={selected.title}
+                onChange={(e) => onChange({ title: e.target.value })}
+              />
             </div>
             <div>
               <Label className="text-[11px]">Descrição</Label>
-              <Textarea rows={3} value={selected.description} onChange={(e) => onChange({ description: e.target.value })} />
+              <Textarea
+                rows={3}
+                value={selected.description}
+                onChange={(e) => onChange({ description: e.target.value })}
+              />
             </div>
             <div>
-              <Label className="text-[11px]">Norma (referência a validar pelo responsável técnico)</Label>
-              <Input className="h-8" placeholder="Ex.: NR-35 item 3.2" value={selected.standard ?? ""} onChange={(e) => onChange({ standard: e.target.value })} />
+              <Label className="text-[11px]">
+                Norma (referência a validar pelo responsável técnico)
+              </Label>
+              <Input
+                className="h-8"
+                placeholder="Ex.: NR-35 item 3.2"
+                value={selected.standard ?? ""}
+                onChange={(e) => onChange({ standard: e.target.value })}
+              />
             </div>
             {selected.elementType === "text" && (
               <div>
                 <Label className="text-[11px]">Texto exibido</Label>
-                <Input className="h-8" value={selected.text ?? ""} onChange={(e) => onChange({ text: e.target.value })} />
+                <Input
+                  className="h-8"
+                  value={selected.text ?? ""}
+                  onChange={(e) => onChange({ text: e.target.value })}
+                />
               </div>
             )}
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <Label className="text-[11px]">Prioridade</Label>
-                <Select value={selected.priority} onValueChange={(v) => onChange({ priority: v as InterventionPriority, style: { ...selected.style, stroke: PRIORITY_COLOR[v as InterventionPriority] } })}>
-                  <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                <Select
+                  value={selected.priority}
+                  onValueChange={(v) =>
+                    onChange({
+                      priority: v as InterventionPriority,
+                      style: {
+                        ...selected.style,
+                        stroke: PRIORITY_COLOR[v as InterventionPriority],
+                      },
+                    })
+                  }
+                >
+                  <SelectTrigger className="h-8">
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     {(["baixa", "média", "alta", "crítica"] as InterventionPriority[]).map((p) => (
-                      <SelectItem key={p} value={p}>{p}</SelectItem>
+                      <SelectItem key={p} value={p}>
+                        {p}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
                 <Label className="text-[11px]">Status</Label>
-                <Select value={selected.status} onValueChange={(v) => onChange({ status: v as InterventionStatus })}>
-                  <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                <Select
+                  value={selected.status}
+                  onValueChange={(v) => onChange({ status: v as InterventionStatus })}
+                >
+                  <SelectTrigger className="h-8">
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
-                    {(["proposta", "aprovada", "em_execucao", "executada", "reprovada", "nao_aplicavel"] as InterventionStatus[]).map((s) => (
-                      <SelectItem key={s} value={s}>{s.replace("_", " ")}</SelectItem>
+                    {(
+                      [
+                        "proposta",
+                        "aprovada",
+                        "em_execucao",
+                        "executada",
+                        "reprovada",
+                        "nao_aplicavel",
+                      ] as InterventionStatus[]
+                    ).map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s.replace("_", " ")}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -797,19 +1069,25 @@ function PropertiesPanel({
             </div>
           </div>
         ) : (
-          <p className="text-xs text-muted-foreground">Selecione uma intervenção no desenho ou insira um elemento.</p>
+          <p className="text-xs text-muted-foreground">
+            Selecione uma intervenção no desenho ou insira um elemento.
+          </p>
         )}
 
         <Separator />
 
         <div>
-          <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Memorial ({interventions.length})</p>
+          <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">
+            Memorial ({interventions.length})
+          </p>
           <ol className="space-y-1 text-[11px]">
             {interventions.map((i) => (
               <li key={i.id} className="border-l-2 pl-2" style={{ borderColor: i.style.stroke }}>
                 <div className="flex items-center gap-1">
                   <span className="font-bold">{String(i.number).padStart(2, "0")}</span>
-                  <Badge variant="outline" className="h-4 text-[9px]">{i.standard ?? "ref."}</Badge>
+                  <Badge variant="outline" className="h-4 text-[9px]">
+                    {i.standard ?? "ref."}
+                  </Badge>
                   <span className="truncate">{i.title}</span>
                 </div>
               </li>
@@ -853,21 +1131,35 @@ function renderSvgString(items: ProjectIntervention[]): string {
     const num = String(it.number).padStart(2, "0");
     const numBadge = `<circle cx="${x + 18}" cy="${y + 18}" r="16" fill="#111" stroke="#fff" stroke-width="2"/><text x="${x + 18}" y="${y + 22}" font-size="16" text-anchor="middle" fill="#fff" font-weight="700">${num}</text>`;
     if (it.elementType === "rect")
-      parts.push(`<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="${it.style.fill ?? s + "55"}" stroke="${s}" stroke-width="${sw}" opacity="${it.style.opacity ?? 0.4}"/>${numBadge}`);
+      parts.push(
+        `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="${it.style.fill ?? s + "55"}" stroke="${s}" stroke-width="${sw}" opacity="${it.style.opacity ?? 0.4}"/>${numBadge}`,
+      );
     else if (it.elementType === "remove")
-      parts.push(`<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="url(#hatchRed)" opacity="0.5"/><rect x="${x}" y="${y}" width="${width}" height="${height}" fill="none" stroke="#ef4444" stroke-width="${sw}"/><text x="${x + width / 2}" y="${y + height / 2}" text-anchor="middle" font-size="26" font-weight="800" fill="#ef4444" stroke="#fff" stroke-width="4" paint-order="stroke">REMOVER</text>${numBadge}`);
+      parts.push(
+        `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="url(#hatchRed)" opacity="0.5"/><rect x="${x}" y="${y}" width="${width}" height="${height}" fill="none" stroke="#ef4444" stroke-width="${sw}"/><text x="${x + width / 2}" y="${y + height / 2}" text-anchor="middle" font-size="26" font-weight="800" fill="#ef4444" stroke="#fff" stroke-width="4" paint-order="stroke">REMOVER</text>${numBadge}`,
+      );
     else if (it.elementType === "relocate")
-      parts.push(`<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="#f9731644" stroke="#f97316" stroke-width="${sw}" stroke-dasharray="10 6"/><text x="${x + width / 2}" y="${y + height / 2}" text-anchor="middle" font-size="22" font-weight="800" fill="#f97316" stroke="#fff" stroke-width="3" paint-order="stroke">REALOCAR</text>${numBadge}`);
+      parts.push(
+        `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="#f9731644" stroke="#f97316" stroke-width="${sw}" stroke-dasharray="10 6"/><text x="${x + width / 2}" y="${y + height / 2}" text-anchor="middle" font-size="22" font-weight="800" fill="#f97316" stroke="#fff" stroke-width="3" paint-order="stroke">REALOCAR</text>${numBadge}`,
+      );
     else if (it.elementType === "arrow")
-      parts.push(`<line x1="${x}" y1="${y}" x2="${x + width}" y2="${y + height}" stroke="${s}" stroke-width="${sw}" marker-end="url(#arrowhead)"/>${numBadge}`);
+      parts.push(
+        `<line x1="${x}" y1="${y}" x2="${x + width}" y2="${y + height}" stroke="${s}" stroke-width="${sw}" marker-end="url(#arrowhead)"/>${numBadge}`,
+      );
     else if (it.elementType === "polyline" && points)
-      parts.push(`<polyline points="${pointsToStr(points)}" fill="none" stroke="${s}" stroke-width="${sw}"/>${numBadge}`);
+      parts.push(
+        `<polyline points="${pointsToStr(points)}" fill="none" stroke="${s}" stroke-width="${sw}"/>${numBadge}`,
+      );
     else if (it.elementType === "text")
-      parts.push(`<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="#ffffffcc" stroke="${s}" stroke-width="1" rx="4"/><text x="${x + 10}" y="${y + (height || 30) / 2 + 6}" font-size="18" fill="#111">${escapeXml(it.text || it.title)}</text>${numBadge}`);
+      parts.push(
+        `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="#ffffffcc" stroke="${s}" stroke-width="1" rx="4"/><text x="${x + 10}" y="${y + (height || 30) / 2 + 6}" font-size="18" fill="#111">${escapeXml(it.text || it.title)}</text>${numBadge}`,
+      );
     else if (it.elementType === "icon" && it.iconKey) {
       const size = width || 80;
       const iconMarkup = iconToString(it.iconKey, s);
-      parts.push(`<g transform="translate(${x} ${y}) scale(${size / 100})">${iconMarkup}</g>${numBadge}`);
+      parts.push(
+        `<g transform="translate(${x} ${y}) scale(${size / 100})">${iconMarkup}</g>${numBadge}`,
+      );
     }
   }
   return parts.join("");
@@ -907,5 +1199,8 @@ function iconToString(k: IconKey, color: string): string {
 }
 
 function escapeXml(s: string): string {
-  return s.replace(/[<>&"']/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&#39;" }[c]!));
+  return s.replace(
+    /[<>&"']/g,
+    (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&#39;" })[c]!,
+  );
 }

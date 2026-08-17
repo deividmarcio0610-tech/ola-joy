@@ -8,7 +8,10 @@ class DisabledProvider implements LightningProvider {
     return [];
   }
   async healthCheck() {
-    return { ok: false, message: "Fonte de raios não configurada. Painel meteorológico continua ativo." };
+    return {
+      ok: false,
+      message: "Fonte de raios não configurada. Painel meteorológico continua ativo.",
+    };
   }
 }
 
@@ -21,13 +24,22 @@ class MultiLightningProvider implements LightningProvider {
     this.name = providers.map((p) => p.name).join("+");
   }
   async healthCheck() {
-    const results = await Promise.all(this.providers.map((p) => p.healthCheck().catch(() => ({ ok: false, message: "erro" }))));
+    const results = await Promise.all(
+      this.providers.map((p) => p.healthCheck().catch(() => ({ ok: false, message: "erro" }))),
+    );
     const ok = results.some((r) => r.ok);
     const message = results.map((r, i) => `${this.providers[i].name}: ${r.message}`).join(" | ");
     return { ok, message };
   }
-  async fetchRecentStrikes(params: { latitude: number; longitude: number; radiusKm: number; minutes: number }) {
-    const settled = await Promise.allSettled(this.providers.map((p) => p.fetchRecentStrikes(params)));
+  async fetchRecentStrikes(params: {
+    latitude: number;
+    longitude: number;
+    radiusKm: number;
+    minutes: number;
+  }) {
+    const settled = await Promise.allSettled(
+      this.providers.map((p) => p.fetchRecentStrikes(params)),
+    );
     const all: LightningStrike[] = [];
     for (const r of settled) if (r.status === "fulfilled") all.push(...r.value);
     // Dedup: mesmo minuto e < 2km => mesmo evento; prioriza fonte com maior "quality".
@@ -48,15 +60,21 @@ class MultiLightningProvider implements LightningProvider {
 
 function build(name: string): LightningProvider | null {
   switch (name) {
-    case "openweather": return new OpenWeatherLightningProvider();
-    case "blitzortung": return new BlitzortungLightningProvider();
-    default: return null;
+    case "openweather":
+      return new OpenWeatherLightningProvider();
+    case "blitzortung":
+      return new BlitzortungLightningProvider();
+    default:
+      return null;
   }
 }
 
 export function getLightningProvider(): LightningProvider {
   const raw = (process.env.LIGHTNING_PROVIDER || "disabled").toLowerCase();
-  const names = raw.split(/[,+\s]+/).map((s) => s.trim()).filter(Boolean);
+  const names = raw
+    .split(/[,+\s]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
   const providers = names.map(build).filter((p): p is LightningProvider => !!p);
   if (providers.length === 0) return new DisabledProvider();
   if (providers.length === 1) return providers[0];

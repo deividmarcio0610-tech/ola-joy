@@ -7,8 +7,12 @@ export function StatusBadge({ status, reasons }: { status: WeatherStatus; reason
     <div className={`rounded-xl border p-4 border-${meta.color}-500/40 bg-${meta.color}-500/10`}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Situação operacional</div>
-          <div className={`text-3xl font-black uppercase tracking-wide text-${meta.color}-300`}>{meta.label}</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+            Situação operacional
+          </div>
+          <div className={`text-3xl font-black uppercase tracking-wide text-${meta.color}-300`}>
+            {meta.label}
+          </div>
         </div>
       </div>
       {reasons.length > 0 && (

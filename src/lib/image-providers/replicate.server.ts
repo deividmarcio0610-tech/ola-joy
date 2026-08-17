@@ -26,7 +26,9 @@ export class ReplicateImageProvider implements ImageProvider {
     const token = process.env.REPLICATE_API_TOKEN;
     if (!token) {
       return {
-        provider: this.name, model, success: false,
+        provider: this.name,
+        model,
+        success: false,
         errorType: "AUTHENTICATION_ERROR",
         errorMessage: "REPLICATE_API_TOKEN não configurado.",
         durationMs: Date.now() - t0,
@@ -57,7 +59,9 @@ export class ReplicateImageProvider implements ImageProvider {
       const createText = await create.text();
       if (!create.ok) {
         return {
-          provider: this.name, model, success: false,
+          provider: this.name,
+          model,
+          success: false,
           httpStatus: create.status,
           errorType: classifyHttpError(create.status, createText),
           errorMessage: createText.slice(0, 500),
@@ -66,15 +70,25 @@ export class ReplicateImageProvider implements ImageProvider {
       }
 
       let pred = JSON.parse(createText) as {
-        id?: string; status?: string; output?: unknown; error?: string;
+        id?: string;
+        status?: string;
+        output?: unknown;
+        error?: string;
       };
 
       // Polling se ainda não estiver concluído.
       const deadline = t0 + DEFAULT_PROVIDER_TIMEOUT_MS;
-      while (pred.status && pred.status !== "succeeded" && pred.status !== "failed" && pred.status !== "canceled") {
+      while (
+        pred.status &&
+        pred.status !== "succeeded" &&
+        pred.status !== "failed" &&
+        pred.status !== "canceled"
+      ) {
         if (Date.now() > deadline) {
           return {
-            provider: this.name, model, success: false,
+            provider: this.name,
+            model,
+            success: false,
             errorType: "TIMEOUT",
             errorMessage: "Replicate demorou além do limite.",
             durationMs: Date.now() - t0,
@@ -89,7 +103,9 @@ export class ReplicateImageProvider implements ImageProvider {
 
       if (pred.status !== "succeeded") {
         return {
-          provider: this.name, model, success: false,
+          provider: this.name,
+          model,
+          success: false,
           errorType: "UNKNOWN_ERROR",
           errorMessage: pred.error || `Replicate status=${pred.status}`,
           durationMs: Date.now() - t0,
@@ -101,7 +117,9 @@ export class ReplicateImageProvider implements ImageProvider {
         : (pred.output as string);
       if (typeof outUrl !== "string" || !outUrl.startsWith("http")) {
         return {
-          provider: this.name, model, success: false,
+          provider: this.name,
+          model,
+          success: false,
           errorType: "UNKNOWN_ERROR",
           errorMessage: "Replicate não retornou URL de imagem.",
           durationMs: Date.now() - t0,
@@ -110,7 +128,9 @@ export class ReplicateImageProvider implements ImageProvider {
       const dl = await fetch(outUrl);
       const buf = new Uint8Array(await dl.arrayBuffer());
       return {
-        provider: this.name, model, success: true,
+        provider: this.name,
+        model,
+        success: true,
         imageBase64: bytesToBase64(buf),
         imageMimeType: dl.headers.get("Content-Type") ?? "image/png",
         durationMs: Date.now() - t0,
@@ -118,7 +138,9 @@ export class ReplicateImageProvider implements ImageProvider {
     } catch (e) {
       const isAbort = e instanceof Error && e.name === "AbortError";
       return {
-        provider: this.name, model, success: false,
+        provider: this.name,
+        model,
+        success: false,
         errorType: isAbort ? "TIMEOUT" : "UNKNOWN_ERROR",
         errorMessage: e instanceof Error ? e.message : String(e),
         durationMs: Date.now() - t0,

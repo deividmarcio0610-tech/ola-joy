@@ -19,17 +19,22 @@ import { useWeatherNotifier } from "@/hooks/use-weather-notifier";
 import { computeLightningRisk } from "@/lib/weather/lightning-risk";
 import { EnablePushButton } from "@/components/push/enable-push-button";
 import { Link } from "@tanstack/react-router";
-import { useWeatherAlerts, shouldEmitAlert, type WeatherAlertRow } from "@/hooks/use-weather-alerts";
+import {
+  useWeatherAlerts,
+  shouldEmitAlert,
+  type WeatherAlertRow,
+} from "@/hooks/use-weather-alerts";
 import { CriticalAlertModal } from "@/components/intemperies/critical-alert-modal";
 import { AlertList } from "@/components/intemperies/alert-list";
-
 
 function IntemperiesPage() {
   const [location, setLocation] = useState<WeatherLocation | null>(null);
   const [weather, setWeather] = useState<WeatherResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [staleWarning, setStaleWarning] = useState<string | null>(null);
-  const [geoState, setGeoState] = useState<"idle" | "requesting" | "denied" | "unsupported">("idle");
+  const [geoState, setGeoState] = useState<"idle" | "requesting" | "denied" | "unsupported">(
+    "idle",
+  );
   const snapshotSaved = useRef<string | null>(null);
   const notifier = useWeatherNotifier();
   const lastStatusRef = useRef<string | null>(null);
@@ -70,7 +75,7 @@ function IntemperiesPage() {
 
       lastFetchAtRef.current = Date.now();
       setWeather(data);
-      setStaleWarning(data.stale ? data.staleReason ?? null : null);
+      setStaleWarning(data.stale ? (data.staleReason ?? null) : null);
 
       // Não persiste snapshot quando é dado antigo (stale) — evita duplicar histórico.
       const isPersisted = loc.id && loc.id !== "current";
@@ -97,7 +102,6 @@ function IntemperiesPage() {
       setLoading(false);
     }
   };
-
 
   const buildCurrentLocation = (lat: number, lon: number): WeatherLocation => ({
     id: "current",
@@ -126,7 +130,10 @@ function IntemperiesPage() {
   const requestGeolocation = () => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       setGeoState("unsupported");
-      setLocation({ ...buildCurrentLocation(FALLBACK_LAT, FALLBACK_LON), name: "Localização padrão (São Paulo)" });
+      setLocation({
+        ...buildCurrentLocation(FALLBACK_LAT, FALLBACK_LON),
+        name: "Localização padrão (São Paulo)",
+      });
       return;
     }
     setGeoState("requesting");
@@ -138,7 +145,10 @@ function IntemperiesPage() {
       () => {
         // Sem alertas, sem botão: cai no fallback silenciosamente.
         setGeoState("denied");
-        setLocation({ ...buildCurrentLocation(FALLBACK_LAT, FALLBACK_LON), name: "Localização padrão (São Paulo)" });
+        setLocation({
+          ...buildCurrentLocation(FALLBACK_LAT, FALLBACK_LON),
+          name: "Localização padrão (São Paulo)",
+        });
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 60_000 },
     );
@@ -170,16 +180,22 @@ function IntemperiesPage() {
     return () => {
       cancelled = true;
     };
+    // Efeito de montagem: busca a localização salva uma única vez. Incluir
+    // `requestGeolocation` reabriria o pedido de permissão a cada re-render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Auto-ativar notificações silenciosamente quando permissão já concedida.
   useEffect(() => {
-    if (typeof Notification !== "undefined" && Notification.permission === "granted" && !notifier.enabled) {
+    if (
+      typeof Notification !== "undefined" &&
+      Notification.permission === "granted" &&
+      !notifier.enabled
+    ) {
       notifier.enable();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
 
   useEffect(() => {
     if (!location) return;
@@ -193,9 +209,9 @@ function IntemperiesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location?.id]);
 
-
   const risk = useMemo(
-    () => (weather ? computeLightningRisk({ current: weather.current, hourly: weather.hourly }) : null),
+    () =>
+      weather ? computeLightningRisk({ current: weather.current, hourly: weather.hourly }) : null,
     [weather],
   );
 
@@ -223,7 +239,8 @@ function IntemperiesPage() {
       lastReasonsRef.current = reasonsStr;
       return;
     }
-    const changed = prev !== status.status || (status.status !== "NORMAL" && prevReasons !== reasonsStr);
+    const changed =
+      prev !== status.status || (status.status !== "NORMAL" && prevReasons !== reasonsStr);
     if (changed) {
       const severity: "info" | "warn" | "critical" =
         status.status === "EMERGENCIA" || status.status === "SUSPENSAO"
@@ -249,7 +266,10 @@ function IntemperiesPage() {
     if (!["ALERTA", "SUSPENSAO", "EMERGENCIA"].includes(status.status)) return;
     const isPersisted = location.id && location.id !== "current";
     if (!isPersisted) return; // GPS efêmero: apenas notificação, sem persistir
-    if (!shouldEmitAlert({ currentStatus: status.status, locationId: location.id, existing: alerts })) return;
+    if (
+      !shouldEmitAlert({ currentStatus: status.status, locationId: location.id, existing: alerts })
+    )
+      return;
 
     (async () => {
       const { data: user } = await supabase.auth.getUser();
@@ -263,6 +283,9 @@ function IntemperiesPage() {
         created_by: user.user.id,
       });
     })();
+    // Grava alerta só quando a SEVERIDADE muda. Incluir `status.reasons` (que muda a cada
+    // recálculo) inseriria linhas duplicadas em weather_alerts.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status.status, location, weather, alerts, risk]);
 
   // Abre modal crítico automaticamente para o alerta ativo mais grave e não reconhecido
@@ -273,8 +296,6 @@ function IntemperiesPage() {
     );
     if (critical) setCriticalOpen(critical);
   }, [alerts, criticalOpen]);
-
-
 
   return (
     <ModuleShell
@@ -299,7 +320,8 @@ function IntemperiesPage() {
                 <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
                   Local monitorado
                   <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-bold text-emerald-300">
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" /> AO VIVO
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" /> AO
+                    VIVO
                   </span>
                 </div>
                 <div className="text-lg font-bold text-foreground">{location.name}</div>
@@ -332,8 +354,17 @@ function IntemperiesPage() {
                   )}
                   {notifier.enabled ? "Alertas ON" : "Ativar alertas"}
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => refresh(location, { force: true })} disabled={loading}>
-                  {loading ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="mr-1 h-3.5 w-3.5" />}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => refresh(location, { force: true })}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <RefreshCw className="mr-1 h-3.5 w-3.5" />
+                  )}
                   Atualizar
                 </Button>
               </div>
@@ -344,12 +375,14 @@ function IntemperiesPage() {
               </div>
             )}
 
-
             <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
               <div className="text-xs text-amber-200">
                 <div className="font-bold">Alertas de raios no telefone (Push)</div>
                 <div className="text-[11px] text-amber-200/80">
-                  Funciona com o app fechado. Requer HTTPS + permissão de notificação. <Link to="/intemperies/notificacoes" className="underline">Diagnóstico</Link>
+                  Funciona com o app fechado. Requer HTTPS + permissão de notificação.{" "}
+                  <Link to="/intemperies/notificacoes" className="underline">
+                    Diagnóstico
+                  </Link>
                 </div>
               </div>
               <EnablePushButton compact />
@@ -364,9 +397,15 @@ function IntemperiesPage() {
               onOpen={(a) => setCriticalOpen(a)}
             />
 
-            {weather?.current && <WeatherCards current={weather.current} hourly={weather.hourly ?? null} />}
+            {weather?.current && (
+              <WeatherCards current={weather.current} hourly={weather.hourly ?? null} />
+            )}
 
-            <LightningPanel location={location} current={weather?.current ?? null} hourly={weather?.hourly ?? null} />
+            <LightningPanel
+              location={location}
+              current={weather?.current ?? null}
+              hourly={weather?.hourly ?? null}
+            />
 
             {weather?.hourly && <HourlyChart hourly={weather.hourly} />}
             {weather?.daily && <DailyForecast daily={weather.daily} />}
@@ -376,7 +415,6 @@ function IntemperiesPage() {
             <HistoryList locationId={location?.id ?? null} />
           </div>
         )}
-
       </div>
       <CriticalAlertModal
         alert={criticalOpen}
@@ -391,12 +429,11 @@ function IntemperiesPage() {
   );
 }
 
-
 export const Route = createFileRoute("/_authenticated/intemperies")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Intempéries · Central Meteorológica · VALETECH" },
+      { title: "Intempéries · Central Meteorológica · VisionGuard AI" },
       {
         name: "description",
         content:

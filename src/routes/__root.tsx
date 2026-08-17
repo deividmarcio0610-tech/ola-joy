@@ -13,11 +13,10 @@ import { useEffect, type ReactNode } from "react";
 import { Toaster } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { ValetechSidebar } from "@/components/valetech-sidebar";
+import { VisionGuardSidebar } from "@/components/visionguard-sidebar";
 import { FloatingChat } from "@/components/floating-chat";
 import { VersionUpdateBanner } from "@/components/version-update-banner";
 import { APP_VERSION } from "@/lib/version";
@@ -85,14 +84,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "VALETECH Vision AI · IA — Inteligência operacional" },
+      { title: "VisionGuard AI · IA — Inteligência operacional" },
       {
         name: "description",
         content:
           "Plataforma corporativa de segurança, supervisão, meio ambiente e ganhos com IA para análise visual em tempo real.",
       },
       { name: "theme-color", content: "#0a0a0a" },
-      { property: "og:title", content: "VALETECH Vision AI · IA — Inteligência operacional" },
+      { property: "og:title", content: "VisionGuard AI · IA — Inteligência operacional" },
       {
         property: "og:description",
         content:
@@ -100,10 +99,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "VALETECH Vision AI · IA — Inteligência operacional" },
-      { name: "twitter:description", content: "Plataforma corporativa de segurança, supervisão, meio ambiente e ganhos com IA para análise visual em tempo real." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/34e9409e-c95c-4c60-99e8-e931ca34b4f1/id-preview-b56f7f2a--a4635b3d-ad07-4431-b336-616f335181a3.lovable.app-1784063385156.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/34e9409e-c95c-4c60-99e8-e931ca34b4f1/id-preview-b56f7f2a--a4635b3d-ad07-4431-b336-616f335181a3.lovable.app-1784063385156.png" },
+      {
+        name: "twitter:title",
+        content: "VisionGuard AI · IA — Inteligência operacional",
+      },
+      {
+        name: "twitter:description",
+        content:
+          "Plataforma corporativa de segurança, supervisão, meio ambiente e ganhos com IA para análise visual em tempo real.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/34e9409e-c95c-4c60-99e8-e931ca34b4f1/id-preview-b56f7f2a--a4635b3d-ad07-4431-b336-616f335181a3.lovable.app-1784063385156.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/34e9409e-c95c-4c60-99e8-e931ca34b4f1/id-preview-b56f7f2a--a4635b3d-ad07-4431-b336-616f335181a3.lovable.app-1784063385156.png",
+      },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -174,7 +188,7 @@ function RootComponent() {
       ) : (
         <SidebarProvider>
           <div className="flex min-h-screen w-full bg-background text-foreground">
-            <ValetechSidebar />
+            <VisionGuardSidebar />
             <div className="flex min-h-screen flex-1 flex-col">
               {pathname !== "/dashboard" && (
                 <div className="sticky top-0 z-20 flex h-12 items-center border-b border-border bg-background/80 px-3 backdrop-blur">
@@ -185,7 +199,7 @@ function RootComponent() {
                 <Outlet />
               </main>
               <footer className="border-t border-border/50 px-4 py-2 text-center text-[10px] text-muted-foreground">
-                VALETECH Vision AI · v{APP_VERSION}
+                VisionGuard AI · v{APP_VERSION}
                 {" · "}
                 <Link to="/novidades" className="hover:text-neon">
                   novidades
@@ -201,4 +215,3 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
-

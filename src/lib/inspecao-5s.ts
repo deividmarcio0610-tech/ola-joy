@@ -2,8 +2,8 @@
 // Auditoria EXCLUSIVA dos 5 sensos: Seiri, Seiton, Seiso, Seiketsu, Shitsuke.
 // Não avalia segurança, NRs, meio ambiente, Kaizen, N3 ou riscos.
 
-import { supabase } from "@/integrations/supabase/client";
 import { ensureFreshSession } from "@/lib/iris-analyze";
+import { callVpsRoute } from "@/lib/vps-ai/call";
 
 export type Senso5SKey = "seiri" | "seiton" | "seiso" | "seiketsu" | "shitsuke";
 
@@ -39,33 +39,17 @@ export function corDaNota(nota: number): string {
   return "bg-red-600 text-white border-red-700";
 }
 
-function extractErrMsg(error: unknown, fallback: string): string {
-  const anyErr = error as { message?: string; context?: { body?: unknown } } | null;
-  const body = anyErr?.context?.body;
-  try {
-    if (typeof body === "string" && body) {
-      const j = JSON.parse(body) as { error?: string };
-      if (j?.error) return j.error;
-    } else if (body && typeof body === "object" && "error" in body) {
-      return String((body as { error: string }).error);
-    }
-  } catch {
-    /* ignore */
-  }
-  return anyErr?.message ?? fallback;
-}
-
 export async function auditar5S(input: {
   images: string[];
   context?: string;
 }): Promise<Inspecao5SResult> {
   await ensureFreshSession();
-  const { data, error } = await supabase.functions.invoke<Inspecao5SResult | { error: string }>(
-    "analisar-com-iris",
-    { body: { mode: "5s", images: input.images, context: input.context } },
-  );
-  if (error) throw new Error(extractErrMsg(error, "Falha na auditoria 5S."));
-  if (!data || typeof data !== "object" || "error" in (data as object)) {
+  const data = await callVpsRoute<Inspecao5SResult | { error: string }>("/api/vps/analisar", {
+    mode: "5s",
+    images: input.images,
+    context: input.context,
+  });
+  if (!data || typeof data !== "object" || "error" in data) {
     throw new Error((data as { error?: string })?.error ?? "Resposta inválida da IA (5S).");
   }
   return data as Inspecao5SResult;

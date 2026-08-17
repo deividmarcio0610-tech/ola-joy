@@ -28,11 +28,13 @@ export function LGPDConsent() {
           <p className="font-semibold">Privacidade e LGPD</p>
           <p className="mt-1 text-muted-foreground">
             Este app captura fotos, vídeos e localização para gerar relatórios operacionais e
-            análises por IA. Ao continuar, você concorda com o tratamento desses dados
-            conforme a Lei Geral de Proteção de Dados (LGPD - Lei 13.709/2018).
+            análises por IA. Ao continuar, você concorda com o tratamento desses dados conforme a
+            Lei Geral de Proteção de Dados (LGPD - Lei 13.709/2018).
           </p>
           <div className="mt-3 flex gap-2">
-            <Button size="sm" onClick={accept}>Concordar e continuar</Button>
+            <Button size="sm" onClick={accept}>
+              Concordar e continuar
+            </Button>
           </div>
         </div>
         <button

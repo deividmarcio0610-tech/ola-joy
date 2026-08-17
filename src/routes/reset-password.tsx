@@ -9,7 +9,7 @@ import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/reset-password")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Redefinir senha · VALETECH" }] }),
+  head: () => ({ meta: [{ title: "Redefinir senha · VisionGuard AI" }] }),
   component: ResetPasswordPage,
 });
 
@@ -60,9 +60,7 @@ function ResetPasswordPage() {
     <div className="mx-auto flex min-h-[80vh] max-w-md items-center justify-center">
       <div className="w-full rounded-2xl border border-border bg-card/60 p-8 backdrop-blur">
         <h1 className="mb-2 font-display text-2xl font-semibold">Redefinir senha</h1>
-        <p className="mb-6 text-sm text-muted-foreground">
-          Escolha uma nova senha para sua conta.
-        </p>
+        <p className="mb-6 text-sm text-muted-foreground">Escolha uma nova senha para sua conta.</p>
         {!ready ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />

@@ -26,7 +26,9 @@ export class StabilityImageProvider implements ImageProvider {
     const key = process.env.STABILITY_API_KEY;
     if (!key) {
       return {
-        provider: this.name, model, success: false,
+        provider: this.name,
+        model,
+        success: false,
         errorType: "AUTHENTICATION_ERROR",
         errorMessage: "STABILITY_API_KEY não configurado.",
         durationMs: Date.now() - t0,
@@ -41,7 +43,11 @@ export class StabilityImageProvider implements ImageProvider {
 
     const form = new FormData();
     const bytes = base64ToBytes(req.originalImageBase64);
-    form.append("image", new Blob([bytes.buffer as ArrayBuffer], { type: req.mimeType }), "input.png");
+    form.append(
+      "image",
+      new Blob([bytes.buffer as ArrayBuffer], { type: req.mimeType }),
+      "input.png",
+    );
     form.append("prompt", prompt);
     form.append("mode", "image-to-image");
     form.append("strength", "0.55");
@@ -65,7 +71,8 @@ export class StabilityImageProvider implements ImageProvider {
       if (!res.ok) {
         const errText = await res.text();
         return {
-          provider: this.name, model,
+          provider: this.name,
+          model,
           success: false,
           httpStatus: res.status,
           errorType: classifyHttpError(res.status, errText),
@@ -78,7 +85,9 @@ export class StabilityImageProvider implements ImageProvider {
       const buf = new Uint8Array(await res.arrayBuffer());
       if (!buf.byteLength) {
         return {
-          provider: this.name, model, success: false,
+          provider: this.name,
+          model,
+          success: false,
           errorType: "UNKNOWN_ERROR",
           errorMessage: "Stability retornou corpo vazio.",
           durationMs: Date.now() - t0,
@@ -86,7 +95,9 @@ export class StabilityImageProvider implements ImageProvider {
       }
 
       return {
-        provider: this.name, model, success: true,
+        provider: this.name,
+        model,
+        success: true,
         imageBase64: bytesToBase64(buf),
         imageMimeType: res.headers.get("Content-Type") ?? "image/png",
         durationMs: Date.now() - t0,
@@ -94,7 +105,9 @@ export class StabilityImageProvider implements ImageProvider {
     } catch (e) {
       const isAbort = e instanceof Error && e.name === "AbortError";
       return {
-        provider: this.name, model, success: false,
+        provider: this.name,
+        model,
+        success: false,
         errorType: isAbort ? "TIMEOUT" : "UNKNOWN_ERROR",
         errorMessage: e instanceof Error ? e.message : String(e),
         durationMs: Date.now() - t0,

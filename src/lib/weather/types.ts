@@ -77,7 +77,6 @@ export type WeatherResponse = {
   error?: string;
 };
 
-
 export type WeatherLocation = {
   id: string;
   name: string;

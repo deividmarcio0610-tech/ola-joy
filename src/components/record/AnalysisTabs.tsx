@@ -49,7 +49,11 @@ export function AnalysisTabs({
           disabled={disabled}
           onChange={(next) => {
             const summary = next.summary_type
-              ? { ...analysis.summary, tipo_registro: next.summary_type, classificacao_sugerida: next.principal_label }
+              ? {
+                  ...analysis.summary,
+                  tipo_registro: next.summary_type,
+                  classificacao_sugerida: next.principal_label,
+                }
               : analysis.summary;
             onChange({
               ...analysis,
@@ -80,10 +84,14 @@ export function AnalysisTabs({
                 Riscos identificados
               </div>
               {analysis.risks.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhum risco relevante identificado.</p>
+                <p className="text-sm text-muted-foreground">
+                  Nenhum risco relevante identificado.
+                </p>
               ) : (
                 <ul className="list-inside list-disc text-sm">
-                  {analysis.risks.map((r, i) => <li key={i}>{r}</li>)}
+                  {analysis.risks.map((r, i) => (
+                    <li key={i}>{r}</li>
+                  ))}
                 </ul>
               )}
             </div>
@@ -94,7 +102,9 @@ export function AnalysisTabs({
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {analysis.hazards.map((h, i) => (
-                    <Badge key={i} variant="secondary">{h}</Badge>
+                    <Badge key={i} variant="secondary">
+                      {h}
+                    </Badge>
                   ))}
                 </div>
               </div>
@@ -128,12 +138,27 @@ export function AnalysisTabs({
         <Card>
           <CardContent className="space-y-3 p-4 text-sm">
             <Section title="Contexto" body={analysis.technical_opinion.contexto} />
-            <Section title="Evidência observada" body={analysis.technical_opinion.evidencia_observada} />
-            <Section title="Risco identificado" body={analysis.technical_opinion.risco_identificado} />
-            <Section title="Consequências possíveis" body={analysis.technical_opinion.consequencias_possiveis} />
-            <Section title="Requisitos aplicáveis" body={analysis.technical_opinion.requisitos_aplicaveis} />
+            <Section
+              title="Evidência observada"
+              body={analysis.technical_opinion.evidencia_observada}
+            />
+            <Section
+              title="Risco identificado"
+              body={analysis.technical_opinion.risco_identificado}
+            />
+            <Section
+              title="Consequências possíveis"
+              body={analysis.technical_opinion.consequencias_possiveis}
+            />
+            <Section
+              title="Requisitos aplicáveis"
+              body={analysis.technical_opinion.requisitos_aplicaveis}
+            />
             <Section title="Ação imediata" body={analysis.technical_opinion.acao_imediata} />
-            <Section title="Recomendação definitiva" body={analysis.technical_opinion.recomendacao_definitiva} />
+            <Section
+              title="Recomendação definitiva"
+              body={analysis.technical_opinion.recomendacao_definitiva}
+            />
             <Section title="Risco residual" body={analysis.technical_opinion.risco_residual} />
             <Section title="Conclusão" body={analysis.technical_opinion.conclusao} />
           </CardContent>

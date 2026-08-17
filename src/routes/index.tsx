@@ -10,13 +10,13 @@ export const Route = createFileRoute("/")({
   },
   head: () => ({
     meta: [
-      { title: "VALETECH Vision AI · IA — Inteligência operacional" },
+      { title: "VisionGuard AI · IA — Inteligência operacional" },
       {
         name: "description",
         content:
           "Plataforma corporativa de segurança, supervisão, meio ambiente e ganhos com IA para análise visual em tempo real.",
       },
-      { property: "og:title", content: "VALETECH Vision AI · IA — Inteligência operacional" },
+      { property: "og:title", content: "VisionGuard AI · IA — Inteligência operacional" },
       {
         property: "og:description",
         content:
@@ -38,13 +38,12 @@ function Landing() {
             <Activity className="h-3 w-3" /> Vision AI · IA
           </span>
           <h1 className="mt-6 max-w-3xl font-display text-4xl font-semibold leading-tight md:text-6xl">
-            Inteligência operacional em{" "}
-            <span className="text-neon text-glow">tempo real</span>
+            Inteligência operacional em <span className="text-neon text-glow">tempo real</span>
           </h1>
           <p className="mt-5 max-w-2xl text-base text-muted-foreground md:text-lg">
-            Segurança, supervisão, meio ambiente e ganhos consolidados numa única
-            plataforma. Análise visual e linguagem pela IA, feita para mineração,
-            siderurgia, energia e indústria pesada.
+            Segurança, supervisão, meio ambiente e ganhos consolidados numa única plataforma.
+            Análise visual e linguagem pela IA, feita para mineração, siderurgia, energia e
+            indústria pesada.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link

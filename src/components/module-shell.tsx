@@ -62,12 +62,10 @@ function ComingSoon() {
         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-neon/10 ring-1 ring-neon/40">
           <Construction className="h-7 w-7 text-neon" />
         </div>
-        <h2 className="font-display text-xl font-semibold text-foreground">
-          Módulo em construção
-        </h2>
+        <h2 className="font-display text-xl font-semibold text-foreground">Módulo em construção</h2>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          A estrutura desta área está pronta. Os fluxos de captura, análise pela IA
-          IA e persistência serão habilitados nas próximas fases do VALETECH.
+          A estrutura desta área está pronta. Os fluxos de captura, análise pela IA IA e
+          persistência serão habilitados nas próximas fases do VisionGuard AI.
         </p>
       </div>
     </div>

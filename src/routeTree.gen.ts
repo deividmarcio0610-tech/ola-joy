@@ -13,7 +13,6 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedVisionRouteImport } from './routes/_authenticated/vision'
 import { Route as AuthenticatedUsuariosRouteImport } from './routes/_authenticated/usuarios'
 import { Route as AuthenticatedSupervisaoRouteImport } from './routes/_authenticated/supervisao'
@@ -38,16 +37,22 @@ import { Route as AuthenticatedAuditoriaRouteImport } from './routes/_authentica
 import { Route as AuthenticatedApresentacaoRouteImport } from './routes/_authenticated/apresentacao'
 import { Route as AuthenticatedAmbientalRouteImport } from './routes/_authenticated/ambiental'
 import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat.index'
-import { Route as ApiIrisProvidersDiagnosticRouteImport } from './routes/api/iris/providers-diagnostic'
-import { Route as ApiIrisKaizenChatRouteImport } from './routes/api/iris/kaizen-chat'
-import { Route as ApiIrisGenerateCorrectedRouteImport } from './routes/api/iris/generate-corrected'
-import { Route as ApiIrisGenerateAfterRouteImport } from './routes/api/iris/generate-after'
+import { Route as ApiVpsVideoRouteImport } from './routes/api/vps/video'
+import { Route as ApiVpsStatusRouteImport } from './routes/api/vps/status'
+import { Route as ApiVpsModelosRouteImport } from './routes/api/vps/modelos'
+import { Route as ApiVpsGenerateAfterRouteImport } from './routes/api/vps/generate-after'
+import { Route as ApiVpsBacktestRouteImport } from './routes/api/vps/backtest'
+import { Route as ApiVpsAnalisarRouteImport } from './routes/api/vps/analisar'
 import { Route as AuthenticatedIntemperiesNotificacoesRouteImport } from './routes/_authenticated/intemperies.notificacoes'
 import { Route as AuthenticatedAdminVersoesRouteImport } from './routes/_authenticated/admin.versoes'
 import { Route as AuthenticatedAdminImageProvidersRouteImport } from './routes/_authenticated/admin.image-providers'
+import { Route as AuthenticatedAdminIaVpsRouteImport } from './routes/_authenticated/admin/ia-vps'
+import { Route as ApiVpsJobsJobIdRouteImport } from './routes/api/vps/jobs/$jobId'
 import { Route as ApiPublicWeatherGeocodeRouteImport } from './routes/api/public/weather/geocode'
 import { Route as ApiPublicWeatherCurrentRouteImport } from './routes/api/public/weather/current'
 import { Route as ApiPublicLightningRecentRouteImport } from './routes/api/public/lightning/recent'
+import { Route as ApiVpsJobsJobIdRetryRouteImport } from './routes/api/vps/jobs/$jobId/retry'
+import { Route as ApiVpsJobsJobIdCancelRouteImport } from './routes/api/vps/jobs/$jobId/cancel'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -66,11 +71,6 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiChatRoute = ApiChatRouteImport.update({
-  id: '/api/chat',
-  path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedVisionRoute = AuthenticatedVisionRouteImport.update({
@@ -200,26 +200,34 @@ const AuthenticatedChatIndexRoute = AuthenticatedChatIndexRouteImport.update({
   path: '/chat/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const ApiIrisProvidersDiagnosticRoute =
-  ApiIrisProvidersDiagnosticRouteImport.update({
-    id: '/api/iris/providers-diagnostic',
-    path: '/api/iris/providers-diagnostic',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiIrisKaizenChatRoute = ApiIrisKaizenChatRouteImport.update({
-  id: '/api/iris/kaizen-chat',
-  path: '/api/iris/kaizen-chat',
+const ApiVpsVideoRoute = ApiVpsVideoRouteImport.update({
+  id: '/api/vps/video',
+  path: '/api/vps/video',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiIrisGenerateCorrectedRoute =
-  ApiIrisGenerateCorrectedRouteImport.update({
-    id: '/api/iris/generate-corrected',
-    path: '/api/iris/generate-corrected',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiIrisGenerateAfterRoute = ApiIrisGenerateAfterRouteImport.update({
-  id: '/api/iris/generate-after',
-  path: '/api/iris/generate-after',
+const ApiVpsStatusRoute = ApiVpsStatusRouteImport.update({
+  id: '/api/vps/status',
+  path: '/api/vps/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiVpsModelosRoute = ApiVpsModelosRouteImport.update({
+  id: '/api/vps/modelos',
+  path: '/api/vps/modelos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiVpsGenerateAfterRoute = ApiVpsGenerateAfterRouteImport.update({
+  id: '/api/vps/generate-after',
+  path: '/api/vps/generate-after',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiVpsBacktestRoute = ApiVpsBacktestRouteImport.update({
+  id: '/api/vps/backtest',
+  path: '/api/vps/backtest',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiVpsAnalisarRoute = ApiVpsAnalisarRouteImport.update({
+  id: '/api/vps/analisar',
+  path: '/api/vps/analisar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedIntemperiesNotificacoesRoute =
@@ -240,6 +248,16 @@ const AuthenticatedAdminImageProvidersRoute =
     path: '/admin/image-providers',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminIaVpsRoute = AuthenticatedAdminIaVpsRouteImport.update({
+  id: '/admin/ia-vps',
+  path: '/admin/ia-vps',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiVpsJobsJobIdRoute = ApiVpsJobsJobIdRouteImport.update({
+  id: '/api/vps/jobs/$jobId',
+  path: '/api/vps/jobs/$jobId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWeatherGeocodeRoute = ApiPublicWeatherGeocodeRouteImport.update({
   id: '/api/public/weather/geocode',
   path: '/api/public/weather/geocode',
@@ -256,6 +274,16 @@ const ApiPublicLightningRecentRoute =
     path: '/api/public/lightning/recent',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiVpsJobsJobIdRetryRoute = ApiVpsJobsJobIdRetryRouteImport.update({
+  id: '/retry',
+  path: '/retry',
+  getParentRoute: () => ApiVpsJobsJobIdRoute,
+} as any)
+const ApiVpsJobsJobIdCancelRoute = ApiVpsJobsJobIdCancelRouteImport.update({
+  id: '/cancel',
+  path: '/cancel',
+  getParentRoute: () => ApiVpsJobsJobIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -284,18 +312,23 @@ export interface FileRoutesByFullPath {
   '/supervisao': typeof AuthenticatedSupervisaoRoute
   '/usuarios': typeof AuthenticatedUsuariosRoute
   '/vision': typeof AuthenticatedVisionRoute
-  '/api/chat': typeof ApiChatRoute
+  '/admin/ia-vps': typeof AuthenticatedAdminIaVpsRoute
   '/admin/image-providers': typeof AuthenticatedAdminImageProvidersRoute
   '/admin/versoes': typeof AuthenticatedAdminVersoesRoute
   '/intemperies/notificacoes': typeof AuthenticatedIntemperiesNotificacoesRoute
-  '/api/iris/generate-after': typeof ApiIrisGenerateAfterRoute
-  '/api/iris/generate-corrected': typeof ApiIrisGenerateCorrectedRoute
-  '/api/iris/kaizen-chat': typeof ApiIrisKaizenChatRoute
-  '/api/iris/providers-diagnostic': typeof ApiIrisProvidersDiagnosticRoute
+  '/api/vps/analisar': typeof ApiVpsAnalisarRoute
+  '/api/vps/backtest': typeof ApiVpsBacktestRoute
+  '/api/vps/generate-after': typeof ApiVpsGenerateAfterRoute
+  '/api/vps/modelos': typeof ApiVpsModelosRoute
+  '/api/vps/status': typeof ApiVpsStatusRoute
+  '/api/vps/video': typeof ApiVpsVideoRoute
   '/chat/': typeof AuthenticatedChatIndexRoute
   '/api/public/lightning/recent': typeof ApiPublicLightningRecentRoute
   '/api/public/weather/current': typeof ApiPublicWeatherCurrentRoute
   '/api/public/weather/geocode': typeof ApiPublicWeatherGeocodeRoute
+  '/api/vps/jobs/$jobId': typeof ApiVpsJobsJobIdRouteWithChildren
+  '/api/vps/jobs/$jobId/cancel': typeof ApiVpsJobsJobIdCancelRoute
+  '/api/vps/jobs/$jobId/retry': typeof ApiVpsJobsJobIdRetryRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -324,18 +357,23 @@ export interface FileRoutesByTo {
   '/supervisao': typeof AuthenticatedSupervisaoRoute
   '/usuarios': typeof AuthenticatedUsuariosRoute
   '/vision': typeof AuthenticatedVisionRoute
-  '/api/chat': typeof ApiChatRoute
+  '/admin/ia-vps': typeof AuthenticatedAdminIaVpsRoute
   '/admin/image-providers': typeof AuthenticatedAdminImageProvidersRoute
   '/admin/versoes': typeof AuthenticatedAdminVersoesRoute
   '/intemperies/notificacoes': typeof AuthenticatedIntemperiesNotificacoesRoute
-  '/api/iris/generate-after': typeof ApiIrisGenerateAfterRoute
-  '/api/iris/generate-corrected': typeof ApiIrisGenerateCorrectedRoute
-  '/api/iris/kaizen-chat': typeof ApiIrisKaizenChatRoute
-  '/api/iris/providers-diagnostic': typeof ApiIrisProvidersDiagnosticRoute
+  '/api/vps/analisar': typeof ApiVpsAnalisarRoute
+  '/api/vps/backtest': typeof ApiVpsBacktestRoute
+  '/api/vps/generate-after': typeof ApiVpsGenerateAfterRoute
+  '/api/vps/modelos': typeof ApiVpsModelosRoute
+  '/api/vps/status': typeof ApiVpsStatusRoute
+  '/api/vps/video': typeof ApiVpsVideoRoute
   '/chat': typeof AuthenticatedChatIndexRoute
   '/api/public/lightning/recent': typeof ApiPublicLightningRecentRoute
   '/api/public/weather/current': typeof ApiPublicWeatherCurrentRoute
   '/api/public/weather/geocode': typeof ApiPublicWeatherGeocodeRoute
+  '/api/vps/jobs/$jobId': typeof ApiVpsJobsJobIdRouteWithChildren
+  '/api/vps/jobs/$jobId/cancel': typeof ApiVpsJobsJobIdCancelRoute
+  '/api/vps/jobs/$jobId/retry': typeof ApiVpsJobsJobIdRetryRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -366,18 +404,23 @@ export interface FileRoutesById {
   '/_authenticated/supervisao': typeof AuthenticatedSupervisaoRoute
   '/_authenticated/usuarios': typeof AuthenticatedUsuariosRoute
   '/_authenticated/vision': typeof AuthenticatedVisionRoute
-  '/api/chat': typeof ApiChatRoute
+  '/_authenticated/admin/ia-vps': typeof AuthenticatedAdminIaVpsRoute
   '/_authenticated/admin/image-providers': typeof AuthenticatedAdminImageProvidersRoute
   '/_authenticated/admin/versoes': typeof AuthenticatedAdminVersoesRoute
   '/_authenticated/intemperies/notificacoes': typeof AuthenticatedIntemperiesNotificacoesRoute
-  '/api/iris/generate-after': typeof ApiIrisGenerateAfterRoute
-  '/api/iris/generate-corrected': typeof ApiIrisGenerateCorrectedRoute
-  '/api/iris/kaizen-chat': typeof ApiIrisKaizenChatRoute
-  '/api/iris/providers-diagnostic': typeof ApiIrisProvidersDiagnosticRoute
+  '/api/vps/analisar': typeof ApiVpsAnalisarRoute
+  '/api/vps/backtest': typeof ApiVpsBacktestRoute
+  '/api/vps/generate-after': typeof ApiVpsGenerateAfterRoute
+  '/api/vps/modelos': typeof ApiVpsModelosRoute
+  '/api/vps/status': typeof ApiVpsStatusRoute
+  '/api/vps/video': typeof ApiVpsVideoRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
   '/api/public/lightning/recent': typeof ApiPublicLightningRecentRoute
   '/api/public/weather/current': typeof ApiPublicWeatherCurrentRoute
   '/api/public/weather/geocode': typeof ApiPublicWeatherGeocodeRoute
+  '/api/vps/jobs/$jobId': typeof ApiVpsJobsJobIdRouteWithChildren
+  '/api/vps/jobs/$jobId/cancel': typeof ApiVpsJobsJobIdCancelRoute
+  '/api/vps/jobs/$jobId/retry': typeof ApiVpsJobsJobIdRetryRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -408,18 +451,23 @@ export interface FileRouteTypes {
     | '/supervisao'
     | '/usuarios'
     | '/vision'
-    | '/api/chat'
+    | '/admin/ia-vps'
     | '/admin/image-providers'
     | '/admin/versoes'
     | '/intemperies/notificacoes'
-    | '/api/iris/generate-after'
-    | '/api/iris/generate-corrected'
-    | '/api/iris/kaizen-chat'
-    | '/api/iris/providers-diagnostic'
+    | '/api/vps/analisar'
+    | '/api/vps/backtest'
+    | '/api/vps/generate-after'
+    | '/api/vps/modelos'
+    | '/api/vps/status'
+    | '/api/vps/video'
     | '/chat/'
     | '/api/public/lightning/recent'
     | '/api/public/weather/current'
     | '/api/public/weather/geocode'
+    | '/api/vps/jobs/$jobId'
+    | '/api/vps/jobs/$jobId/cancel'
+    | '/api/vps/jobs/$jobId/retry'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -448,18 +496,23 @@ export interface FileRouteTypes {
     | '/supervisao'
     | '/usuarios'
     | '/vision'
-    | '/api/chat'
+    | '/admin/ia-vps'
     | '/admin/image-providers'
     | '/admin/versoes'
     | '/intemperies/notificacoes'
-    | '/api/iris/generate-after'
-    | '/api/iris/generate-corrected'
-    | '/api/iris/kaizen-chat'
-    | '/api/iris/providers-diagnostic'
+    | '/api/vps/analisar'
+    | '/api/vps/backtest'
+    | '/api/vps/generate-after'
+    | '/api/vps/modelos'
+    | '/api/vps/status'
+    | '/api/vps/video'
     | '/chat'
     | '/api/public/lightning/recent'
     | '/api/public/weather/current'
     | '/api/public/weather/geocode'
+    | '/api/vps/jobs/$jobId'
+    | '/api/vps/jobs/$jobId/cancel'
+    | '/api/vps/jobs/$jobId/retry'
   id:
     | '__root__'
     | '/'
@@ -489,18 +542,23 @@ export interface FileRouteTypes {
     | '/_authenticated/supervisao'
     | '/_authenticated/usuarios'
     | '/_authenticated/vision'
-    | '/api/chat'
+    | '/_authenticated/admin/ia-vps'
     | '/_authenticated/admin/image-providers'
     | '/_authenticated/admin/versoes'
     | '/_authenticated/intemperies/notificacoes'
-    | '/api/iris/generate-after'
-    | '/api/iris/generate-corrected'
-    | '/api/iris/kaizen-chat'
-    | '/api/iris/providers-diagnostic'
+    | '/api/vps/analisar'
+    | '/api/vps/backtest'
+    | '/api/vps/generate-after'
+    | '/api/vps/modelos'
+    | '/api/vps/status'
+    | '/api/vps/video'
     | '/_authenticated/chat/'
     | '/api/public/lightning/recent'
     | '/api/public/weather/current'
     | '/api/public/weather/geocode'
+    | '/api/vps/jobs/$jobId'
+    | '/api/vps/jobs/$jobId/cancel'
+    | '/api/vps/jobs/$jobId/retry'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -508,14 +566,16 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
-  ApiChatRoute: typeof ApiChatRoute
-  ApiIrisGenerateAfterRoute: typeof ApiIrisGenerateAfterRoute
-  ApiIrisGenerateCorrectedRoute: typeof ApiIrisGenerateCorrectedRoute
-  ApiIrisKaizenChatRoute: typeof ApiIrisKaizenChatRoute
-  ApiIrisProvidersDiagnosticRoute: typeof ApiIrisProvidersDiagnosticRoute
+  ApiVpsAnalisarRoute: typeof ApiVpsAnalisarRoute
+  ApiVpsBacktestRoute: typeof ApiVpsBacktestRoute
+  ApiVpsGenerateAfterRoute: typeof ApiVpsGenerateAfterRoute
+  ApiVpsModelosRoute: typeof ApiVpsModelosRoute
+  ApiVpsStatusRoute: typeof ApiVpsStatusRoute
+  ApiVpsVideoRoute: typeof ApiVpsVideoRoute
   ApiPublicLightningRecentRoute: typeof ApiPublicLightningRecentRoute
   ApiPublicWeatherCurrentRoute: typeof ApiPublicWeatherCurrentRoute
   ApiPublicWeatherGeocodeRoute: typeof ApiPublicWeatherGeocodeRoute
+  ApiVpsJobsJobIdRoute: typeof ApiVpsJobsJobIdRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -546,13 +606,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/chat': {
-      id: '/api/chat'
-      path: '/api/chat'
-      fullPath: '/api/chat'
-      preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/vision': {
@@ -723,32 +776,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChatIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/iris/providers-diagnostic': {
-      id: '/api/iris/providers-diagnostic'
-      path: '/api/iris/providers-diagnostic'
-      fullPath: '/api/iris/providers-diagnostic'
-      preLoaderRoute: typeof ApiIrisProvidersDiagnosticRouteImport
+    '/api/vps/video': {
+      id: '/api/vps/video'
+      path: '/api/vps/video'
+      fullPath: '/api/vps/video'
+      preLoaderRoute: typeof ApiVpsVideoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/iris/kaizen-chat': {
-      id: '/api/iris/kaizen-chat'
-      path: '/api/iris/kaizen-chat'
-      fullPath: '/api/iris/kaizen-chat'
-      preLoaderRoute: typeof ApiIrisKaizenChatRouteImport
+    '/api/vps/status': {
+      id: '/api/vps/status'
+      path: '/api/vps/status'
+      fullPath: '/api/vps/status'
+      preLoaderRoute: typeof ApiVpsStatusRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/iris/generate-corrected': {
-      id: '/api/iris/generate-corrected'
-      path: '/api/iris/generate-corrected'
-      fullPath: '/api/iris/generate-corrected'
-      preLoaderRoute: typeof ApiIrisGenerateCorrectedRouteImport
+    '/api/vps/modelos': {
+      id: '/api/vps/modelos'
+      path: '/api/vps/modelos'
+      fullPath: '/api/vps/modelos'
+      preLoaderRoute: typeof ApiVpsModelosRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/iris/generate-after': {
-      id: '/api/iris/generate-after'
-      path: '/api/iris/generate-after'
-      fullPath: '/api/iris/generate-after'
-      preLoaderRoute: typeof ApiIrisGenerateAfterRouteImport
+    '/api/vps/generate-after': {
+      id: '/api/vps/generate-after'
+      path: '/api/vps/generate-after'
+      fullPath: '/api/vps/generate-after'
+      preLoaderRoute: typeof ApiVpsGenerateAfterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/vps/backtest': {
+      id: '/api/vps/backtest'
+      path: '/api/vps/backtest'
+      fullPath: '/api/vps/backtest'
+      preLoaderRoute: typeof ApiVpsBacktestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/vps/analisar': {
+      id: '/api/vps/analisar'
+      path: '/api/vps/analisar'
+      fullPath: '/api/vps/analisar'
+      preLoaderRoute: typeof ApiVpsAnalisarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/intemperies/notificacoes': {
@@ -772,6 +839,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminImageProvidersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/ia-vps': {
+      id: '/_authenticated/admin/ia-vps'
+      path: '/admin/ia-vps'
+      fullPath: '/admin/ia-vps'
+      preLoaderRoute: typeof AuthenticatedAdminIaVpsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/vps/jobs/$jobId': {
+      id: '/api/vps/jobs/$jobId'
+      path: '/api/vps/jobs/$jobId'
+      fullPath: '/api/vps/jobs/$jobId'
+      preLoaderRoute: typeof ApiVpsJobsJobIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/weather/geocode': {
       id: '/api/public/weather/geocode'
       path: '/api/public/weather/geocode'
@@ -792,6 +873,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/lightning/recent'
       preLoaderRoute: typeof ApiPublicLightningRecentRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/vps/jobs/$jobId/retry': {
+      id: '/api/vps/jobs/$jobId/retry'
+      path: '/retry'
+      fullPath: '/api/vps/jobs/$jobId/retry'
+      preLoaderRoute: typeof ApiVpsJobsJobIdRetryRouteImport
+      parentRoute: typeof ApiVpsJobsJobIdRoute
+    }
+    '/api/vps/jobs/$jobId/cancel': {
+      id: '/api/vps/jobs/$jobId/cancel'
+      path: '/cancel'
+      fullPath: '/api/vps/jobs/$jobId/cancel'
+      preLoaderRoute: typeof ApiVpsJobsJobIdCancelRouteImport
+      parentRoute: typeof ApiVpsJobsJobIdRoute
     }
   }
 }
@@ -835,6 +930,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSupervisaoRoute: typeof AuthenticatedSupervisaoRoute
   AuthenticatedUsuariosRoute: typeof AuthenticatedUsuariosRoute
   AuthenticatedVisionRoute: typeof AuthenticatedVisionRoute
+  AuthenticatedAdminIaVpsRoute: typeof AuthenticatedAdminIaVpsRoute
   AuthenticatedAdminImageProvidersRoute: typeof AuthenticatedAdminImageProvidersRoute
   AuthenticatedAdminVersoesRoute: typeof AuthenticatedAdminVersoesRoute
   AuthenticatedChatIndexRoute: typeof AuthenticatedChatIndexRoute
@@ -864,6 +960,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSupervisaoRoute: AuthenticatedSupervisaoRoute,
   AuthenticatedUsuariosRoute: AuthenticatedUsuariosRoute,
   AuthenticatedVisionRoute: AuthenticatedVisionRoute,
+  AuthenticatedAdminIaVpsRoute: AuthenticatedAdminIaVpsRoute,
   AuthenticatedAdminImageProvidersRoute: AuthenticatedAdminImageProvidersRoute,
   AuthenticatedAdminVersoesRoute: AuthenticatedAdminVersoesRoute,
   AuthenticatedChatIndexRoute: AuthenticatedChatIndexRoute,
@@ -872,20 +969,46 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface ApiVpsJobsJobIdRouteChildren {
+  ApiVpsJobsJobIdCancelRoute: typeof ApiVpsJobsJobIdCancelRoute
+  ApiVpsJobsJobIdRetryRoute: typeof ApiVpsJobsJobIdRetryRoute
+}
+
+const ApiVpsJobsJobIdRouteChildren: ApiVpsJobsJobIdRouteChildren = {
+  ApiVpsJobsJobIdCancelRoute: ApiVpsJobsJobIdCancelRoute,
+  ApiVpsJobsJobIdRetryRoute: ApiVpsJobsJobIdRetryRoute,
+}
+
+const ApiVpsJobsJobIdRouteWithChildren = ApiVpsJobsJobIdRoute._addFileChildren(
+  ApiVpsJobsJobIdRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
-  ApiChatRoute: ApiChatRoute,
-  ApiIrisGenerateAfterRoute: ApiIrisGenerateAfterRoute,
-  ApiIrisGenerateCorrectedRoute: ApiIrisGenerateCorrectedRoute,
-  ApiIrisKaizenChatRoute: ApiIrisKaizenChatRoute,
-  ApiIrisProvidersDiagnosticRoute: ApiIrisProvidersDiagnosticRoute,
+  ApiVpsAnalisarRoute: ApiVpsAnalisarRoute,
+  ApiVpsBacktestRoute: ApiVpsBacktestRoute,
+  ApiVpsGenerateAfterRoute: ApiVpsGenerateAfterRoute,
+  ApiVpsModelosRoute: ApiVpsModelosRoute,
+  ApiVpsStatusRoute: ApiVpsStatusRoute,
+  ApiVpsVideoRoute: ApiVpsVideoRoute,
   ApiPublicLightningRecentRoute: ApiPublicLightningRecentRoute,
   ApiPublicWeatherCurrentRoute: ApiPublicWeatherCurrentRoute,
   ApiPublicWeatherGeocodeRoute: ApiPublicWeatherGeocodeRoute,
+  ApiVpsJobsJobIdRoute: ApiVpsJobsJobIdRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

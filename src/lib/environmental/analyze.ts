@@ -9,10 +9,18 @@ import type { EnvAnalysisResult } from "./schema";
 
 function extractJson(text: string): unknown {
   const clean = text.replace(/```json|```/g, "").trim();
-  try { return JSON.parse(clean); } catch { /* try again */ }
+  try {
+    return JSON.parse(clean);
+  } catch {
+    /* try again */
+  }
   const m = clean.match(/\{[\s\S]*\}/);
   if (!m) return {};
-  try { return JSON.parse(m[0]); } catch { return {}; }
+  try {
+    return JSON.parse(m[0]);
+  } catch {
+    return {};
+  }
 }
 
 export type EnvAnalyzeInput = {
@@ -33,7 +41,9 @@ export async function analisarAmbientalN3(input: EnvAnalyzeInput): Promise<EnvAn
     input.extraContext ? `\nContexto adicional extraído dos anexos:\n${input.extraContext}` : "",
     "",
     "Analise cada imagem citando o que é observável. Preencha o contrato JSON completo.",
-  ].filter(Boolean).join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   const content: IrisChatMessage["content"] = [{ type: "text", text: userPrompt }];
   for (const url of input.images.slice(0, 6)) {
@@ -75,13 +85,20 @@ async function getFreshAuthenticatedUserId(): Promise<string> {
   return userData.user.id;
 }
 
-export async function conversarAmbiental(history: EnvChatTurn[], userText: string, images: string[] = []): Promise<string> {
+export async function conversarAmbiental(
+  history: EnvChatTurn[],
+  userText: string,
+  images: string[] = [],
+): Promise<string> {
   const messages: IrisChatMessage[] = [{ role: "system", content: ENV_CHAT_SYSTEM_PROMPT }];
   for (const t of history) {
     messages.push({ role: t.role, content: t.content });
   }
   const uc: IrisChatMessage["content"] = images.length
-    ? [{ type: "text", text: userText || "(sem texto)" }, ...images.map((url) => ({ type: "image_url" as const, image_url: { url } }))]
+    ? [
+        { type: "text", text: userText || "(sem texto)" },
+        ...images.map((url) => ({ type: "image_url" as const, image_url: { url } })),
+      ]
     : userText;
   messages.push({ role: "user", content: uc });
   const resp = await chamarIrisChat({ messages });
@@ -89,13 +106,20 @@ export async function conversarAmbiental(history: EnvChatTurn[], userText: strin
 }
 
 // Upload de anexo ambiental para o bucket privado `environmental`.
-export async function uploadEnvAttachment(auditId: string, file: File): Promise<{ path: string; signedUrl: string | null }> {
+export async function uploadEnvAttachment(
+  auditId: string,
+  file: File,
+): Promise<{ path: string; signedUrl: string | null }> {
   const userId = await getFreshAuthenticatedUserId();
   const ext = file.name.split(".").pop() || "bin";
   const path = `${userId}/${auditId}/${crypto.randomUUID()}.${ext}`;
-  const up = await supabase.storage.from("environmental").upload(path, file, { contentType: file.type, upsert: false });
+  const up = await supabase.storage
+    .from("environmental")
+    .upload(path, file, { contentType: file.type, upsert: false });
   if (up.error) throw up.error;
-  const signed = await supabase.storage.from("environmental").createSignedUrl(path, 60 * 60 * 24 * 7);
+  const signed = await supabase.storage
+    .from("environmental")
+    .createSignedUrl(path, 60 * 60 * 24 * 7);
   return { path, signedUrl: signed.data?.signedUrl ?? null };
 }
 

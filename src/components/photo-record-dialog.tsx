@@ -11,13 +11,11 @@ import {
   FileDown,
   CheckCircle2,
   AlertTriangle,
-  
 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { findSimilar, createRecordWithCode } from "@/lib/records.functions";
 import { sha256OfFile, dHashOfFile } from "@/lib/image-hash";
-import { fileToCompressedDataURL } from "@/lib/image-compress";
 import { CompareSlider } from "@/components/compare-slider";
 import jsPDF from "jspdf";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,7 +43,12 @@ import { toast } from "sonner";
 import { validateFile } from "@/lib/validation";
 import { logAudit } from "@/lib/audit";
 import type { ModuleKey } from "@/components/record-module";
-import { analisarComIris, chamarIrisChat, gerarSimulacaoComIris, toPhotoDialogResult } from "@/lib/iris-analyze";
+import {
+  analisarComIris,
+  chamarIrisChat,
+  gerarSimulacaoComIris,
+  toPhotoDialogResult,
+} from "@/lib/iris-analyze";
 import { handleAiError } from "@/lib/ai-credits-error";
 import { deriveNrCorrections } from "@/lib/nr-corrections";
 import { ReportActions } from "@/components/report/ReportActions";
@@ -53,7 +56,6 @@ import { buildFromIrisResult } from "@/lib/reports/build-from-analysis";
 import { N3KaizenFlow } from "@/components/record/N3KaizenFlow";
 import { Inspecao5SFlow } from "@/components/record/Inspecao5SFlow";
 import type { N3Result, N3Risk, KaizenResult } from "@/lib/n3-kaizen";
-
 
 const priorityOptions = [
   { v: "baixa", l: "Baixa" },
@@ -118,7 +120,14 @@ type IrisResult = {
   // Hierarquia de controles de risco
   control_hierarchy?: {
     level: 1 | 2 | 3 | 4 | 5 | 6 | 7;
-    label: "eliminacao" | "substituicao" | "protecao_coletiva" | "barreira_fisica" | "automacao_isolamento" | "controle_administrativo" | "epi";
+    label:
+      | "eliminacao"
+      | "substituicao"
+      | "protecao_coletiva"
+      | "barreira_fisica"
+      | "automacao_isolamento"
+      | "controle_administrativo"
+      | "epi";
     chosen_solution: string;
     justification: string;
     alternatives_considered?: string[];
@@ -133,7 +142,6 @@ type IrisResult = {
     operational_safety?: number;
   };
 };
-
 
 interface Props {
   moduleKey: ModuleKey;
@@ -203,7 +211,9 @@ function PhotoRecordContent({
   const [simulationPrompt, setSimulationPrompt] = useState<string | null>(null);
   const [generatingAfter, setGeneratingAfter] = useState(false);
   const [afterPlan, setAfterPlan] = useState<string | null>(null);
-  const [correctionPhoto, setCorrectionPhoto] = useState<{ file: File; preview: string } | null>(null);
+  const [correctionPhoto, setCorrectionPhoto] = useState<{ file: File; preview: string } | null>(
+    null,
+  );
   const [compareMode, setCompareMode] = useState<"grid" | "slider">("grid");
   type CompareResult = {
     conformidade: number;
@@ -220,7 +230,21 @@ function PhotoRecordContent({
   const [manualResp, setManualResp] = useState("");
   const [imageHash, setImageHash] = useState<string | null>(null);
   const [imagePhash, setImagePhash] = useState<string | null>(null);
-  type SimilarRecord = { id: string; internal_code: string | null; vale_protocol: string | null; vale_status: string | null; title: string | null; description: string | null; area: string | null; location: string | null; equipment: string | null; photo_url: string | null; similarity: number; module: string; created_at: string };
+  type SimilarRecord = {
+    id: string;
+    internal_code: string | null;
+    vale_protocol: string | null;
+    vale_status: string | null;
+    title: string | null;
+    description: string | null;
+    area: string | null;
+    location: string | null;
+    equipment: string | null;
+    photo_url: string | null;
+    similarity: number;
+    module: string;
+    created_at: string;
+  };
   const [similar, setSimilar] = useState<SimilarRecord[]>([]);
   const [showDupDialog, setShowDupDialog] = useState(false);
   const [dupKind, setDupKind] = useState<"new" | "complement" | "recurrence">("new");
@@ -239,9 +263,20 @@ function PhotoRecordContent({
     usedInGeneration?: boolean;
   };
   const NORM_SUGGESTIONS = [
-    "NR-01", "NR-06", "NR-10", "NR-11", "NR-12", "NR-18",
-    "NR-23", "NR-26", "NR-33", "NR-35",
-    "5S", "NBR", "Procedimento interno", "Outra",
+    "NR-01",
+    "NR-06",
+    "NR-10",
+    "NR-11",
+    "NR-12",
+    "NR-18",
+    "NR-23",
+    "NR-26",
+    "NR-33",
+    "NR-35",
+    "5S",
+    "NBR",
+    "Procedimento interno",
+    "Outra",
   ];
 
   const [corrections, setCorrections] = useState<SafetyCorrection[]>([]);
@@ -249,7 +284,10 @@ function PhotoRecordContent({
   const [newDescription, setNewDescription] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [correctionError, setCorrectionError] = useState<string | null>(null);
-  const [generationProgress, setGenerationProgress] = useState<{ pct: number; label: string } | null>(null);
+  const [generationProgress, setGenerationProgress] = useState<{
+    pct: number;
+    label: string;
+  } | null>(null);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -259,7 +297,10 @@ function PhotoRecordContent({
   }
 
   useEffect(() => {
-    if (!result) { setCorrections([]); return; }
+    if (!result) {
+      setCorrections([]);
+      return;
+    }
     const d = deriveNrCorrections(result as unknown as Record<string, unknown>);
     setCorrections(
       d.correcoes.map((c) => ({
@@ -272,8 +313,6 @@ function PhotoRecordContent({
       })),
     );
   }, [result]);
-
-
 
   function onPick(list: FileList | null) {
     if (!list) return;
@@ -296,12 +335,18 @@ function PhotoRecordContent({
     setN3Result(null);
     setN3SelectedRisk(null);
     setKaizenResult(null);
-    Promise.all(next.map((p) => toDataURL(p.file))).then(setPhotoDataUrls).catch(() => setPhotoDataUrls([]));
+    Promise.all(next.map((p) => toDataURL(p.file)))
+      .then(setPhotoDataUrls)
+      .catch(() => setPhotoDataUrls([]));
     // Fingerprint the first photo
     const first = next[0]?.file;
     if (first) {
-      sha256OfFile(first).then(setImageHash).catch(() => {});
-      dHashOfFile(first).then(setImagePhash).catch(() => {});
+      sha256OfFile(first)
+        .then(setImageHash)
+        .catch(() => {});
+      dHashOfFile(first)
+        .then(setImagePhash)
+        .catch(() => {});
     }
   }
 
@@ -318,12 +363,18 @@ function PhotoRecordContent({
     setN3Result(null);
     setN3SelectedRisk(null);
     setKaizenResult(null);
-    Promise.all(remaining.map((p) => toDataURL(p.file))).then(setPhotoDataUrls).catch(() => setPhotoDataUrls([]));
+    Promise.all(remaining.map((p) => toDataURL(p.file)))
+      .then(setPhotoDataUrls)
+      .catch(() => setPhotoDataUrls([]));
   }
 
-
   async function toDataURL(file: File): Promise<string> {
-    return fileToCompressedDataURL(file);
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result as string);
+      r.onerror = () => reject(r.error);
+      r.readAsDataURL(file);
+    });
   }
 
   async function analyze() {
@@ -337,7 +388,7 @@ function PhotoRecordContent({
       const dataUrls = await Promise.all(photos.map((p) => toDataURL(p.file)));
       const raw = await analisarComIris({
         images: dataUrls,
-        context: "Análise de campo — VALETECH. Considere hierarquia de controles de risco.",
+        context: "Análise de campo — VisionGuard AI. Considere hierarquia de controles de risco.",
       });
       const parsed = toPhotoDialogResult(raw) as unknown as IrisResult;
       setResult(parsed);
@@ -379,9 +430,13 @@ function PhotoRecordContent({
     setCompareResult({
       conformidade: m.conf,
       itens_corrigidos: manualResultado === "concluida" ? ["Confirmação humana: " + m.label] : [],
-      itens_pendentes: manualResultado === "parcial" || manualResultado === "risco_presente" ? [manualObs || m.label] : [],
+      itens_pendentes:
+        manualResultado === "parcial" || manualResultado === "risco_presente"
+          ? [manualObs || m.label]
+          : [],
       itens_nao_identificados: [],
-      observacoes: `[Validação manual sem IA] ${m.label}. Responsável: ${manualResp}. ${manualObs}`.trim(),
+      observacoes:
+        `[Validação manual sem IA] ${m.label}. Responsável: ${manualResp}. ${manualObs}`.trim(),
     });
     logAudit("record_update", { module: moduleKey, targetId: "manual-confirm" });
     setManualOpen(false);
@@ -400,7 +455,9 @@ function PhotoRecordContent({
       let beforeSha = imageHash;
       try {
         if (!beforeSha) beforeSha = await sha256OfFile(photos[0].file);
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
       const afterSha = await sha256OfFile(correctionPhoto.file).catch(() => null);
       const cacheKey = beforeSha && afterSha ? compareCacheKey(beforeSha, afterSha) : null;
       if (cacheKey) {
@@ -409,11 +466,15 @@ function PhotoRecordContent({
           if (cached) {
             const parsedCache = JSON.parse(cached) as CompareResult;
             setCompareResult(parsedCache);
-            toast.info("Análise já realizada anteriormente. Resultado recuperado sem novo consumo.");
+            toast.info(
+              "Análise já realizada anteriormente. Resultado recuperado sem novo consumo.",
+            );
             setComparing(false);
             return;
           }
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
       }
       const beforeUrl = await toDataURL(photos[0].file);
       const afterUrl = await toDataURL(correctionPhoto.file);
@@ -425,8 +486,8 @@ function PhotoRecordContent({
           {
             role: "system",
             content:
-              'Você é IA, auditora técnica de segurança e 5S. Compare a foto ANTES com a foto DEPOIS (correção real, enviada pelo usuário) e produza uma análise objetiva baseada APENAS no que é visivelmente observável nas duas fotos. ' +
-              'Analise: derramamentos removidos, organização, limpeza, obstáculos, EPC, sinalização, isolamento, condições do piso, materiais, área liberada. ' +
+              "Você é IA, auditora técnica de segurança e 5S. Compare a foto ANTES com a foto DEPOIS (correção real, enviada pelo usuário) e produza uma análise objetiva baseada APENAS no que é visivelmente observável nas duas fotos. " +
+              "Analise: derramamentos removidos, organização, limpeza, obstáculos, EPC, sinalização, isolamento, condições do piso, materiais, área liberada. " +
               'Nunca invente evidências. Quando não houver informação visual suficiente para confirmar um item, coloque-o em "itens_nao_identificados". ' +
               'Retorne EXCLUSIVAMENTE JSON válido no formato: {"conformidade":0-100,"itens_corrigidos":["..."],"itens_pendentes":["..."],"itens_nao_identificados":["..."],"observacoes":"texto breve"}. Sem texto fora do JSON.',
           },
@@ -451,7 +512,10 @@ function PhotoRecordContent({
         itens_nao_identificados: string[];
         observacoes: string;
       }>;
-      const list = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string" && x.trim().length > 0) : []);
+      const list = (v: unknown) =>
+        Array.isArray(v)
+          ? v.filter((x): x is string => typeof x === "string" && x.trim().length > 0)
+          : [];
       const finalResult: CompareResult = {
         conformidade: Math.max(0, Math.min(100, Number(parsed.conformidade ?? 0))),
         itens_corrigidos: list(parsed.itens_corrigidos),
@@ -461,7 +525,11 @@ function PhotoRecordContent({
       };
       setCompareResult(finalResult);
       if (cacheKey) {
-        try { localStorage.setItem(cacheKey, JSON.stringify(finalResult)); } catch { /* ignore */ }
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify(finalResult));
+        } catch {
+          /* ignore */
+        }
       }
       logAudit("ai_analysis", { module: moduleKey, targetId: "compare-real" });
       toast.success("Comparação Antes × Depois concluída.");
@@ -476,7 +544,8 @@ function PhotoRecordContent({
     if (e instanceof Error) {
       if (e.name === "AbortError") return "Geração cancelada.";
       const msg = e.message || "";
-      if (/timeout|demorou|abort/i.test(msg)) return "A geração demorou além do limite. Tente novamente.";
+      if (/timeout|demorou|abort/i.test(msg))
+        return "A geração demorou além do limite. Tente novamente.";
       if (/\b401\b/.test(msg)) return "A autenticação do serviço de imagem falhou.";
       if (/\b402\b/.test(msg)) return "O provedor de imagem está sem saldo disponível.";
       if (/\b429\b/.test(msg)) return "O limite temporário do serviço de imagem foi atingido.";
@@ -490,12 +559,16 @@ function PhotoRecordContent({
     setGenerationError(null);
     if (!photos[0]) {
       const m = "Carregue a fotografia original antes de gerar a correção.";
-      setGenerationError(m); toast.error(m); return;
+      setGenerationError(m);
+      toast.error(m);
+      return;
     }
     const selected = corrections.filter((c) => c.selected && c.description.trim().length >= 10);
     if (selected.length === 0) {
       const m = "Selecione ou adicione pelo menos uma correção.";
-      setGenerationError(m); toast.error(m); return;
+      setGenerationError(m);
+      toast.error(m);
+      return;
     }
     // Cancela requisição anterior, se houver
     abortRef.current?.abort();
@@ -531,19 +604,32 @@ function PhotoRecordContent({
         setSimulationPrompt(prompt);
         setSimulationVersion((v) => v + 1);
         const usedIds = new Set(selected.map((s) => s.id));
-        setCorrections((prev) => prev.map((c) => (usedIds.has(c.id) ? { ...c, usedInGeneration: true } : c)));
+        setCorrections((prev) =>
+          prev.map((c) => (usedIds.has(c.id) ? { ...c, usedInGeneration: true } : c)),
+        );
         setGenerationProgress({ pct: 100, label: "Concluído" });
         toast.success("Imagem Depois gerada pela IA.");
       } else {
         const plan = sim.tipo === "plano_correcao_visual" ? sim.planoCorrecao : null;
-        const lines = plan ? [
-          plan.condicao_final_esperada && `Condição esperada: ${plan.condicao_final_esperada}`,
-          plan.itens_reparar?.length ? `Reparar: ${plan.itens_reparar.join("; ")}` : null,
-          plan.isolamento_necessario?.length ? `Isolamento: ${plan.isolamento_necessario.join("; ")}` : null,
-          plan.sinalizacao_necessaria?.length ? `Sinalização: ${plan.sinalizacao_necessaria.join("; ")}` : null,
-        ].filter(Boolean).join("\n") : "";
+        const lines = plan
+          ? [
+              plan.condicao_final_esperada && `Condição esperada: ${plan.condicao_final_esperada}`,
+              plan.itens_reparar?.length ? `Reparar: ${plan.itens_reparar.join("; ")}` : null,
+              plan.isolamento_necessario?.length
+                ? `Isolamento: ${plan.isolamento_necessario.join("; ")}`
+                : null,
+              plan.sinalizacao_necessaria?.length
+                ? `Sinalização: ${plan.sinalizacao_necessaria.join("; ")}`
+                : null,
+            ]
+              .filter(Boolean)
+              .join("\n")
+          : "";
         setAfterPlan(lines || sim.mensagem || "Plano visual textual retornado.");
-        setGenerationError(sim.mensagem || "Não foi possível gerar a correção visual. Nenhum crédito foi descontado.");
+        setGenerationError(
+          sim.mensagem ||
+            "Não foi possível gerar a correção visual. Nenhum crédito foi descontado.",
+        );
         toast.info(sim.mensagem || "Geração visual indisponível — plano textual retornado.");
       }
     } catch (e) {
@@ -556,11 +642,6 @@ function PhotoRecordContent({
       setTimeout(() => setGenerationProgress(null), 1500);
     }
   }
-
-
-
-
-
 
   const save = useMutation({
     mutationFn: async () => {
@@ -621,11 +702,13 @@ function PhotoRecordContent({
       let insertedId: string | null = null;
       let internalCode: string | null = null;
 
-      const moduleForServer = (chosenModule === "inspection"
-        ? "inspecao"
-        : chosenModule === "supervision"
-          ? "n3"
-          : chosenModule) as "n3" | "crm" | "kaizen" | "environment" | "emergency" | "gain" | "inspecao";
+      const moduleForServer = (
+        chosenModule === "inspection"
+          ? "inspecao"
+          : chosenModule === "supervision"
+            ? "n3"
+            : chosenModule
+      ) as "n3" | "crm" | "kaizen" | "environment" | "emergency" | "gain" | "inspecao";
       const out = await createRecordFn({
         data: {
           module: moduleForServer,
@@ -644,11 +727,19 @@ function PhotoRecordContent({
             confidence: result.confidence,
             after_url,
             correction_url,
-            simulation: afterImage ? { prompt: simulationPrompt, version: simulationVersion, generated_at: new Date().toISOString() } : null,
+            simulation: afterImage
+              ? {
+                  prompt: simulationPrompt,
+                  version: simulationVersion,
+                  generated_at: new Date().toISOString(),
+                }
+              : null,
           },
           parent_record_id: dupKind !== "new" ? dupParentId : null,
           kind: dupKind,
-          similarity_meta: similar.length ? ({ top: similar.slice(0, 5) } as Record<string, unknown>) : null,
+          similarity_meta: similar.length
+            ? ({ top: similar.slice(0, 5) } as Record<string, unknown>)
+            : null,
           justification: dupJustification || null,
         },
       });
@@ -695,14 +786,18 @@ function PhotoRecordContent({
       result.resources ? `Recursos: ${result.resources}` : "",
       result.execution_time ? `Tempo estimado: ${result.execution_time}` : "",
       result.expected_gain ? `Ganho esperado: ${result.expected_gain}` : "",
-      result.changes_applied?.length ? `Alterações aplicadas (simulação): ${result.changes_applied.join("; ")}` : "",
+      result.changes_applied?.length
+        ? `Alterações aplicadas (simulação): ${result.changes_applied.join("; ")}`
+        : "",
       result.improvement
         ? `Melhoria estimada: risco -${result.improvement.risk_reduction ?? 0}% · organização +${result.improvement.organization ?? 0}% · conformidade +${result.improvement.compliance ?? 0}% · seg. operacional +${result.improvement.operational_safety ?? 0}%`
         : "",
       result.technical_opinion ? `\nParecer técnico:\n${result.technical_opinion}` : "",
       ``,
-      `— Gerado pela IA · VALETECH`,
-    ].filter(Boolean).join("\n");
+      `— Gerado pela IA · VisionGuard AI`,
+    ]
+      .filter(Boolean)
+      .join("\n");
   }, [result, priority]);
 
   async function buildPdf(): Promise<jsPDF> {
@@ -712,7 +807,7 @@ function PhotoRecordContent({
     const M = 40; // margem
     const contentW = pageW - M * 2;
 
-    // Paleta VALETECH
+    // Paleta VisionGuard AI
     const NEON: [number, number, number] = [0, 200, 100];
     const DARK: [number, number, number] = [15, 15, 15];
     const GRAY: [number, number, number] = [100, 100, 100];
@@ -735,7 +830,7 @@ function PhotoRecordContent({
       doc.setTextColor(...NEON);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(14);
-      doc.text("VALETECH", M, 26);
+      doc.text("VisionGuard AI", M, 26);
       doc.setTextColor(255, 255, 255);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
@@ -781,7 +876,10 @@ function PhotoRecordContent({
       y += 22;
     }
 
-    function paragraph(txt: string, opts?: { bold?: boolean; size?: number; color?: [number, number, number] }) {
+    function paragraph(
+      txt: string,
+      opts?: { bold?: boolean; size?: number; color?: [number, number, number] },
+    ) {
       if (!txt) return;
       doc.setFont("helvetica", opts?.bold ? "bold" : "normal");
       doc.setFontSize(opts?.size ?? 10);
@@ -815,24 +913,35 @@ function PhotoRecordContent({
     function badgeBox(title: string, value: string, color: [number, number, number]) {
       const w = (contentW - 20) / 3;
       const h = 46;
-      return { w, h, draw: (x: number) => {
-        doc.setFillColor(...color);
-        doc.rect(x, y, w, h, "F");
-        doc.setTextColor(255, 255, 255);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(8);
-        doc.text(title.toUpperCase(), x + 8, y + 14);
-        doc.setFontSize(15);
-        doc.text(value, x + 8, y + 34);
-      }};
+      return {
+        w,
+        h,
+        draw: (x: number) => {
+          doc.setFillColor(...color);
+          doc.rect(x, y, w, h, "F");
+          doc.setTextColor(255, 255, 255);
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(8);
+          doc.text(title.toUpperCase(), x + 8, y + 14);
+          doc.setFontSize(15);
+          doc.text(value, x + 8, y + 34);
+        },
+      };
     }
 
     function riskColor(cls?: string): [number, number, number] {
       switch ((cls ?? "").toLowerCase()) {
-        case "critico": case "critica": return [180, 30, 30];
-        case "alto": case "alta": return [210, 100, 20];
-        case "medio": case "media": return [200, 160, 20];
-        default: return [40, 120, 60];
+        case "critico":
+        case "critica":
+          return [180, 30, 30];
+        case "alto":
+        case "alta":
+          return [210, 100, 20];
+        case "medio":
+        case "media":
+          return [200, 160, 20];
+        default:
+          return [40, 120, 60];
       }
     }
 
@@ -857,7 +966,10 @@ function PhotoRecordContent({
         const ratio = props.width / props.height;
         let iw = availW;
         let ih = iw / ratio;
-        if (ih > availH) { ih = availH; iw = ih * ratio; }
+        if (ih > availH) {
+          ih = availH;
+          iw = ih * ratio;
+        }
         const ix = M + (availW - iw) / 2;
         // Moldura
         doc.setDrawColor(...LIGHT);
@@ -1009,7 +1121,7 @@ function PhotoRecordContent({
         doc.setFillColor(...LIGHT);
         doc.rect(M, barY, barW, 6, "F");
         doc.setFillColor(...NEON);
-        doc.rect(M, barY, Math.max(0, Math.min(100, pct)) * barW / 100, 6, "F");
+        doc.rect(M, barY, (Math.max(0, Math.min(100, pct)) * barW) / 100, 6, "F");
         y += 24;
       }
     }
@@ -1029,7 +1141,11 @@ function PhotoRecordContent({
     // ===== PÁGINAS DE FOTOS — cada uma em página separada, em tamanho grande =====
     const beforeUrl = photos[0] ? await toDataURL(photos[0].file) : null;
     if (beforeUrl) {
-      await photoPage("FOTO ORIGINAL (ANTES)", beforeUrl, "Registro real do local — anexar no app da Vale");
+      await photoPage(
+        "FOTO ORIGINAL (ANTES)",
+        beforeUrl,
+        "Registro real do local — anexar no app da Vale",
+      );
     }
     if (afterImage) {
       await photoPage(
@@ -1040,7 +1156,11 @@ function PhotoRecordContent({
     }
     if (correctionPhoto) {
       const realUrl = await toDataURL(correctionPhoto.file);
-      await photoPage("CORREÇÃO EXECUTADA (FOTO REAL)", realUrl, "Registro da correção realizada em campo");
+      await photoPage(
+        "CORREÇÃO EXECUTADA (FOTO REAL)",
+        realUrl,
+        "Registro da correção realizada em campo",
+      );
     }
     // Adicionar demais fotos anexadas
     for (let i = 1; i < photos.length; i++) {
@@ -1079,7 +1199,11 @@ function PhotoRecordContent({
         };
         if (nav.canShare?.({ files: [file] }) && nav.share) {
           try {
-            await nav.share({ files: [file], text: reportText, title: result?.title ?? "Registro VALETECH" });
+            await nav.share({
+              files: [file],
+              text: reportText,
+              title: result?.title ?? "Registro VisionGuard AI",
+            });
             return;
           } catch (err) {
             if ((err as DOMException)?.name === "AbortError") return;
@@ -1113,7 +1237,7 @@ function PhotoRecordContent({
     const doc = await buildPdf();
     doc.save(pdfFilename());
     toast.info("PDF baixado. Anexe-o ao e-mail.");
-    const subject = result ? `[VALETECH] ${result.title}` : "Registro VALETECH";
+    const subject = result ? `[VisionGuard AI] ${result.title}` : "Registro VisionGuard AI";
     const url = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(reportText)}`;
     window.location.href = url;
   }
@@ -1121,9 +1245,6 @@ function PhotoRecordContent({
     const doc = await buildPdf();
     doc.save(pdfFilename());
   }
-
-
-
 
   return (
     <DialogContent className="max-h-[95vh] max-w-3xl overflow-y-auto">
@@ -1133,7 +1254,8 @@ function PhotoRecordContent({
           Registro inteligente com IA
         </DialogTitle>
         <DialogDescription>
-          Tire uma foto ou selecione da galeria. A IA identifica e preenche o registro automaticamente.
+          Tire uma foto ou selecione da galeria. A IA identifica e preenche o registro
+          automaticamente.
         </DialogDescription>
       </DialogHeader>
 
@@ -1199,7 +1321,6 @@ function PhotoRecordContent({
                     <X className="h-3 w-3" />
                   </button>
                 </div>
-
               ))}
               <button
                 type="button"
@@ -1229,8 +1350,6 @@ function PhotoRecordContent({
               )}
             </Button>
           </div>
-
-
         </div>
 
         {/* Módulo Inspeção: auditor EXCLUSIVO de 5S. Não avalia N3/Kaizen/segurança/ambiental. */}
@@ -1254,7 +1373,6 @@ function PhotoRecordContent({
           />
         )}
 
-
         {/* IA result review */}
         {result && (
           <div className="space-y-3 rounded-xl border border-neon/30 bg-neon/5 p-3">
@@ -1269,7 +1387,6 @@ function PhotoRecordContent({
             </div>
 
             <N3ProbabilityChart result={result} />
-
 
             <div className="grid gap-2">
               <div className="grid gap-1">
@@ -1375,19 +1492,27 @@ function PhotoRecordContent({
                     {correctionPhoto && (
                       <>
                         <Button
-                          type="button" size="sm"
+                          type="button"
+                          size="sm"
                           variant={compareMode === "grid" ? "default" : "outline"}
                           className="h-7 text-[10px]"
                           onClick={() => setCompareMode("grid")}
-                        >Grade</Button>
+                        >
+                          Grade
+                        </Button>
                         <Button
-                          type="button" size="sm"
+                          type="button"
+                          size="sm"
                           variant={compareMode === "slider" ? "default" : "outline"}
                           className="h-7 text-[10px]"
                           onClick={() => setCompareMode("slider")}
-                        >Slider</Button>
+                        >
+                          Slider
+                        </Button>
                         <Button
-                          type="button" size="sm" variant="outline"
+                          type="button"
+                          size="sm"
+                          variant="outline"
                           className="h-7 gap-1.5 text-[11px] border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10"
                           onClick={() => setManualOpen(true)}
                         >
@@ -1398,251 +1523,357 @@ function PhotoRecordContent({
                   </div>
                 </div>
                 <p className="mb-2 text-[10px] leading-relaxed text-muted-foreground">
-                  Carregue a foto <b>Depois</b> para registro visual. Use <b>Confirmar manualmente</b> para validar a correção sem consumir créditos de IA.
+                  Carregue a foto <b>Depois</b> para registro visual. Use{" "}
+                  <b>Confirmar manualmente</b> para validar a correção sem consumir créditos de IA.
                 </p>
 
                 {/* Editor de correções de segurança (sugeridas + manuais) */}
-                {result && (() => {
-                  const nr = deriveNrCorrections(result as unknown as Record<string, unknown>);
-                  const selectedCount = corrections.filter((c) => c.selected).length;
-                  const trimmedDesc = newDescription.trim();
-                  const isDuplicate = corrections.some(
-                    (c) =>
-                      c.id !== editingId &&
-                      c.description.trim().toLowerCase() === trimmedDesc.toLowerCase() &&
-                      c.standard.trim().toLowerCase() === newStandard.trim().toLowerCase(),
-                  );
-                  const descTooShort = trimmedDesc.length > 0 && trimmedDesc.length < 10;
-                  const descTooLong = trimmedDesc.length > 600;
-                  const standardTooLong = newStandard.trim().length > 50;
-                  const canSubmit =
-                    newStandard.trim().length > 0 &&
-                    trimmedDesc.length >= 10 &&
-                    !descTooLong &&
-                    !standardTooLong &&
-                    !isDuplicate;
+                {result &&
+                  (() => {
+                    const nr = deriveNrCorrections(result as unknown as Record<string, unknown>);
+                    const selectedCount = corrections.filter((c) => c.selected).length;
+                    const trimmedDesc = newDescription.trim();
+                    const isDuplicate = corrections.some(
+                      (c) =>
+                        c.id !== editingId &&
+                        c.description.trim().toLowerCase() === trimmedDesc.toLowerCase() &&
+                        c.standard.trim().toLowerCase() === newStandard.trim().toLowerCase(),
+                    );
+                    const descTooShort = trimmedDesc.length > 0 && trimmedDesc.length < 10;
+                    const descTooLong = trimmedDesc.length > 600;
+                    const standardTooLong = newStandard.trim().length > 50;
+                    const canSubmit =
+                      newStandard.trim().length > 0 &&
+                      trimmedDesc.length >= 10 &&
+                      !descTooLong &&
+                      !standardTooLong &&
+                      !isDuplicate;
 
-                  function submitCorrection() {
-                    setCorrectionError(null);
-                    if (!newStandard.trim()) { setCorrectionError("Informe a norma ou referência."); return; }
-                    if (trimmedDesc.length === 0) { setCorrectionError("Descreva a correção que deverá ser aplicada."); return; }
-                    if (trimmedDesc.length < 10) { setCorrectionError("A descrição precisa ter pelo menos 10 caracteres."); return; }
-                    if (descTooLong) { setCorrectionError("A descrição não pode ultrapassar 600 caracteres."); return; }
-                    if (isDuplicate) { setCorrectionError("Já existe uma correção idêntica."); return; }
+                    function submitCorrection() {
+                      setCorrectionError(null);
+                      if (!newStandard.trim()) {
+                        setCorrectionError("Informe a norma ou referência.");
+                        return;
+                      }
+                      if (trimmedDesc.length === 0) {
+                        setCorrectionError("Descreva a correção que deverá ser aplicada.");
+                        return;
+                      }
+                      if (trimmedDesc.length < 10) {
+                        setCorrectionError("A descrição precisa ter pelo menos 10 caracteres.");
+                        return;
+                      }
+                      if (descTooLong) {
+                        setCorrectionError("A descrição não pode ultrapassar 600 caracteres.");
+                        return;
+                      }
+                      if (isDuplicate) {
+                        setCorrectionError("Já existe uma correção idêntica.");
+                        return;
+                      }
 
-                    if (editingId) {
-                      setCorrections((prev) => prev.map((c) => (c.id === editingId ? { ...c, standard: newStandard.trim(), description: trimmedDesc } : c)));
-                      toast.success("Correção atualizada.");
-                    } else {
-                      setCorrections((prev) => [
-                        ...prev,
-                        {
-                          id: newCorrectionId(),
-                          standard: newStandard.trim(),
-                          description: trimmedDesc,
-                          selected: true,
-                          source: "manual",
-                          createdAt: new Date().toISOString(),
-                        },
-                      ]);
-                      toast.success("Correção adicionada.");
+                      if (editingId) {
+                        setCorrections((prev) =>
+                          prev.map((c) =>
+                            c.id === editingId
+                              ? { ...c, standard: newStandard.trim(), description: trimmedDesc }
+                              : c,
+                          ),
+                        );
+                        toast.success("Correção atualizada.");
+                      } else {
+                        setCorrections((prev) => [
+                          ...prev,
+                          {
+                            id: newCorrectionId(),
+                            standard: newStandard.trim(),
+                            description: trimmedDesc,
+                            selected: true,
+                            source: "manual",
+                            createdAt: new Date().toISOString(),
+                          },
+                        ]);
+                        toast.success("Correção adicionada.");
+                      }
+                      setNewStandard("");
+                      setNewDescription("");
+                      setEditingId(null);
                     }
-                    setNewStandard(""); setNewDescription(""); setEditingId(null);
-                  }
 
-                  function startEdit(c: SafetyCorrection) {
-                    setEditingId(c.id);
-                    setNewStandard(c.standard);
-                    setNewDescription(c.description);
-                    setCorrectionError(null);
-                  }
-                  function cancelEdit() {
-                    setEditingId(null); setNewStandard(""); setNewDescription(""); setCorrectionError(null);
-                  }
-                  function deleteCorrection(c: SafetyCorrection) {
-                    if (c.usedInGeneration) {
-                      const ok = window.confirm("Esta correção já foi aplicada em uma geração anterior. Remover mesmo assim?");
-                      if (!ok) return;
+                    function startEdit(c: SafetyCorrection) {
+                      setEditingId(c.id);
+                      setNewStandard(c.standard);
+                      setNewDescription(c.description);
+                      setCorrectionError(null);
                     }
-                    setCorrections((prev) => prev.filter((x) => x.id !== c.id));
-                    if (editingId === c.id) cancelEdit();
-                  }
+                    function cancelEdit() {
+                      setEditingId(null);
+                      setNewStandard("");
+                      setNewDescription("");
+                      setCorrectionError(null);
+                    }
+                    function deleteCorrection(c: SafetyCorrection) {
+                      if (c.usedInGeneration) {
+                        const ok = window.confirm(
+                          "Esta correção já foi aplicada em uma geração anterior. Remover mesmo assim?",
+                        );
+                        if (!ok) return;
+                      }
+                      setCorrections((prev) => prev.filter((x) => x.id !== c.id));
+                      if (editingId === c.id) cancelEdit();
+                    }
 
-                  return (
-                    <div className="mb-3 space-y-2 rounded-md border border-neon/30 bg-background/60 p-3 text-[11px]">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-semibold uppercase tracking-widest text-neon">
-                          Correções de segurança para a Foto Depois
-                        </span>
-                        <span className="text-[10px] text-muted-foreground">
-                          {selectedCount}/{corrections.length} selecionada{selectedCount === 1 ? "" : "s"}
-                        </span>
-                      </div>
-
-                      {nr.perigos.length > 0 && (
-                        <div>
-                          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-rose-400">Perigos detectados</div>
-                          <ul className="list-inside list-disc space-y-0.5 text-foreground/90">
-                            {nr.perigos.map((p, i) => <li key={`p${i}`}>{p}</li>)}
-                          </ul>
+                    return (
+                      <div className="mb-3 space-y-2 rounded-md border border-neon/30 bg-background/60 p-3 text-[11px]">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-semibold uppercase tracking-widest text-neon">
+                            Correções de segurança para a Foto Depois
+                          </span>
+                          <span className="text-[10px] text-muted-foreground">
+                            {selectedCount}/{corrections.length} selecionada
+                            {selectedCount === 1 ? "" : "s"}
+                          </span>
                         </div>
-                      )}
-                      {nr.riscos.length > 0 && (
-                        <div>
-                          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-amber-400">Riscos identificados</div>
-                          <ul className="list-inside list-disc space-y-0.5 text-foreground/90">
-                            {nr.riscos.map((r, i) => <li key={`r${i}`}>{r}</li>)}
-                          </ul>
-                        </div>
-                      )}
 
-                      <div>
-                        <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-                          <div className="text-[10px] font-semibold uppercase tracking-wide text-emerald-400">
-                            Lista de correções
+                        {nr.perigos.length > 0 && (
+                          <div>
+                            <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-rose-400">
+                              Perigos detectados
+                            </div>
+                            <ul className="list-inside list-disc space-y-0.5 text-foreground/90">
+                              {nr.perigos.map((p, i) => (
+                                <li key={`p${i}`}>{p}</li>
+                              ))}
+                            </ul>
                           </div>
-                          <div className="flex flex-wrap gap-3 text-[10px]">
-                            <button type="button" className="text-emerald-300 hover:underline"
-                              onClick={() => setCorrections((prev) => prev.map((c) => ({ ...c, selected: true })))}>
-                              Selecionar todas
-                            </button>
-                            <button type="button" className="text-muted-foreground hover:underline"
-                              onClick={() => setCorrections((prev) => prev.map((c) => ({ ...c, selected: false })))}>
-                              Desmarcar todas
-                            </button>
-                            <button type="button" className="text-rose-300 hover:underline"
-                              onClick={() => {
-                                const manuais = corrections.filter((c) => c.source === "manual");
-                                if (manuais.length === 0) { toast.info("Não há correções manuais para excluir."); return; }
-                                const usadas = manuais.some((c) => c.usedInGeneration);
-                                if (usadas) {
-                                  const ok = window.confirm("Algumas correções manuais já foram usadas em uma geração. Excluir todas?");
-                                  if (!ok) return;
-                                }
-                                setCorrections((prev) => prev.filter((c) => c.source !== "manual"));
-                              }}>
-                              Excluir manuais
-                            </button>
+                        )}
+                        {nr.riscos.length > 0 && (
+                          <div>
+                            <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-amber-400">
+                              Riscos identificados
+                            </div>
+                            <ul className="list-inside list-disc space-y-0.5 text-foreground/90">
+                              {nr.riscos.map((r, i) => (
+                                <li key={`r${i}`}>{r}</li>
+                              ))}
+                            </ul>
                           </div>
-                        </div>
-
-                        {corrections.length === 0 && (
-                          <p className="mb-2 text-muted-foreground">
-                            Nenhuma correção — adicione abaixo a norma e a descrição da correção.
-                          </p>
                         )}
 
-                        <ul className="space-y-1.5">
-                          {corrections.map((c) => (
-                            <li key={c.id} className="flex items-start gap-2 rounded border border-border/40 bg-background/40 p-1.5">
-                              <label className="mt-1 flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center">
-                                <input
-                                  type="checkbox"
-                                  aria-label={`Selecionar correção ${c.standard}`}
-                                  className="h-4 w-4 accent-emerald-500"
-                                  checked={c.selected}
-                                  onChange={(e) => setCorrections((prev) => prev.map((x) => (x.id === c.id ? { ...x, selected: e.target.checked } : x)))}
-                                />
-                              </label>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex flex-wrap items-center gap-1.5">
-                                  <span className="rounded bg-neon/10 px-1.5 py-0.5 text-[10px] font-semibold text-neon">{c.standard}</span>
-                                  <span className="text-[9px] uppercase tracking-wide text-muted-foreground">
-                                    {c.source === "iris" ? "Sugerida pela IA" : "Adicionada manualmente"}
-                                  </span>
-                                  {c.usedInGeneration && (
-                                    <span className="text-[9px] uppercase tracking-wide text-emerald-400">Usada na geração</span>
-                                  )}
-                                </div>
-                                <p className="mt-0.5 whitespace-pre-wrap break-words text-foreground/90">{c.description}</p>
-                              </div>
-                              <div className="flex shrink-0 flex-col gap-1">
-                                <button type="button"
-                                  className="rounded px-1.5 py-0.5 text-[10px] text-sky-300 hover:bg-sky-500/10"
-                                  onClick={() => startEdit(c)}>
-                                  Editar
-                                </button>
-                                <button type="button"
-                                  className="rounded px-1.5 py-0.5 text-[10px] text-rose-300 hover:bg-rose-500/10"
-                                  onClick={() => deleteCorrection(c)}>
-                                  Excluir
-                                </button>
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
-
-                        <div className="mt-3 space-y-2 border-t border-border/50 pt-2">
-                          <div className="flex flex-col gap-2 sm:flex-row">
-                            <div className="sm:w-40">
-                              <Label htmlFor="new-standard" className="text-[10px] uppercase tracking-widest text-muted-foreground">Norma</Label>
-                              <Input
-                                id="new-standard"
-                                list="norm-suggestions"
-                                className="h-8 text-[11px]"
-                                maxLength={50}
-                                placeholder="Ex.: NR-10, NR-35, 5S ou Procedimento interno"
-                                value={newStandard}
-                                onChange={(e) => { setNewStandard(e.target.value); setCorrectionError(null); }}
-                              />
-                              <datalist id="norm-suggestions">
-                                {NORM_SUGGESTIONS.map((s) => <option key={s} value={s} />)}
-                              </datalist>
+                        <div>
+                          <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+                            <div className="text-[10px] font-semibold uppercase tracking-wide text-emerald-400">
+                              Lista de correções
                             </div>
-                            <div className="flex-1">
-                              <Label htmlFor="new-desc" className="text-[10px] uppercase tracking-widest text-muted-foreground">Descrição</Label>
-                              <Textarea
-                                id="new-desc"
-                                className="min-h-[54px] text-[11px]"
-                                rows={2}
-                                maxLength={600}
-                                placeholder="Descreva a correção a aplicar…"
-                                value={newDescription}
-                                onChange={(e) => { setNewDescription(e.target.value); setCorrectionError(null); }}
-                              />
-                              <div className="mt-0.5 flex items-center justify-between text-[9px] text-muted-foreground">
-                                <span>
-                                  {descTooShort && "Mínimo 10 caracteres."}
-                                  {isDuplicate && " Correção duplicada."}
-                                </span>
-                                <span>{trimmedDesc.length}/600</span>
-                              </div>
+                            <div className="flex flex-wrap gap-3 text-[10px]">
+                              <button
+                                type="button"
+                                className="text-emerald-300 hover:underline"
+                                onClick={() =>
+                                  setCorrections((prev) =>
+                                    prev.map((c) => ({ ...c, selected: true })),
+                                  )
+                                }
+                              >
+                                Selecionar todas
+                              </button>
+                              <button
+                                type="button"
+                                className="text-muted-foreground hover:underline"
+                                onClick={() =>
+                                  setCorrections((prev) =>
+                                    prev.map((c) => ({ ...c, selected: false })),
+                                  )
+                                }
+                              >
+                                Desmarcar todas
+                              </button>
+                              <button
+                                type="button"
+                                className="text-rose-300 hover:underline"
+                                onClick={() => {
+                                  const manuais = corrections.filter((c) => c.source === "manual");
+                                  if (manuais.length === 0) {
+                                    toast.info("Não há correções manuais para excluir.");
+                                    return;
+                                  }
+                                  const usadas = manuais.some((c) => c.usedInGeneration);
+                                  if (usadas) {
+                                    const ok = window.confirm(
+                                      "Algumas correções manuais já foram usadas em uma geração. Excluir todas?",
+                                    );
+                                    if (!ok) return;
+                                  }
+                                  setCorrections((prev) =>
+                                    prev.filter((c) => c.source !== "manual"),
+                                  );
+                                }}
+                              >
+                                Excluir manuais
+                              </button>
                             </div>
                           </div>
 
-                          {correctionError && (
-                            <p className="text-[10px] text-rose-300" role="alert">{correctionError}</p>
+                          {corrections.length === 0 && (
+                            <p className="mb-2 text-muted-foreground">
+                              Nenhuma correção — adicione abaixo a norma e a descrição da correção.
+                            </p>
                           )}
 
-                          <div className="flex flex-wrap gap-2">
-                            <Button
-                              type="button" size="sm"
-                              className="h-7 gap-1 text-[11px]"
-                              disabled={!canSubmit}
-                              onClick={submitCorrection}
-                            >
-                              <Plus className="h-3 w-3" />
-                              {editingId ? "Salvar alteração" : "Adicionar"}
-                            </Button>
-                            {editingId && (
-                              <Button type="button" size="sm" variant="ghost" className="h-7 text-[11px]" onClick={cancelEdit}>
-                                Cancelar edição
-                              </Button>
+                          <ul className="space-y-1.5">
+                            {corrections.map((c) => (
+                              <li
+                                key={c.id}
+                                className="flex items-start gap-2 rounded border border-border/40 bg-background/40 p-1.5"
+                              >
+                                <label className="mt-1 flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center">
+                                  <input
+                                    type="checkbox"
+                                    aria-label={`Selecionar correção ${c.standard}`}
+                                    className="h-4 w-4 accent-emerald-500"
+                                    checked={c.selected}
+                                    onChange={(e) =>
+                                      setCorrections((prev) =>
+                                        prev.map((x) =>
+                                          x.id === c.id ? { ...x, selected: e.target.checked } : x,
+                                        ),
+                                      )
+                                    }
+                                  />
+                                </label>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex flex-wrap items-center gap-1.5">
+                                    <span className="rounded bg-neon/10 px-1.5 py-0.5 text-[10px] font-semibold text-neon">
+                                      {c.standard}
+                                    </span>
+                                    <span className="text-[9px] uppercase tracking-wide text-muted-foreground">
+                                      {c.source === "iris"
+                                        ? "Sugerida pela IA"
+                                        : "Adicionada manualmente"}
+                                    </span>
+                                    {c.usedInGeneration && (
+                                      <span className="text-[9px] uppercase tracking-wide text-emerald-400">
+                                        Usada na geração
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="mt-0.5 whitespace-pre-wrap break-words text-foreground/90">
+                                    {c.description}
+                                  </p>
+                                </div>
+                                <div className="flex shrink-0 flex-col gap-1">
+                                  <button
+                                    type="button"
+                                    className="rounded px-1.5 py-0.5 text-[10px] text-sky-300 hover:bg-sky-500/10"
+                                    onClick={() => startEdit(c)}
+                                  >
+                                    Editar
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="rounded px-1.5 py-0.5 text-[10px] text-rose-300 hover:bg-rose-500/10"
+                                    onClick={() => deleteCorrection(c)}
+                                  >
+                                    Excluir
+                                  </button>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+
+                          <div className="mt-3 space-y-2 border-t border-border/50 pt-2">
+                            <div className="flex flex-col gap-2 sm:flex-row">
+                              <div className="sm:w-40">
+                                <Label
+                                  htmlFor="new-standard"
+                                  className="text-[10px] uppercase tracking-widest text-muted-foreground"
+                                >
+                                  Norma
+                                </Label>
+                                <Input
+                                  id="new-standard"
+                                  list="norm-suggestions"
+                                  className="h-8 text-[11px]"
+                                  maxLength={50}
+                                  placeholder="Ex.: NR-10, NR-35, 5S ou Procedimento interno"
+                                  value={newStandard}
+                                  onChange={(e) => {
+                                    setNewStandard(e.target.value);
+                                    setCorrectionError(null);
+                                  }}
+                                />
+                                <datalist id="norm-suggestions">
+                                  {NORM_SUGGESTIONS.map((s) => (
+                                    <option key={s} value={s} />
+                                  ))}
+                                </datalist>
+                              </div>
+                              <div className="flex-1">
+                                <Label
+                                  htmlFor="new-desc"
+                                  className="text-[10px] uppercase tracking-widest text-muted-foreground"
+                                >
+                                  Descrição
+                                </Label>
+                                <Textarea
+                                  id="new-desc"
+                                  className="min-h-[54px] text-[11px]"
+                                  rows={2}
+                                  maxLength={600}
+                                  placeholder="Descreva a correção a aplicar…"
+                                  value={newDescription}
+                                  onChange={(e) => {
+                                    setNewDescription(e.target.value);
+                                    setCorrectionError(null);
+                                  }}
+                                />
+                                <div className="mt-0.5 flex items-center justify-between text-[9px] text-muted-foreground">
+                                  <span>
+                                    {descTooShort && "Mínimo 10 caracteres."}
+                                    {isDuplicate && " Correção duplicada."}
+                                  </span>
+                                  <span>{trimmedDesc.length}/600</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {correctionError && (
+                              <p className="text-[10px] text-rose-300" role="alert">
+                                {correctionError}
+                              </p>
                             )}
+
+                            <div className="flex flex-wrap gap-2">
+                              <Button
+                                type="button"
+                                size="sm"
+                                className="h-7 gap-1 text-[11px]"
+                                disabled={!canSubmit}
+                                onClick={submitCorrection}
+                              >
+                                <Plus className="h-3 w-3" />
+                                {editingId ? "Salvar alteração" : "Adicionar"}
+                              </Button>
+                              {editingId && (
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 text-[11px]"
+                                  onClick={cancelEdit}
+                                >
+                                  Cancelar edição
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })()}
-
+                    );
+                  })()}
 
                 {/* Geração automática de imagem "Depois" removida do aplicativo.
                     O plano visual das correções agora é feito no Projeto Executivo. */}
-
-
-
-
 
                 {compareMode === "slider" && correctionPhoto && photos[0] ? (
                   <CompareSlider
@@ -1655,21 +1886,41 @@ function PhotoRecordContent({
                 ) : (
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <p className="mb-1 text-[10px] uppercase tracking-widest text-muted-foreground">Antes</p>
+                      <p className="mb-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+                        Antes
+                      </p>
                       {photos[0] ? (
-                        <button type="button" onClick={() => setExpandedImage(photos[0].preview)} className="block w-full">
-                          <img src={photos[0].preview} alt="Antes" className="aspect-square w-full rounded-md border border-border object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setExpandedImage(photos[0].preview)}
+                          className="block w-full"
+                        >
+                          <img
+                            src={photos[0].preview}
+                            alt="Antes"
+                            className="aspect-square w-full rounded-md border border-border object-cover"
+                          />
                         </button>
                       ) : (
                         <div className="aspect-square w-full rounded-md border border-dashed border-border" />
                       )}
                     </div>
                     <div>
-                      <p className="mb-1 text-[10px] uppercase tracking-widest text-muted-foreground">Correção real</p>
+                      <p className="mb-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+                        Correção real
+                      </p>
                       {correctionPhoto ? (
                         <div className="relative">
-                          <button type="button" onClick={() => setExpandedImage(correctionPhoto.preview)} className="block w-full">
-                            <img src={correctionPhoto.preview} alt="Correção real" className="aspect-square w-full rounded-md border border-emerald-500/40 object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => setExpandedImage(correctionPhoto.preview)}
+                            className="block w-full"
+                          >
+                            <img
+                              src={correctionPhoto.preview}
+                              alt="Correção real"
+                              className="aspect-square w-full rounded-md border border-emerald-500/40 object-cover"
+                            />
                           </button>
                           <button
                             type="button"
@@ -1679,7 +1930,9 @@ function PhotoRecordContent({
                               setCompareResult(null);
                             }}
                             className="absolute right-1 top-1 rounded bg-black/70 px-1.5 text-[9px] text-white"
-                          >remover</button>
+                          >
+                            remover
+                          </button>
                         </div>
                       ) : (
                         <div className="grid aspect-square w-full grid-cols-1 gap-1">
@@ -1695,7 +1948,10 @@ function PhotoRecordContent({
                                 const f = e.target.files?.[0];
                                 if (!f) return;
                                 const v = validateFile(f, "image");
-                                if (!v.ok) { toast.error(v.error); return; }
+                                if (!v.ok) {
+                                  toast.error(v.error);
+                                  return;
+                                }
                                 setCorrectionPhoto({ file: f, preview: URL.createObjectURL(f) });
                                 setCompareResult(null);
                               }}
@@ -1712,7 +1968,10 @@ function PhotoRecordContent({
                                 const f = e.target.files?.[0];
                                 if (!f) return;
                                 const v = validateFile(f, "image");
-                                if (!v.ok) { toast.error(v.error); return; }
+                                if (!v.ok) {
+                                  toast.error(v.error);
+                                  return;
+                                }
                                 setCorrectionPhoto({ file: f, preview: URL.createObjectURL(f) });
                                 setCompareResult(null);
                               }}
@@ -1727,8 +1986,12 @@ function PhotoRecordContent({
                 {compareResult && (
                   <div className="mt-3 space-y-2 rounded-md border border-neon/30 bg-neon/5 p-3 text-[11px] leading-relaxed">
                     <div className="flex items-center justify-between">
-                      <span className="font-display text-[10px] font-bold uppercase tracking-widest text-neon">Conformidade estimada</span>
-                      <span className={`font-mono text-sm ${compareResult.conformidade >= 70 ? "text-neon" : compareResult.conformidade >= 40 ? "text-yellow-300" : "text-red-400"}`}>
+                      <span className="font-display text-[10px] font-bold uppercase tracking-widest text-neon">
+                        Conformidade estimada
+                      </span>
+                      <span
+                        className={`font-mono text-sm ${compareResult.conformidade >= 70 ? "text-neon" : compareResult.conformidade >= 40 ? "text-yellow-300" : "text-red-400"}`}
+                      >
                         {compareResult.conformidade}%
                       </span>
                     </div>
@@ -1740,43 +2003,59 @@ function PhotoRecordContent({
                     </div>
                     {compareResult.itens_corrigidos?.length > 0 && (
                       <div>
-                        <p className="text-[10px] font-semibold uppercase tracking-widest text-neon">Itens corrigidos</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-widest text-neon">
+                          Itens corrigidos
+                        </p>
                         <ul className="ml-4 list-disc text-foreground/80">
-                          {compareResult.itens_corrigidos.map((i, k) => <li key={k}>{i}</li>)}
+                          {compareResult.itens_corrigidos.map((i, k) => (
+                            <li key={k}>{i}</li>
+                          ))}
                         </ul>
                       </div>
                     )}
                     {compareResult.itens_pendentes?.length > 0 && (
                       <div>
-                        <p className="text-[10px] font-semibold uppercase tracking-widest text-yellow-300">Itens pendentes</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-widest text-yellow-300">
+                          Itens pendentes
+                        </p>
                         <ul className="ml-4 list-disc text-foreground/80">
-                          {compareResult.itens_pendentes.map((i, k) => <li key={k}>{i}</li>)}
+                          {compareResult.itens_pendentes.map((i, k) => (
+                            <li key={k}>{i}</li>
+                          ))}
                         </ul>
                       </div>
                     )}
                     {compareResult.itens_nao_identificados?.length > 0 && (
                       <div>
-                        <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Sem evidências suficientes</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                          Sem evidências suficientes
+                        </p>
                         <ul className="ml-4 list-disc text-foreground/80">
-                          {compareResult.itens_nao_identificados.map((i, k) => <li key={k}>{i}</li>)}
+                          {compareResult.itens_nao_identificados.map((i, k) => (
+                            <li key={k}>{i}</li>
+                          ))}
                         </ul>
                       </div>
                     )}
                     {compareResult.observacoes && (
-                      <p className="text-foreground/80"><span className="text-muted-foreground">Observações:</span> {compareResult.observacoes}</p>
+                      <p className="text-foreground/80">
+                        <span className="text-muted-foreground">Observações:</span>{" "}
+                        {compareResult.observacoes}
+                      </p>
                     )}
-                    <p className="text-[9px] italic text-muted-foreground">Avaliação automática — sujeita à validação do responsável.</p>
+                    <p className="text-[9px] italic text-muted-foreground">
+                      Avaliação automática — sujeita à validação do responsável.
+                    </p>
                   </div>
                 )}
 
                 <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
-                  Envie a <b className="text-emerald-300">foto real da correção</b> e clique em <b>Comparar com IA</b> para comparar objetivamente com a foto de antes.
+                  Envie a <b className="text-emerald-300">foto real da correção</b> e clique em{" "}
+                  <b>Comparar com IA</b> para comparar objetivamente com a foto de antes.
                 </p>
               </div>
 
-
               <div className="rounded-lg border border-border bg-black/30 p-3 text-xs">
-
                 <div className="mb-1 flex items-center gap-1 font-display text-[10px] font-bold uppercase tracking-widest text-neon">
                   <CheckCircle2 className="h-3 w-3" /> Ação imediata
                 </div>
@@ -1799,22 +2078,33 @@ function PhotoRecordContent({
               </div>
 
               {/* Parecer técnico aprofundado */}
-              {(result.technical_opinion || result.norms_violated || result.root_cause || result.probability || result.risk_class) && (
+              {(result.technical_opinion ||
+                result.norms_violated ||
+                result.root_cause ||
+                result.probability ||
+                result.risk_class) && (
                 <div className="rounded-lg border border-neon/30 bg-black/30 p-3 text-xs">
                   <div className="mb-2 flex items-center gap-1 font-display text-[10px] font-bold uppercase tracking-widest text-neon">
                     <AlertTriangle className="h-3 w-3" /> Parecer técnico · Engenheiro de Segurança
                   </div>
                   {result.norms_violated && (
-                    <div className="mb-1 text-[11px]"><span className="text-muted-foreground">Normas violadas:</span> {result.norms_violated}</div>
+                    <div className="mb-1 text-[11px]">
+                      <span className="text-muted-foreground">Normas violadas:</span>{" "}
+                      {result.norms_violated}
+                    </div>
                   )}
                   {result.root_cause && (
-                    <div className="mb-1 text-[11px]"><span className="text-muted-foreground">Causa raiz:</span> {result.root_cause}</div>
+                    <div className="mb-1 text-[11px]">
+                      <span className="text-muted-foreground">Causa raiz:</span> {result.root_cause}
+                    </div>
                   )}
                   {result.consequences_list && result.consequences_list.length > 0 && (
                     <div className="mb-1 text-[11px]">
                       <span className="text-muted-foreground">Consequências:</span>
                       <ul className="ml-4 list-disc text-foreground/80">
-                        {result.consequences_list.map((c, i) => <li key={i}>{c}</li>)}
+                        {result.consequences_list.map((c, i) => (
+                          <li key={i}>{c}</li>
+                        ))}
                       </ul>
                     </div>
                   )}
@@ -1822,36 +2112,69 @@ function PhotoRecordContent({
                     <div className="mt-2 grid grid-cols-4 gap-1 text-center text-[10px]">
                       <div className="rounded bg-black/50 p-1.5">
                         <div className="text-muted-foreground">Prob.</div>
-                        <div className="font-display text-sm text-neon">{result.probability ?? "-"}</div>
+                        <div className="font-display text-sm text-neon">
+                          {result.probability ?? "-"}
+                        </div>
                       </div>
                       <div className="rounded bg-black/50 p-1.5">
                         <div className="text-muted-foreground">Sev.</div>
-                        <div className="font-display text-sm text-neon">{result.severity ?? "-"}</div>
+                        <div className="font-display text-sm text-neon">
+                          {result.severity ?? "-"}
+                        </div>
                       </div>
                       <div className="rounded bg-black/50 p-1.5">
                         <div className="text-muted-foreground">Score</div>
-                        <div className="font-display text-sm text-neon">{result.risk_score ?? (result.probability && result.severity ? result.probability * result.severity : "-")}</div>
+                        <div className="font-display text-sm text-neon">
+                          {result.risk_score ??
+                            (result.probability && result.severity
+                              ? result.probability * result.severity
+                              : "-")}
+                        </div>
                       </div>
                       <div className="rounded bg-black/50 p-1.5">
                         <div className="text-muted-foreground">Classe</div>
-                        <div className="font-display text-sm uppercase text-neon">{result.risk_class ?? "-"}</div>
+                        <div className="font-display text-sm uppercase text-neon">
+                          {result.risk_class ?? "-"}
+                        </div>
                       </div>
                     </div>
                   )}
                   {result.risk_class_reason && (
-                    <div className="mt-2 text-[11px]"><span className="text-muted-foreground">Justificativa:</span> {result.risk_class_reason}</div>
+                    <div className="mt-2 text-[11px]">
+                      <span className="text-muted-foreground">Justificativa:</span>{" "}
+                      {result.risk_class_reason}
+                    </div>
                   )}
                   {result.preventive_action && (
-                    <div className="mt-2 text-[11px]"><span className="text-muted-foreground">Ação preventiva:</span> {result.preventive_action}</div>
+                    <div className="mt-2 text-[11px]">
+                      <span className="text-muted-foreground">Ação preventiva:</span>{" "}
+                      {result.preventive_action}
+                    </div>
                   )}
                   <div className="mt-2 grid grid-cols-1 gap-1 text-[11px] sm:grid-cols-3">
-                    {result.resources && <div><span className="text-muted-foreground">Recursos:</span> {result.resources}</div>}
-                    {result.execution_time && <div><span className="text-muted-foreground">Tempo:</span> {result.execution_time}</div>}
-                    {result.expected_gain && <div><span className="text-muted-foreground">Ganho esperado:</span> {result.expected_gain}</div>}
+                    {result.resources && (
+                      <div>
+                        <span className="text-muted-foreground">Recursos:</span> {result.resources}
+                      </div>
+                    )}
+                    {result.execution_time && (
+                      <div>
+                        <span className="text-muted-foreground">Tempo:</span>{" "}
+                        {result.execution_time}
+                      </div>
+                    )}
+                    {result.expected_gain && (
+                      <div>
+                        <span className="text-muted-foreground">Ganho esperado:</span>{" "}
+                        {result.expected_gain}
+                      </div>
+                    )}
                   </div>
                   {result.technical_opinion && (
                     <div className="mt-2 rounded bg-black/40 p-2 text-[11px] leading-relaxed text-foreground/90">
-                      <div className="mb-1 text-[10px] uppercase tracking-widest text-neon">Parecer</div>
+                      <div className="mb-1 text-[10px] uppercase tracking-widest text-neon">
+                        Parecer
+                      </div>
                       {result.technical_opinion}
                     </div>
                   )}
@@ -1866,15 +2189,37 @@ function PhotoRecordContent({
                   </div>
                   {result.changes_applied?.length ? (
                     <ul className="ml-4 list-disc text-[11px] text-foreground/85">
-                      {result.changes_applied.map((c, i) => <li key={i}>{c}</li>)}
+                      {result.changes_applied.map((c, i) => (
+                        <li key={i}>{c}</li>
+                      ))}
                     </ul>
                   ) : null}
                   {result.improvement && (
                     <div className="mt-2 grid grid-cols-2 gap-1 text-center text-[10px] sm:grid-cols-4">
-                      <div className="rounded bg-black/50 p-1.5"><div className="text-muted-foreground">Risco</div><div className="font-display text-sm text-neon">-{result.improvement.risk_reduction ?? 0}%</div></div>
-                      <div className="rounded bg-black/50 p-1.5"><div className="text-muted-foreground">Organização</div><div className="font-display text-sm text-neon">+{result.improvement.organization ?? 0}%</div></div>
-                      <div className="rounded bg-black/50 p-1.5"><div className="text-muted-foreground">Conformidade</div><div className="font-display text-sm text-neon">+{result.improvement.compliance ?? 0}%</div></div>
-                      <div className="rounded bg-black/50 p-1.5"><div className="text-muted-foreground">Seg. Oper.</div><div className="font-display text-sm text-neon">+{result.improvement.operational_safety ?? 0}%</div></div>
+                      <div className="rounded bg-black/50 p-1.5">
+                        <div className="text-muted-foreground">Risco</div>
+                        <div className="font-display text-sm text-neon">
+                          -{result.improvement.risk_reduction ?? 0}%
+                        </div>
+                      </div>
+                      <div className="rounded bg-black/50 p-1.5">
+                        <div className="text-muted-foreground">Organização</div>
+                        <div className="font-display text-sm text-neon">
+                          +{result.improvement.organization ?? 0}%
+                        </div>
+                      </div>
+                      <div className="rounded bg-black/50 p-1.5">
+                        <div className="text-muted-foreground">Conformidade</div>
+                        <div className="font-display text-sm text-neon">
+                          +{result.improvement.compliance ?? 0}%
+                        </div>
+                      </div>
+                      <div className="rounded bg-black/50 p-1.5">
+                        <div className="text-muted-foreground">Seg. Oper.</div>
+                        <div className="font-display text-sm text-neon">
+                          +{result.improvement.operational_safety ?? 0}%
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1892,24 +2237,24 @@ function PhotoRecordContent({
                 </Button>
               </div>
 
-
-              <ReportActions report={buildFromIrisResult({
-                result,
-                moduleKey,
-                originalImageUrl: photos[0]?.preview,
-                markedImageUrl: afterImage ?? undefined,
-                requester: result.suggested_responsible || "—",
-                company: result.area || "—",
-                unit: result.location || "—",
-                area: result.area || "—",
-                equipment: result.equipment || undefined,
-                qrTargetUrl: typeof window !== "undefined" ? window.location.href : undefined,
-              })} />
-
-
+              <ReportActions
+                report={buildFromIrisResult({
+                  result,
+                  moduleKey,
+                  originalImageUrl: photos[0]?.preview,
+                  markedImageUrl: afterImage ?? undefined,
+                  requester: result.suggested_responsible || "—",
+                  company: result.area || "—",
+                  unit: result.location || "—",
+                  area: result.area || "—",
+                  equipment: result.equipment || undefined,
+                  qrTargetUrl: typeof window !== "undefined" ? window.location.href : undefined,
+                })}
+              />
 
               <p className="text-[10px] italic text-muted-foreground">
-                AVISO: As ações propostas pela IA devem ser validadas pelos responsáveis antes da execução.
+                AVISO: As ações propostas pela IA devem ser validadas pelos responsáveis antes da
+                execução.
               </p>
             </div>
           </div>
@@ -1958,10 +2303,13 @@ function PhotoRecordContent({
           <DialogContent className="max-h-[92dvh] max-w-2xl overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-display uppercase tracking-widest text-neon">
-                {similar[0].similarity >= 90 ? "Provável duplicidade detectada" : "Possíveis registros semelhantes"}
+                {similar[0].similarity >= 90
+                  ? "Provável duplicidade detectada"
+                  : "Possíveis registros semelhantes"}
               </DialogTitle>
               <DialogDescription>
-                Encontramos {similar.length} registro(s) semelhante(s). Verifique antes de criar uma nova {chosenModule === "n3" ? "N3" : "CRM"}.
+                Encontramos {similar.length} registro(s) semelhante(s). Verifique antes de criar uma
+                nova {chosenModule === "n3" ? "N3" : "CRM"}.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-2">
@@ -1975,22 +2323,35 @@ function PhotoRecordContent({
                     className={`flex w-full gap-3 rounded-lg border p-2 text-left text-xs transition ${selected ? "border-neon bg-neon/5" : "border-border/60 bg-black/30"}`}
                   >
                     {s.photo_url ? (
-                      <img src={s.photo_url} alt="" className="h-16 w-16 shrink-0 rounded-md border border-border object-cover" />
+                      <img
+                        src={s.photo_url}
+                        alt=""
+                        className="h-16 w-16 shrink-0 rounded-md border border-border object-cover"
+                      />
                     ) : (
                       <div className="h-16 w-16 shrink-0 rounded-md border border-border/40 bg-muted/20" />
                     )}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="truncate font-medium text-foreground">{s.title ?? "(sem título)"}</p>
-                        <span className={`rounded-full px-2 py-0.5 font-display text-[10px] font-bold uppercase tracking-widest ${s.similarity >= 90 ? "bg-red-500/15 text-red-300" : s.similarity >= 75 ? "bg-orange-500/15 text-orange-300" : "bg-yellow-500/10 text-yellow-300"}`}>
+                        <p className="truncate font-medium text-foreground">
+                          {s.title ?? "(sem título)"}
+                        </p>
+                        <span
+                          className={`rounded-full px-2 py-0.5 font-display text-[10px] font-bold uppercase tracking-widest ${s.similarity >= 90 ? "bg-red-500/15 text-red-300" : s.similarity >= 75 ? "bg-orange-500/15 text-orange-300" : "bg-yellow-500/10 text-yellow-300"}`}
+                        >
                           {s.similarity}%
                         </span>
                       </div>
-                      <p className="font-mono text-[10px] text-neon">{s.internal_code ?? "—"}{s.vale_protocol ? ` · ${s.vale_protocol}` : ""}</p>
+                      <p className="font-mono text-[10px] text-neon">
+                        {s.internal_code ?? "—"}
+                        {s.vale_protocol ? ` · ${s.vale_protocol}` : ""}
+                      </p>
                       <p className="truncate text-[11px] text-muted-foreground">
                         {[s.area, s.location, s.equipment].filter(Boolean).join(" · ")}
                       </p>
-                      <p className="text-[10px] text-muted-foreground">{new Date(s.created_at).toLocaleString("pt-BR")}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {new Date(s.created_at).toLocaleString("pt-BR")}
+                      </p>
                     </div>
                   </button>
                 );
@@ -1998,25 +2359,53 @@ function PhotoRecordContent({
             </div>
 
             <div className="mt-3 space-y-2 rounded-lg border border-border/60 bg-black/30 p-3">
-              <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">O que fazer?</Label>
+              <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                O que fazer?
+              </Label>
               <div className="grid gap-1 text-xs">
                 <label className="flex items-start gap-2">
-                  <input type="radio" checked={dupKind === "new"} onChange={() => setDupKind("new")} />
-                  <span><b>Confirmar novo registro</b> — descartar semelhança. {similar[0].similarity >= 90 && <span className="text-orange-300">(exige justificativa)</span>}</span>
+                  <input
+                    type="radio"
+                    checked={dupKind === "new"}
+                    onChange={() => setDupKind("new")}
+                  />
+                  <span>
+                    <b>Confirmar novo registro</b> — descartar semelhança.{" "}
+                    {similar[0].similarity >= 90 && (
+                      <span className="text-orange-300">(exige justificativa)</span>
+                    )}
+                  </span>
                 </label>
                 <label className="flex items-start gap-2">
-                  <input type="radio" checked={dupKind === "complement"} onChange={() => setDupKind("complement")} />
-                  <span><b>Vincular como complemento</b> — atualiza tratativa do registro selecionado.</span>
+                  <input
+                    type="radio"
+                    checked={dupKind === "complement"}
+                    onChange={() => setDupKind("complement")}
+                  />
+                  <span>
+                    <b>Vincular como complemento</b> — atualiza tratativa do registro selecionado.
+                  </span>
                 </label>
                 <label className="flex items-start gap-2">
-                  <input type="radio" checked={dupKind === "recurrence"} onChange={() => setDupKind("recurrence")} />
-                  <span><b>Registrar reincidência</b> — cria N3/CRM vinculada ao original (código …-R0N).</span>
+                  <input
+                    type="radio"
+                    checked={dupKind === "recurrence"}
+                    onChange={() => setDupKind("recurrence")}
+                  />
+                  <span>
+                    <b>Registrar reincidência</b> — cria N3/CRM vinculada ao original (código
+                    …-R0N).
+                  </span>
                 </label>
               </div>
               {(dupKind === "new" && similar[0].similarity >= 90) || dupKind === "recurrence" ? (
                 <Textarea
                   rows={2}
-                  placeholder={dupKind === "new" ? "Justificativa para criar novo registro" : "Motivo da reincidência / falha da ação anterior"}
+                  placeholder={
+                    dupKind === "new"
+                      ? "Justificativa para criar novo registro"
+                      : "Motivo da reincidência / falha da ação anterior"
+                  }
                   value={dupJustification}
                   onChange={(e) => setDupJustification(e.target.value)}
                 />
@@ -2024,11 +2413,15 @@ function PhotoRecordContent({
             </div>
 
             <DialogFooter className="gap-2">
-              <Button variant="outline" onClick={() => setShowDupDialog(false)}>Cancelar</Button>
+              <Button variant="outline" onClick={() => setShowDupDialog(false)}>
+                Cancelar
+              </Button>
               <Button
                 disabled={
                   (dupKind !== "new" && !dupParentId) ||
-                  ((dupKind === "new" && similar[0].similarity >= 90) || dupKind === "recurrence") && !dupJustification.trim()
+                  (((dupKind === "new" && similar[0].similarity >= 90) ||
+                    dupKind === "recurrence") &&
+                    !dupJustification.trim())
                 }
                 onClick={() => setShowDupDialog(false)}
               >
@@ -2044,13 +2437,19 @@ function PhotoRecordContent({
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Confirmar correção manualmente</DialogTitle>
-              <DialogDescription>Validação humana da correção — não consome créditos de IA.</DialogDescription>
+              <DialogDescription>
+                Validação humana da correção — não consome créditos de IA.
+              </DialogDescription>
             </DialogHeader>
             <div className="grid gap-3">
               <div className="grid gap-1">
-                <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Resultado</Label>
+                <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Resultado
+                </Label>
                 <Select value={manualResultado} onValueChange={setManualResultado}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="concluida">Correção concluída</SelectItem>
                     <SelectItem value="parcial">Correção parcial</SelectItem>
@@ -2061,23 +2460,37 @@ function PhotoRecordContent({
                 </Select>
               </div>
               <div className="grid gap-1">
-                <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Responsável pela validação</Label>
-                <Input value={manualResp} onChange={(e) => setManualResp(e.target.value)} placeholder="Nome / matrícula" />
+                <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Responsável pela validação
+                </Label>
+                <Input
+                  value={manualResp}
+                  onChange={(e) => setManualResp(e.target.value)}
+                  placeholder="Nome / matrícula"
+                />
               </div>
               <div className="grid gap-1">
-                <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">Observação / Risco residual</Label>
-                <Textarea value={manualObs} onChange={(e) => setManualObs(e.target.value)} rows={3} placeholder="Descreva o que foi verificado, risco residual e necessidade de nova ação." />
+                <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Observação / Risco residual
+                </Label>
+                <Textarea
+                  value={manualObs}
+                  onChange={(e) => setManualObs(e.target.value)}
+                  rows={3}
+                  placeholder="Descreva o que foi verificado, risco residual e necessidade de nova ação."
+                />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setManualOpen(false)}>Cancelar</Button>
+              <Button variant="outline" onClick={() => setManualOpen(false)}>
+                Cancelar
+              </Button>
               <Button onClick={confirmManual}>Confirmar sem IA</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       )}
     </DialogContent>
-
   );
 }
 
@@ -2100,14 +2513,21 @@ function ConfidenceBadge({ c }: { c: "alta" | "media" | "baixa" }) {
 
 function N3ProbabilityChart({ result }: { result: IrisResult }) {
   const raw = (result as unknown as { raw?: { score_confianca?: number } }).raw;
-  const base = typeof raw?.score_confianca === "number"
-    ? raw.score_confianca
-    : result.confidence === "alta" ? 85 : result.confidence === "media" ? 60 : 35;
+  const base =
+    typeof raw?.score_confianca === "number"
+      ? raw.score_confianca
+      : result.confidence === "alta"
+        ? 85
+        : result.confidence === "media"
+          ? 60
+          : 35;
   const critBoost = { critica: 1, alta: 0.92, media: 0.72, baixa: 0.5 }[result.criticality] ?? 0.7;
   const catFactor =
-    result.category === "n3" ? 1
-      : result.category === "inspecao" || result.category === "emergency" ? 0.7
-      : 0.35;
+    result.category === "n3"
+      ? 1
+      : result.category === "inspecao" || result.category === "emergency"
+        ? 0.7
+        : 0.35;
   const prob = Math.round(Math.min(99, Math.max(1, base * critBoost * catFactor)));
   const rest = 100 - prob;
 
@@ -2123,7 +2543,15 @@ function N3ProbabilityChart({ result }: { result: IrisResult }) {
   return (
     <div className="flex items-center gap-4 rounded-lg border border-border/60 bg-black/30 p-3">
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke="hsl(var(--muted))" strokeWidth="18" opacity="0.25" />
+        <circle
+          cx={cx}
+          cy={cy}
+          r={r}
+          fill="none"
+          stroke="hsl(var(--muted))"
+          strokeWidth="18"
+          opacity="0.25"
+        />
         <circle
           cx={cx}
           cy={cy}
@@ -2134,7 +2562,14 @@ function N3ProbabilityChart({ result }: { result: IrisResult }) {
           strokeDasharray={`${dashN3} ${dashRest}`}
           transform={`rotate(-90 ${cx} ${cy})`}
         />
-        <text x={cx} y={cy - 2} textAnchor="middle" className="fill-foreground" fontSize="20" fontWeight="700">
+        <text
+          x={cx}
+          y={cy - 2}
+          textAnchor="middle"
+          className="fill-foreground"
+          fontSize="20"
+          fontWeight="700"
+        >
           {prob}%
         </text>
         <text x={cx} y={cy + 14} textAnchor="middle" className="fill-muted-foreground" fontSize="9">

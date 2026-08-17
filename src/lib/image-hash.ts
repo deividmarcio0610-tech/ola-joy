@@ -16,7 +16,8 @@ export async function dHashOfFile(file: File): Promise<string> {
       el.onerror = () => reject(new Error("Falha ao ler imagem"));
       el.src = url;
     });
-    const w = 9, h = 8;
+    const w = 9,
+      h = 8;
     const canvas = document.createElement("canvas");
     canvas.width = w;
     canvas.height = h;
@@ -50,7 +51,10 @@ export function hammingHex(a: string, b: string): number {
   let d = 0;
   for (let i = 0; i < a.length; i++) {
     let x = parseInt(a[i], 16) ^ parseInt(b[i], 16);
-    while (x) { d += x & 1; x >>= 1; }
+    while (x) {
+      d += x & 1;
+      x >>= 1;
+    }
   }
   return d;
 }

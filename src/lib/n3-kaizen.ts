@@ -1,9 +1,8 @@
-// Cliente para os dois modos separados de IA:
-//   • N3 (auditor): identifica riscos, NÃO propõe solução.
-//   • Kaizen (engenharia): recebe 1 risco e propõe melhorias.
+// Cliente para os dois modos de IA: N3 (auditor) e Kaizen (engenharia).
+// Toda inferência passa pela API da VPS via /api/vps/analisar.
 
-import { supabase } from "@/integrations/supabase/client";
 import { ensureFreshSession } from "@/lib/iris-analyze";
+import { callVpsRoute } from "@/lib/vps-ai/call";
 
 export type N3Risk = {
   id: string;
@@ -40,21 +39,7 @@ export type N3Result = {
 
 export type KaizenImprovement = {
   id: string;
-  eixo:
-    | "seguranca"
-    | "mecanica"
-    | "eletrica"
-    | "civil"
-    | "estrutural"
-    | "ambiental"
-    | "operacional"
-    | "ergonomia"
-    | "financeiro"
-    | "produtividade"
-    | "qualidade"
-    | "confiabilidade"
-    | "manutencao"
-    | string;
+  eixo: string;
   problema: string;
   causa_raiz: string;
   solucao: string;
@@ -73,34 +58,17 @@ export type KaizenResult = {
   melhorias: KaizenImprovement[];
 };
 
-function extractErrMsg(error: unknown, fallback: string): string {
-  const anyErr = error as { message?: string; context?: { body?: unknown } } | null;
-  const body = anyErr?.context?.body;
-  try {
-    if (typeof body === "string" && body) {
-      const j = JSON.parse(body) as { error?: string };
-      if (j?.error) return j.error;
-    } else if (body && typeof body === "object" && "error" in body) {
-      return String((body as { error: string }).error);
-    }
-  } catch {
-    /* ignore */
-  }
-  return anyErr?.message ?? fallback;
-}
-
 export async function analisarN3(input: {
   image?: string;
   images?: string[];
   context?: string;
 }): Promise<N3Result> {
   await ensureFreshSession();
-  const { data, error } = await supabase.functions.invoke<N3Result | { error: string }>(
-    "analisar-com-iris",
-    { body: { mode: "n3", ...input } },
-  );
-  if (error) throw new Error(extractErrMsg(error, "Falha ao executar auditoria N3."));
-  if (!data || typeof data !== "object" || "error" in (data as object)) {
+  const data = await callVpsRoute<N3Result | { error: string }>("/api/vps/analisar", {
+    mode: "n3",
+    ...input,
+  });
+  if (!data || typeof data !== "object" || "error" in data) {
     throw new Error((data as { error?: string })?.error ?? "Resposta inválida da IA (N3).");
   }
   return data as N3Result;
@@ -113,12 +81,11 @@ export async function gerarKaizen(input: {
   context?: string;
 }): Promise<KaizenResult> {
   await ensureFreshSession();
-  const { data, error } = await supabase.functions.invoke<KaizenResult | { error: string }>(
-    "analisar-com-iris",
-    { body: { mode: "kaizen", ...input } },
-  );
-  if (error) throw new Error(extractErrMsg(error, "Falha ao gerar Kaizen."));
-  if (!data || typeof data !== "object" || "error" in (data as object)) {
+  const data = await callVpsRoute<KaizenResult | { error: string }>("/api/vps/analisar", {
+    mode: "kaizen",
+    ...input,
+  });
+  if (!data || typeof data !== "object" || "error" in data) {
     throw new Error((data as { error?: string })?.error ?? "Resposta inválida da IA (Kaizen).");
   }
   return data as KaizenResult;

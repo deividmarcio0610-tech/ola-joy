@@ -22,13 +22,21 @@ export function useWeatherNotifier() {
     }
     // desbloqueia audio (gesto do usuário)
     try {
-      const Ctor = (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext);
+      const Ctor =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       audioCtxRef.current = new Ctor();
       await audioCtxRef.current.resume();
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     localStorage.setItem(KEY, "1");
     setEnabled(true);
-    toast.success(perm === "granted" ? "Alertas ativados neste dispositivo" : "Alertas visuais ativos (notificação do sistema bloqueada)");
+    toast.success(
+      perm === "granted"
+        ? "Alertas ativados neste dispositivo"
+        : "Alertas visuais ativos (notificação do sistema bloqueada)",
+    );
   };
 
   const disable = () => {
@@ -40,7 +48,8 @@ export function useWeatherNotifier() {
   const beep = (severity: "info" | "warn" | "critical") => {
     const ctx = audioCtxRef.current;
     if (!ctx) return;
-    const freqs = severity === "critical" ? [880, 660, 880] : severity === "warn" ? [660, 520] : [520];
+    const freqs =
+      severity === "critical" ? [880, 660, 880] : severity === "warn" ? [660, 520] : [520];
     const now = ctx.currentTime;
     freqs.forEach((f, i) => {
       const osc = ctx.createOscillator();
@@ -58,11 +67,21 @@ export function useWeatherNotifier() {
 
   const vibrate = (severity: "info" | "warn" | "critical") => {
     if (!("vibrate" in navigator)) return;
-    const pattern = severity === "critical" ? [400, 120, 400, 120, 600] : severity === "warn" ? [250, 100, 250] : [200];
+    const pattern =
+      severity === "critical"
+        ? [400, 120, 400, 120, 600]
+        : severity === "warn"
+          ? [250, 100, 250]
+          : [200];
     navigator.vibrate(pattern);
   };
 
-  const notify = (opts: { title: string; body: string; severity: "info" | "warn" | "critical"; tag?: string }) => {
+  const notify = (opts: {
+    title: string;
+    body: string;
+    severity: "info" | "warn" | "critical";
+    tag?: string;
+  }) => {
     if (!enabled) return;
     beep(opts.severity);
     vibrate(opts.severity);
@@ -70,17 +89,27 @@ export function useWeatherNotifier() {
       try {
         new Notification(opts.title, {
           body: opts.body,
-          tag: opts.tag ?? "valetech-weather",
+          tag: opts.tag ?? "visionguard-weather",
           icon: "/favicon.ico",
           badge: "/favicon.ico",
           silent: false,
           requireInteraction: opts.severity === "critical",
         });
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
     // toast in-app garantido
-    const fn = opts.severity === "critical" ? toast.error : opts.severity === "warn" ? toast.warning : toast.info;
-    fn(opts.title, { description: opts.body, duration: opts.severity === "critical" ? 15000 : 8000 });
+    const fn =
+      opts.severity === "critical"
+        ? toast.error
+        : opts.severity === "warn"
+          ? toast.warning
+          : toast.info;
+    fn(opts.title, {
+      description: opts.body,
+      duration: opts.severity === "critical" ? 15000 : 8000,
+    });
   };
 
   return { enabled, permission, enable, disable, notify };

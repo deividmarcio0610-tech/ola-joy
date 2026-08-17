@@ -285,7 +285,10 @@ async function updateProviderOnFailure(
 ) {
   const failures = (row.consecutive_failures ?? 0) + 1;
   let blockedUntil: string | null = null;
-  let status: "closed" | "open" | "half_open" = row.current_status as "closed" | "open" | "half_open";
+  let status: "closed" | "open" | "half_open" = row.current_status as
+    | "closed"
+    | "open"
+    | "half_open";
 
   if (errorType === "RATE_LIMIT") {
     const secs = retryAfterSeconds ?? 5 * 60;

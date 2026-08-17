@@ -9,7 +9,7 @@ export async function watermarkSimulation(imageUrl: string): Promise<string> {
   if (!ctx) return imageUrl;
   ctx.drawImage(img, 0, 0);
 
-  const label = "SIMULAÇÃO GERADA POR IA · VALETECH";
+  const label = "SIMULAÇÃO GERADA POR IA · VisionGuard AI";
   const padding = Math.round(canvas.width * 0.012);
   const fontSize = Math.max(12, Math.round(canvas.width * 0.022));
   ctx.font = `bold ${fontSize}px "Helvetica","Arial",sans-serif`;
@@ -48,7 +48,14 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+function roundRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.arcTo(x + w, y, x + w, y + h, r);

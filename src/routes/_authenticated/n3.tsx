@@ -6,11 +6,10 @@ import { SafetyPlanLauncher } from "@/components/safety-plan/launcher";
 export const Route = createFileRoute("/_authenticated/n3")({
   head: () => ({
     meta: [
-      { title: "N3 - Não Conformidade · VALETECH" },
+      { title: "N3 - Não Conformidade · VisionGuard AI" },
       {
         name: "description",
-        content:
-          "Registro inteligente, análise e tratativa de não conformidades com apoio da IA.",
+        content: "Registro inteligente, análise e tratativa de não conformidades com apoio da IA.",
       },
     ],
   }),

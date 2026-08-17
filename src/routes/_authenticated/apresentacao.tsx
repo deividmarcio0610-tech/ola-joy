@@ -69,8 +69,7 @@ const SCENES: Scene[] = [
   {
     id: "abertura",
     title: "Abertura",
-    narration:
-      "ValeTech IA. Inteligência artificial para engenharia e segurança do trabalho.",
+    narration: "ValeTech IA. Inteligência artificial para engenharia e segurança do trabalho.",
     duration: 7.4,
   },
   {
@@ -154,8 +153,7 @@ const SCENES: Scene[] = [
   {
     id: "exportacoes",
     title: "Exportações",
-    narration:
-      "PDF, PNG, Excel, checklist e projeto executivo — em um clique.",
+    narration: "PDF, PNG, Excel, checklist e projeto executivo — em um clique.",
     duration: 6.5,
   },
   {
@@ -269,7 +267,8 @@ function ApresentacaoPage() {
     const u = new SpeechSynthesisUtterance(scene.narration);
     u.lang = "pt-BR";
     const voices = synth.getVoices();
-    const pt = voices.find((v) => /pt[-_]BR/i.test(v.lang)) || voices.find((v) => /^pt/i.test(v.lang));
+    const pt =
+      voices.find((v) => /pt[-_]BR/i.test(v.lang)) || voices.find((v) => /^pt/i.test(v.lang));
     if (pt) u.voice = pt;
     // Ajusta a velocidade para caber na duração da cena
     const words = scene.narration.trim().split(/\s+/).length;
@@ -307,7 +306,7 @@ function ApresentacaoPage() {
       for (let i = 0; i < target; i++) start += scenes[i].duration;
       setElapsed(start + 0.01);
     },
-    [elapsed, scenes]
+    [elapsed, scenes],
   );
 
   useEffect(() => {
@@ -344,19 +343,22 @@ function ApresentacaoPage() {
   const scriptText = useMemo(
     () =>
       scenes
-        .map(
-          (s, i) =>
-            `Cena ${i + 1} — ${s.title} (${s.duration.toFixed(1)}s)\n${s.narration}\n`
-        )
+        .map((s, i) => `Cena ${i + 1} — ${s.title} (${s.duration.toFixed(1)}s)\n${s.narration}\n`)
         .join("\n"),
-    [scenes]
+    [scenes],
   );
 
   const srtText = useMemo(() => {
     const fmt = (t: number) => {
-      const h = Math.floor(t / 3600).toString().padStart(2, "0");
-      const m = Math.floor((t % 3600) / 60).toString().padStart(2, "0");
-      const s = Math.floor(t % 60).toString().padStart(2, "0");
+      const h = Math.floor(t / 3600)
+        .toString()
+        .padStart(2, "0");
+      const m = Math.floor((t % 3600) / 60)
+        .toString()
+        .padStart(2, "0");
+      const s = Math.floor(t % 60)
+        .toString()
+        .padStart(2, "0");
       const ms = Math.floor((t - Math.floor(t)) * 1000)
         .toString()
         .padStart(3, "0");
@@ -383,150 +385,174 @@ function ApresentacaoPage() {
   };
 
   const [recording, setRecording] = useState(false);
-  const recordVideo = useCallback(async (format: "webm" | "mp4" = "webm") => {
-    if (recording) return;
-    if (typeof MediaRecorder === "undefined") {
-      toast.error("Seu navegador não suporta gravação de vídeo. Use Chrome/Edge no desktop.");
-      return;
-    }
-
-    // Preferência: captura de tela nativa (getDisplayMedia) — grava frames reais em 30fps.
-    const hasDisplayMedia =
-      typeof navigator !== "undefined" &&
-      !!navigator.mediaDevices &&
-      typeof navigator.mediaDevices.getDisplayMedia === "function";
-
-    const candidates = format === "mp4"
-      ? ["video/mp4;codecs=avc1", "video/mp4;codecs=h264", "video/mp4"]
-      : ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"];
-    const mime = candidates.find((m) => MediaRecorder.isTypeSupported(m));
-    if (!mime) {
-      toast.error(
-        format === "mp4"
-          ? "Este navegador não grava MP4. Use 'Baixar WebM' ou abra no Chrome/Edge."
-          : "Este navegador não suporta gravação WebM.",
-      );
-      return;
-    }
-
-    const finalize = (chunks: BlobPart[], mimeOut: string, ext: string) => {
-      const blob = new Blob(chunks, { type: mimeOut });
-      if (blob.size === 0) {
-        toast.error("Gravação vazia — tente novamente.");
+  const recordVideo = useCallback(
+    async (format: "webm" | "mp4" = "webm") => {
+      if (recording) return;
+      if (typeof MediaRecorder === "undefined") {
+        toast.error("Seu navegador não suporta gravação de vídeo. Use Chrome/Edge no desktop.");
         return;
       }
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `valetech-apresentacao.${ext}`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 5000);
-      toast.success("Vídeo baixado.");
-    };
 
-    // Caminho A: captura de tela (recomendado, funciona no desktop)
-    if (hasDisplayMedia) {
+      // Preferência: captura de tela nativa (getDisplayMedia) — grava frames reais em 30fps.
+      const hasDisplayMedia =
+        typeof navigator !== "undefined" &&
+        !!navigator.mediaDevices &&
+        typeof navigator.mediaDevices.getDisplayMedia === "function";
+
+      const candidates =
+        format === "mp4"
+          ? ["video/mp4;codecs=avc1", "video/mp4;codecs=h264", "video/mp4"]
+          : ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"];
+      const mime = candidates.find((m) => MediaRecorder.isTypeSupported(m));
+      if (!mime) {
+        toast.error(
+          format === "mp4"
+            ? "Este navegador não grava MP4. Use 'Baixar WebM' ou abra no Chrome/Edge."
+            : "Este navegador não suporta gravação WebM.",
+        );
+        return;
+      }
+
+      const finalize = (chunks: BlobPart[], mimeOut: string, ext: string) => {
+        const blob = new Blob(chunks, { type: mimeOut });
+        if (blob.size === 0) {
+          toast.error("Gravação vazia — tente novamente.");
+          return;
+        }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `visionguard-apresentacao.${ext}`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+        toast.success("Vídeo baixado.");
+      };
+
+      // Caminho A: captura de tela (recomendado, funciona no desktop)
+      if (hasDisplayMedia) {
+        try {
+          const stream = await navigator.mediaDevices.getDisplayMedia({
+            video: { frameRate: 30 } as MediaTrackConstraints,
+            audio: false,
+          });
+          const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 6_000_000 });
+          const chunks: BlobPart[] = [];
+          rec.ondataavailable = (e) => {
+            if (e.data && e.data.size > 0) chunks.push(e.data);
+          };
+          rec.onstop = () => {
+            stream.getTracks().forEach((t) => t.stop());
+            finalize(chunks, format === "mp4" ? "video/mp4" : "video/webm", format);
+            setRecording(false);
+          };
+          stream.getVideoTracks()[0].addEventListener("ended", () => {
+            if (rec.state !== "inactive") rec.stop();
+          });
+
+          setRecording(true);
+          setElapsed(0);
+          setPlaying(true);
+          rec.start(1000);
+          toast.info("Gravando… selecione a aba da apresentação. Não feche esta janela.");
+
+          const stopAt = total * 1000 + 500;
+          setTimeout(() => {
+            if (rec.state !== "inactive") rec.stop();
+          }, stopAt);
+          return;
+        } catch (err) {
+          console.warn("getDisplayMedia falhou, tentando fallback:", err);
+          // usuário cancelou ou não permitiu — cai para fallback
+        }
+      }
+
+      // Caminho B (fallback): canvas + html2canvas (mais lento, pode falhar em mobile)
+      const stage = stageRef.current;
+      if (!stage) {
+        toast.error("Palco não encontrado.");
+        return;
+      }
+      let cancelled = false;
       try {
-        const stream = await navigator.mediaDevices.getDisplayMedia({
-          video: { frameRate: 30 } as MediaTrackConstraints,
-          audio: false,
-        });
+        const { default: html2canvas } = await import("html2canvas");
+        const rect = stage.getBoundingClientRect();
+        const scale = Math.min(2, Math.max(1, 1280 / Math.max(1, rect.width)));
+        const W = Math.round(rect.width * scale);
+        const H = Math.round(rect.height * scale);
+        const canvas = document.createElement("canvas");
+        canvas.width = W;
+        canvas.height = H;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) throw new Error("canvas 2d");
+        const stream = (canvas as HTMLCanvasElement).captureStream(30);
         const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 6_000_000 });
         const chunks: BlobPart[] = [];
-        rec.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+        rec.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) chunks.push(e.data);
+        };
         rec.onstop = () => {
           stream.getTracks().forEach((t) => t.stop());
           finalize(chunks, format === "mp4" ? "video/mp4" : "video/webm", format);
           setRecording(false);
         };
-        stream.getVideoTracks()[0].addEventListener("ended", () => {
-          if (rec.state !== "inactive") rec.stop();
-        });
 
         setRecording(true);
         setElapsed(0);
         setPlaying(true);
-        rec.start(1000);
-        toast.info("Gravando… selecione a aba da apresentação. Não feche esta janela.");
 
-        const stopAt = total * 1000 + 500;
-        setTimeout(() => {
-          if (rec.state !== "inactive") rec.stop();
-        }, stopAt);
-        return;
-      } catch (err) {
-        console.warn("getDisplayMedia falhou, tentando fallback:", err);
-        // usuário cancelou ou não permitiu — cai para fallback
-      }
-    }
-
-    // Caminho B (fallback): canvas + html2canvas (mais lento, pode falhar em mobile)
-    const stage = stageRef.current;
-    if (!stage) {
-      toast.error("Palco não encontrado.");
-      return;
-    }
-    let cancelled = false;
-    try {
-      const { default: html2canvas } = await import("html2canvas");
-      const rect = stage.getBoundingClientRect();
-      const scale = Math.min(2, Math.max(1, 1280 / Math.max(1, rect.width)));
-      const W = Math.round(rect.width * scale);
-      const H = Math.round(rect.height * scale);
-      const canvas = document.createElement("canvas");
-      canvas.width = W;
-      canvas.height = H;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) throw new Error("canvas 2d");
-      const stream = (canvas as HTMLCanvasElement).captureStream(30);
-      const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 6_000_000 });
-      const chunks: BlobPart[] = [];
-      rec.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
-      rec.onstop = () => {
-        stream.getTracks().forEach((t) => t.stop());
-        finalize(chunks, format === "mp4" ? "video/mp4" : "video/webm", format);
-        setRecording(false);
-      };
-
-      setRecording(true);
-      setElapsed(0);
-      setPlaying(true);
-
-      try {
-        const first = await html2canvas(stage, { backgroundColor: "#050810", scale, logging: false, useCORS: true, allowTaint: true });
-        ctx.drawImage(first, 0, 0, W, H);
-      } catch {
-        ctx.fillStyle = "#050810";
-        ctx.fillRect(0, 0, W, H);
-      }
-
-      rec.start(1000);
-      toast.info("Gerando vídeo… mantenha esta aba visível.");
-
-      const started = performance.now();
-      const stopAt = total * 1000 + 400;
-      const tick = async () => {
-        if (cancelled) return;
         try {
-          const snap = await html2canvas(stage, { backgroundColor: "#050810", scale, logging: false, useCORS: true, allowTaint: true });
-          ctx.drawImage(snap, 0, 0, W, H);
-        } catch { /* mantém último frame */ }
-        if (performance.now() - started >= stopAt) {
-          setTimeout(() => { if (rec.state !== "inactive") rec.stop(); }, 300);
-          return;
+          const first = await html2canvas(stage, {
+            backgroundColor: "#050810",
+            scale,
+            logging: false,
+            useCORS: true,
+            allowTaint: true,
+          });
+          ctx.drawImage(first, 0, 0, W, H);
+        } catch {
+          ctx.fillStyle = "#050810";
+          ctx.fillRect(0, 0, W, H);
         }
-        setTimeout(tick, 100);
-      };
-      tick();
-    } catch (err) {
-      cancelled = true;
-      console.error(err);
-      toast.error("Falha ao gerar vídeo. Tente em Chrome/Edge no desktop.");
-      setRecording(false);
-    }
-  }, [recording, total]);
+
+        rec.start(1000);
+        toast.info("Gerando vídeo… mantenha esta aba visível.");
+
+        const started = performance.now();
+        const stopAt = total * 1000 + 400;
+        const tick = async () => {
+          if (cancelled) return;
+          try {
+            const snap = await html2canvas(stage, {
+              backgroundColor: "#050810",
+              scale,
+              logging: false,
+              useCORS: true,
+              allowTaint: true,
+            });
+            ctx.drawImage(snap, 0, 0, W, H);
+          } catch {
+            /* mantém último frame */
+          }
+          if (performance.now() - started >= stopAt) {
+            setTimeout(() => {
+              if (rec.state !== "inactive") rec.stop();
+            }, 300);
+            return;
+          }
+          setTimeout(tick, 100);
+        };
+        tick();
+      } catch (err) {
+        cancelled = true;
+        console.error(err);
+        toast.error("Falha ao gerar vídeo. Tente em Chrome/Edge no desktop.");
+        setRecording(false);
+      }
+    },
+    [recording, total],
+  );
 
   const copyText = async (text: string, label: string) => {
     try {
@@ -538,11 +564,7 @@ function ApresentacaoPage() {
   };
 
   const aspectClass =
-    format === "16:9"
-      ? "aspect-video"
-      : format === "9:16"
-        ? "aspect-[9/16]"
-        : "aspect-square";
+    format === "16:9" ? "aspect-video" : format === "9:16" ? "aspect-[9/16]" : "aspect-square";
 
   const currentScene = scenes[sceneIndex];
   const sceneProgress = currentScene ? sceneElapsed / currentScene.duration : 0;
@@ -559,8 +581,8 @@ function ApresentacaoPage() {
               Vídeo de Apresentação · ValeTech IA
             </h1>
             <p className="text-xs text-muted-foreground">
-              15 cenas cinematográficas — padrão multinacional. Grave em tela
-              cheia com OBS ou CapCut para exportar em 1920×1080.
+              15 cenas cinematográficas — padrão multinacional. Grave em tela cheia com OBS ou
+              CapCut para exportar em 1920×1080.
             </p>
           </div>
         </header>
@@ -574,11 +596,7 @@ function ApresentacaoPage() {
               variant={playing ? "secondary" : "default"}
               onClick={() => setPlaying((p) => !p)}
             >
-              {playing ? (
-                <Pause className="h-4 w-4" />
-              ) : (
-                <Play className="h-4 w-4" />
-              )}
+              {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
               <span className="ml-1">{playing ? "Pausar" : "Iniciar"}</span>
             </Button>
             <Button size="sm" variant="outline" onClick={restart}>
@@ -592,11 +610,7 @@ function ApresentacaoPage() {
               <ChevronRight className="h-4 w-4" />
             </Button>
             <Button size="sm" variant="outline" onClick={enterFullscreen}>
-              {fullscreen ? (
-                <Minimize2 className="h-4 w-4" />
-              ) : (
-                <Maximize2 className="h-4 w-4" />
-              )}
+              {fullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
               <span className="ml-1">Tela cheia</span>
             </Button>
           </div>
@@ -676,12 +690,7 @@ function ApresentacaoPage() {
           <CinematicBackdrop />
           <Particles />
 
-          <Stage
-            scene={currentScene}
-            progress={sceneProgress}
-            index={sceneIndex}
-            format={format}
-          />
+          <Stage scene={currentScene} progress={sceneProgress} index={sceneIndex} format={format} />
 
           {/* Vinheta */}
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_50%,rgba(0,0,0,0.55)_100%)]" />
@@ -759,9 +768,7 @@ function ApresentacaoPage() {
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <span className="ml-3 flex-1">{s.title}</span>
-                  <span className="text-xs opacity-60">
-                    {s.duration.toFixed(1)}s
-                  </span>
+                  <span className="text-xs opacity-60">{s.duration.toFixed(1)}s</span>
                 </li>
               ))}
             </ol>
@@ -772,44 +779,26 @@ function ApresentacaoPage() {
               <h2 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
                 Roteiro & Exportação
               </h2>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setShowSubs((v) => !v)}
-              >
+              <Button size="sm" variant="ghost" onClick={() => setShowSubs((v) => !v)}>
                 {showSubs ? "Ocultar legendas" : "Mostrar legendas"}
               </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setSpeak((v) => !v)}
-              >
+              <Button size="sm" variant="ghost" onClick={() => setSpeak((v) => !v)}>
                 {speak ? "Silenciar narração" : "Ativar narração"}
               </Button>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setShowScript((v) => !v)}
-              >
+              <Button size="sm" variant="outline" onClick={() => setShowScript((v) => !v)}>
                 <FileText className="h-4 w-4" />
-                <span className="ml-1">
-                  {showScript ? "Ocultar" : "Ver"} roteiro
-                </span>
+                <span className="ml-1">{showScript ? "Ocultar" : "Ver"} roteiro</span>
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => copyText(scriptText, "Roteiro")}
-              >
+              <Button size="sm" variant="outline" onClick={() => copyText(scriptText, "Roteiro")}>
                 <Copy className="h-4 w-4" />
                 <span className="ml-1">Copiar roteiro</span>
               </Button>
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => download("valetech-roteiro.txt", scriptText)}
+                onClick={() => download("visionguard-roteiro.txt", scriptText)}
               >
                 <Download className="h-4 w-4" />
                 <span className="ml-1">TXT</span>
@@ -817,7 +806,7 @@ function ApresentacaoPage() {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => download("valetech-legendas.srt", srtText)}
+                onClick={() => download("visionguard-legendas.srt", srtText)}
               >
                 <Download className="h-4 w-4" />
                 <span className="ml-1">SRT</span>
@@ -829,9 +818,7 @@ function ApresentacaoPage() {
                 disabled={recording}
               >
                 <Download className="h-4 w-4" />
-                <span className="ml-1">
-                  {recording ? "Gerando…" : "Baixar WebM"}
-                </span>
+                <span className="ml-1">{recording ? "Gerando…" : "Baixar WebM"}</span>
               </Button>
               <Button
                 size="sm"
@@ -840,9 +827,7 @@ function ApresentacaoPage() {
                 disabled={recording}
               >
                 <Download className="h-4 w-4" />
-                <span className="ml-1">
-                  {recording ? "Gerando…" : "Baixar MP4"}
-                </span>
+                <span className="ml-1">{recording ? "Gerando…" : "Baixar MP4"}</span>
               </Button>
             </div>
             {showScript && (
@@ -851,9 +836,8 @@ function ApresentacaoPage() {
               </pre>
             )}
             <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
-              Grave em tela cheia com OBS ou CapCut. Formato 16:9 para YouTube /
-              LinkedIn; 9:16 para Reels e Shorts. Adicione trilha corporativa e
-              locução profissional na edição.
+              Grave em tela cheia com OBS ou CapCut. Formato 16:9 para YouTube / LinkedIn; 9:16 para
+              Reels e Shorts. Adicione trilha corporativa e locução profissional na edição.
             </p>
           </div>
         </div>
@@ -930,7 +914,7 @@ function Particles() {
         d: (i % 6) * 0.3,
         s: 1 + (i % 4) * 0.5,
       })),
-    []
+    [],
   );
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -1048,9 +1032,7 @@ function SceneAbertura({ progress }: { progress: number; format: Format }) {
             />
           </div>
         </div>
-        <h1 className="font-display text-6xl font-black tracking-tight md:text-8xl">
-          ValeTech IA
-        </h1>
+        <h1 className="font-display text-6xl font-black tracking-tight md:text-8xl">ValeTech IA</h1>
         <div
           className="text-center"
           style={{ opacity: t2, transform: `translateY(${(1 - t2) * 10}px)` }}
@@ -1080,12 +1062,48 @@ function SceneAbertura({ progress }: { progress: number; format: Format }) {
 // ==========================================================
 function SceneDashboard({ progress }: { progress: number; format: Format }) {
   const cards = [
-    { label: "Inspeções", value: "1.248", icon: ClipboardList, hue: "text-sky-300", tone: "from-sky-500/20 to-transparent" },
-    { label: "Pendências", value: "37", icon: AlertTriangle, hue: "text-amber-300", tone: "from-amber-500/20 to-transparent" },
-    { label: "Projetos", value: "82", icon: LayoutGrid, hue: "text-neon", tone: "from-emerald-500/20 to-transparent" },
-    { label: "Relatórios", value: "312", icon: FileText, hue: "text-violet-300", tone: "from-violet-500/20 to-transparent" },
-    { label: "Conformidade", value: "94%", icon: ShieldCheck, hue: "text-neon", tone: "from-emerald-500/20 to-transparent" },
-    { label: "Indicadores", value: "18", icon: BarChart3, hue: "text-cyan-300", tone: "from-cyan-500/20 to-transparent" },
+    {
+      label: "Inspeções",
+      value: "1.248",
+      icon: ClipboardList,
+      hue: "text-sky-300",
+      tone: "from-sky-500/20 to-transparent",
+    },
+    {
+      label: "Pendências",
+      value: "37",
+      icon: AlertTriangle,
+      hue: "text-amber-300",
+      tone: "from-amber-500/20 to-transparent",
+    },
+    {
+      label: "Projetos",
+      value: "82",
+      icon: LayoutGrid,
+      hue: "text-neon",
+      tone: "from-emerald-500/20 to-transparent",
+    },
+    {
+      label: "Relatórios",
+      value: "312",
+      icon: FileText,
+      hue: "text-violet-300",
+      tone: "from-violet-500/20 to-transparent",
+    },
+    {
+      label: "Conformidade",
+      value: "94%",
+      icon: ShieldCheck,
+      hue: "text-neon",
+      tone: "from-emerald-500/20 to-transparent",
+    },
+    {
+      label: "Indicadores",
+      value: "18",
+      icon: BarChart3,
+      hue: "text-cyan-300",
+      tone: "from-cyan-500/20 to-transparent",
+    },
   ];
   return (
     <div className="absolute inset-0 flex flex-col p-8 md:p-14">
@@ -1159,9 +1177,7 @@ function SceneNovaInspecao({ progress }: { progress: number; format: Format }) {
       >
         <div className="flex items-center justify-between border-b border-white/10 pb-4">
           <div>
-            <div className="text-[10px] uppercase tracking-[0.4em] text-neon/80">
-              Nova inspeção
-            </div>
+            <div className="text-[10px] uppercase tracking-[0.4em] text-neon/80">Nova inspeção</div>
             <div className="mt-1 font-display text-2xl font-bold text-white md:text-3xl">
               Preenchimento automático
             </div>
@@ -1260,9 +1276,7 @@ function SceneUpload({ progress }: { progress: number; format: Format }) {
               <div
                 key={i}
                 className={`relative aspect-square overflow-hidden rounded-md border transition-all ${
-                  done
-                    ? "border-neon/40 bg-neon/5"
-                    : "border-white/10 bg-white/[0.02]"
+                  done ? "border-neon/40 bg-neon/5" : "border-white/10 bg-white/[0.02]"
                 }`}
               >
                 <MiniIndustrial hue={i % 3} />
@@ -1324,11 +1338,8 @@ function SceneAnalisando({ progress }: { progress: number; format: Format }) {
             }}
           >
             <div className="absolute -top-7 left-0 flex items-center gap-1 whitespace-nowrap rounded bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">
-              <span className="font-mono">{String(i + 1).padStart(2, "0")}</span>
-              · {b.label}
-              <span className="ml-1 rounded bg-black/40 px-1 font-mono">
-                {b.nr}
-              </span>
+              <span className="font-mono">{String(i + 1).padStart(2, "0")}</span>· {b.label}
+              <span className="ml-1 rounded bg-black/40 px-1 font-mono">{b.nr}</span>
             </div>
           </div>
         );
@@ -1350,9 +1361,7 @@ function SceneAnalisando({ progress }: { progress: number; format: Format }) {
                 <span
                   key={t}
                   className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest transition-all ${
-                    active
-                      ? "bg-neon/20 text-neon ring-1 ring-neon/50"
-                      : "bg-white/5 text-white/40"
+                    active ? "bg-neon/20 text-neon ring-1 ring-neon/50" : "bg-white/5 text-white/40"
                   }`}
                 >
                   {t}
@@ -1426,14 +1435,7 @@ function SceneResultado({ progress }: { progress: number; format: Format }) {
         {/* Donut */}
         <div className="mt-3 flex items-center gap-4">
           <svg width="150" height="150" viewBox="0 0 120 120" className="shrink-0">
-            <circle
-              cx="60"
-              cy="60"
-              r="42"
-              fill="none"
-              stroke="#ffffff10"
-              strokeWidth="10"
-            />
+            <circle cx="60" cy="60" r="42" fill="none" stroke="#ffffff10" strokeWidth="10" />
             <circle
               cx="60"
               cy="60"
@@ -1452,14 +1454,7 @@ function SceneResultado({ progress }: { progress: number; format: Format }) {
                 <stop offset="100%" stopColor="#fb923c" />
               </linearGradient>
             </defs>
-            <text
-              x="60"
-              y="58"
-              textAnchor="middle"
-              fill="#fff"
-              fontSize="22"
-              fontWeight="800"
-            >
+            <text x="60" y="58" textAnchor="middle" fill="#fff" fontSize="22" fontWeight="800">
               {value}
             </text>
             <text
@@ -1486,8 +1481,7 @@ function SceneResultado({ progress }: { progress: number; format: Format }) {
                 <span className="h-2 w-2 rounded-full bg-red-400" /> Risco {value}
               </span>
               <span className="flex items-center gap-1 text-white/50">
-                <span className="h-2 w-2 rounded-full bg-white/30" /> Margem{" "}
-                {100 - value}
+                <span className="h-2 w-2 rounded-full bg-white/30" /> Margem {100 - value}
               </span>
             </div>
           </div>
@@ -1496,29 +1490,16 @@ function SceneResultado({ progress }: { progress: number; format: Format }) {
         {/* Legenda das faixas de risco */}
         <RiskBandsLegend progress={progress} start={0.22} className="mt-3" />
 
-
         {/* Título e descrição gerados pela IA */}
-        <div
-          className="mt-4"
-          style={{ opacity: fadeIn(progress, 0.3, 0.3) }}
-        >
-          <div className="text-[10px] uppercase tracking-[0.35em] text-neon/80">
-            Título (IA)
-          </div>
+        <div className="mt-4" style={{ opacity: fadeIn(progress, 0.3, 0.3) }}>
+          <div className="text-[10px] uppercase tracking-[0.35em] text-neon/80">Título (IA)</div>
           <div className="mt-1 font-display text-base font-bold text-white">
             Riscos Elétricos, Obstrução e Piso Molhado em Área Industrial
           </div>
         </div>
-        <div
-          className="mt-3"
-          style={{ opacity: fadeIn(progress, 0.4, 0.3) }}
-        >
-          <div className="text-[10px] uppercase tracking-[0.35em] text-neon/80">
-            Descrição (IA)
-          </div>
-          <p className="mt-1 text-[11px] leading-relaxed text-white/80">
-            {descricao}
-          </p>
+        <div className="mt-3" style={{ opacity: fadeIn(progress, 0.4, 0.3) }}>
+          <div className="text-[10px] uppercase tracking-[0.35em] text-neon/80">Descrição (IA)</div>
+          <p className="mt-1 text-[11px] leading-relaxed text-white/80">{descricao}</p>
         </div>
 
         {/* Área / Local / Prioridade */}
@@ -1535,9 +1516,7 @@ function SceneResultado({ progress }: { progress: number; format: Format }) {
             <div className="mt-0.5 text-white/90">Painel 440V</div>
           </div>
           <div className="rounded-md border border-red-500/40 bg-red-500/10 px-2 py-1.5">
-            <div className="uppercase tracking-widest text-red-300/80">
-              Prioridade
-            </div>
+            <div className="uppercase tracking-widest text-red-300/80">Prioridade</div>
             <div className="mt-0.5 font-bold text-red-300">Crítica</div>
           </div>
         </div>
@@ -1556,9 +1535,8 @@ function SceneResultado({ progress }: { progress: number; format: Format }) {
           Ação imediata
         </div>
         <p className="mt-2 text-[11px] leading-relaxed text-white/80">
-          Interromper imediatamente as atividades na área, desenergizar o painel
-          e a máquina de solda, remover todos os cabos do chão, limpar e secar o
-          piso e sinalizar a área.
+          Interromper imediatamente as atividades na área, desenergizar o painel e a máquina de
+          solda, remover todos os cabos do chão, limpar e secar o piso e sinalizar a área.
         </p>
 
         <div className="mt-5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-sky-300">
@@ -1566,18 +1544,15 @@ function SceneResultado({ progress }: { progress: number; format: Format }) {
           Ação definitiva
         </div>
         <p className="mt-2 text-[11px] leading-relaxed text-white/80">
-          Implementar sistema de gerenciamento de cabos (calhas, bandejas) para
-          evitar fiação no chão (NR-10). Criar rotas de passagem exclusivas e
-          sinalizadas para pedestres e veículos (NR-11). Instalar proteções
-          físicas para equipamentos elétricos e máquinas de solda (NR-10, NR-12).
-          Garantir drenagem adequada do piso e limpeza constante.
+          Implementar sistema de gerenciamento de cabos (calhas, bandejas) para evitar fiação no
+          chão (NR-10). Criar rotas de passagem exclusivas e sinalizadas para pedestres e veículos
+          (NR-11). Instalar proteções físicas para equipamentos elétricos e máquinas de solda
+          (NR-10, NR-12). Garantir drenagem adequada do piso e limpeza constante.
         </p>
 
         <div className="mt-4 rounded-md border border-white/10 bg-white/[0.03] p-2 text-[10px] text-white/70">
-          <span className="uppercase tracking-widest text-white/50">
-            Responsável:
-          </span>{" "}
-          Supervisor de Operações
+          <span className="uppercase tracking-widest text-white/50">Responsável:</span> Supervisor
+          de Operações
         </div>
       </Glass>
 
@@ -1595,19 +1570,15 @@ function SceneResultado({ progress }: { progress: number; format: Format }) {
         </div>
 
         <div className="mt-3">
-          <div className="text-[10px] uppercase tracking-widest text-white/50">
-            Causa raiz
-          </div>
+          <div className="text-[10px] uppercase tracking-widest text-white/50">Causa raiz</div>
           <p className="mt-1 text-[11px] leading-relaxed text-white/80">
-            Fiação elétrica desorganizada sobre piso molhado, obstrução de
-            passagem e equipamento pesado em área de trânsito.
+            Fiação elétrica desorganizada sobre piso molhado, obstrução de passagem e equipamento
+            pesado em área de trânsito.
           </p>
         </div>
 
         <div className="mt-3">
-          <div className="text-[10px] uppercase tracking-widest text-white/50">
-            Consequências
-          </div>
+          <div className="text-[10px] uppercase tracking-widest text-white/50">Consequências</div>
           <ul className="mt-1 space-y-1">
             {consequencias.map((c, i) => {
               const t = fadeIn(progress, 0.35 + i * 0.06, 0.2);
@@ -1652,14 +1623,12 @@ function SceneResultado({ progress }: { progress: number; format: Format }) {
           style={{ opacity: fadeIn(progress, 0.65, 0.3) }}
         >
           <span className="font-bold text-white/95">Justificativa: </span>
-          Score {score} (P{P}×S{S}). Quanto mais próximo de 100, maior o nível
-          de risco.
+          Score {score} (P{P}×S{S}). Quanto mais próximo de 100, maior o nível de risco.
         </div>
       </Glass>
     </div>
   );
 }
-
 
 // ==========================================================
 // CENA 7 — Projeto Executivo (checkmarks desenhando)
@@ -1703,10 +1672,7 @@ function SceneProjetoExecutivo({ progress }: { progress: number; format: Format 
             const t = fadeIn(progress, 0.15 + i * 0.03, 0.15);
             return (
               <g key={cx} style={{ opacity: t, transform: `translateY(${(1 - t) * 15}px)` }}>
-                <polygon
-                  points={`${cx},340 ${cx - 10},365 ${cx + 10},365`}
-                  fill="#f97316"
-                />
+                <polygon points={`${cx},340 ${cx - 10},365 ${cx + 10},365`} fill="#f97316" />
                 <rect x={cx - 12} y="363" width="24" height="4" fill="#111" />
               </g>
             );
@@ -1742,20 +1708,23 @@ function SceneProjetoExecutivo({ progress }: { progress: number; format: Format 
           {/* Faixa de circulação */}
           <g style={{ opacity: fadeIn(progress, 0.7, 0.2) }}>
             {Array.from({ length: 12 }).map((_, i) => (
-              <rect
-                key={i}
-                x={40 + i * 30}
-                y="450"
-                width="20"
-                height="6"
-                fill="#ffffff90"
-              />
+              <rect key={i} x={40 + i * 30} y="450" width="20" height="6" fill="#ffffff90" />
             ))}
           </g>
           {/* Placa */}
           <g style={{ opacity: fadeIn(progress, 0.65, 0.2) }}>
-            <rect x="120" y="140" width="30" height="30" fill="#facc15" stroke="#111" strokeWidth="2" />
-            <text x="135" y="160" textAnchor="middle" fontSize="14" fontWeight="800">!</text>
+            <rect
+              x="120"
+              y="140"
+              width="30"
+              height="30"
+              fill="#facc15"
+              stroke="#111"
+              strokeWidth="2"
+            />
+            <text x="135" y="160" textAnchor="middle" fontSize="14" fontWeight="800">
+              !
+            </text>
             <line x1="135" y1="170" x2="135" y2="200" stroke="#111" strokeWidth="3" />
           </g>
           {/* Numeração */}
@@ -1770,7 +1739,14 @@ function SceneProjetoExecutivo({ progress }: { progress: number; format: Format 
             return (
               <g key={m.n} style={{ opacity: t }}>
                 <circle cx={m.x} cy={m.y} r="14" fill="#0ea5e9" stroke="#fff" strokeWidth="2" />
-                <text x={m.x} y={m.y + 4} textAnchor="middle" fill="#fff" fontSize="12" fontWeight="800">
+                <text
+                  x={m.x}
+                  y={m.y + 4}
+                  textAnchor="middle"
+                  fill="#fff"
+                  fontSize="12"
+                  fontWeight="800"
+                >
                   {m.n}
                 </text>
               </g>
@@ -1814,10 +1790,22 @@ function SceneProjetoExecutivo({ progress }: { progress: number; format: Format 
 function SceneMemorial({ progress }: { progress: number; format: Format }) {
   const items = [
     { n: "01", label: "Instalar guarda-corpo", nr: "NR-35", crit: "Alta", resp: "SESMT" },
-    { n: "02", label: "Remover materiais e liberar rota", nr: "NR-11", crit: "Alta", resp: "Logística" },
+    {
+      n: "02",
+      label: "Remover materiais e liberar rota",
+      nr: "NR-11",
+      crit: "Alta",
+      resp: "Logística",
+    },
     { n: "03", label: "Sinalizar área com placa", nr: "NR-26", crit: "Média", resp: "Manutenção" },
     { n: "04", label: "Posicionar extintor Classe C", nr: "NR-23", crit: "Alta", resp: "Brigada" },
-    { n: "05", label: "Aterramento e organização de cabos", nr: "NR-10", crit: "Crítica", resp: "Elétrica" },
+    {
+      n: "05",
+      label: "Aterramento e organização de cabos",
+      nr: "NR-10",
+      crit: "Crítica",
+      resp: "Elétrica",
+    },
     { n: "06", label: "Demarcar faixa de circulação", nr: "NR-12", crit: "Média", resp: "SESMT" },
   ];
   return (
@@ -1835,8 +1823,7 @@ function SceneMemorial({ progress }: { progress: number; format: Format }) {
         <ul className="mt-5 space-y-2.5">
           {items.map((it, i) => {
             const t = fadeIn(progress, i * 0.14, 0.25);
-            const active =
-              Math.floor(progress * items.length) === i && progress < 1;
+            const active = Math.floor(progress * items.length) === i && progress < 1;
             return (
               <li
                 key={it.n}
@@ -1864,9 +1851,7 @@ function SceneMemorial({ progress }: { progress: number; format: Format }) {
                     {it.crit}
                   </span>
                 </div>
-                <div className="mt-1 text-sm font-medium text-white">
-                  {it.label}
-                </div>
+                <div className="mt-1 text-sm font-medium text-white">{it.label}</div>
                 <div className="mt-1 flex items-center gap-3 text-[10px] text-white/50">
                   <span className="font-mono">{it.nr}</span>
                   <span>·</span>
@@ -1929,12 +1914,8 @@ function ReportPage({ page }: { page: number }) {
           <span>Relatório · ValeTech IA</span>
           <span>Página 1 / 4</span>
         </div>
-        <div className="mt-4 font-display text-xl font-bold">
-          Inspeção Executiva de Segurança
-        </div>
-        <div className="text-xs text-slate-500">
-          Vale · Mina S11D · Correia CR-104
-        </div>
+        <div className="mt-4 font-display text-xl font-bold">Inspeção Executiva de Segurança</div>
+        <div className="text-xs text-slate-500">Vale · Mina S11D · Correia CR-104</div>
         <div className="mt-3 grid flex-1 grid-cols-2 gap-2">
           <div className="rounded bg-slate-100" />
           <div className="rounded bg-slate-100" />
@@ -2051,11 +2032,7 @@ function SceneAntesExecutado({ progress }: { progress: number; format: Format })
               strokeDasharray="10 6"
             />
             {[380, 445, 510, 575, 640].map((cx) => (
-              <polygon
-                key={cx}
-                points={`${cx},340 ${cx - 10},365 ${cx + 10},365`}
-                fill="#f97316"
-              />
+              <polygon key={cx} points={`${cx},340 ${cx - 10},365 ${cx + 10},365`} fill="#f97316" />
             ))}
             <path
               d="M 40 420 L 300 420 L 300 380 L 380 380"
@@ -2125,9 +2102,7 @@ function SceneHistorico({ progress }: { progress: number; format: Format }) {
   return (
     <div className="absolute inset-0 flex gap-4 p-6 md:p-12">
       <Glass className="w-full max-w-xs p-5">
-        <div className="text-[10px] uppercase tracking-[0.4em] text-neon/80">
-          Histórico
-        </div>
+        <div className="text-[10px] uppercase tracking-[0.4em] text-neon/80">Histórico</div>
         <ul className="mt-4 space-y-1">
           {revs.map((r, i) => {
             const t = fadeIn(progress, i * 0.15, 0.2);
@@ -2176,11 +2151,7 @@ function SceneHistorico({ progress }: { progress: number; format: Format }) {
         </div>
         <div className="mt-4 space-y-1.5">
           {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className="h-2 rounded bg-white/10"
-              style={{ width: `${90 - i * 20}%` }}
-            />
+            <div key={i} className="h-2 rounded bg-white/10" style={{ width: `${90 - i * 20}%` }} />
           ))}
         </div>
       </Glass>
@@ -2228,9 +2199,7 @@ function SceneIndicadores({ progress }: { progress: number; format: Format }) {
 
       {/* Donut áreas críticas */}
       <Glass className="p-5">
-        <div className="text-[10px] uppercase tracking-[0.4em] text-neon/80">
-          Áreas críticas
-        </div>
+        <div className="text-[10px] uppercase tracking-[0.4em] text-neon/80">Áreas críticas</div>
         <div className="mt-3 flex items-center justify-center">
           <svg width="140" height="140" viewBox="0 0 100 100">
             {[
@@ -2264,9 +2233,7 @@ function SceneIndicadores({ progress }: { progress: number; format: Format }) {
 
       {/* Stats */}
       <Glass className="p-5">
-        <div className="text-[10px] uppercase tracking-[0.4em] text-neon/80">
-          Tempo médio
-        </div>
+        <div className="text-[10px] uppercase tracking-[0.4em] text-neon/80">Tempo médio</div>
         <div className="mt-2 font-display text-4xl font-black text-white">
           4,2 <span className="text-lg text-white/50">dias</span>
         </div>
@@ -2278,9 +2245,7 @@ function SceneIndicadores({ progress }: { progress: number; format: Format }) {
         <div className="text-[10px] uppercase tracking-[0.4em] text-neon/80">
           Correções executadas
         </div>
-        <div className="mt-2 font-display text-4xl font-black text-white">
-          312
-        </div>
+        <div className="mt-2 font-display text-4xl font-black text-white">312</div>
         <div className="mt-1 text-[11px] text-white/60">
           Pendências: <span className="text-amber-300">37</span>
         </div>
@@ -2288,9 +2253,7 @@ function SceneIndicadores({ progress }: { progress: number; format: Format }) {
 
       {/* Linha evolução */}
       <Glass className="col-span-2 p-5">
-        <div className="text-[10px] uppercase tracking-[0.4em] text-neon/80">
-          Evolução mensal
-        </div>
+        <div className="text-[10px] uppercase tracking-[0.4em] text-neon/80">Evolução mensal</div>
         <svg viewBox="0 0 300 100" className="mt-2 h-24 w-full">
           <polyline
             points="0,80 40,70 80,55 120,45 160,50 200,30 240,20 300,10"
@@ -2322,21 +2285,36 @@ function SceneIndicadores({ progress }: { progress: number; format: Format }) {
 // ==========================================================
 function SceneExportacoes({ progress }: { progress: number; format: Format }) {
   const exports = [
-    { label: "PDF Executivo", icon: FileDown, color: "text-red-300", bg: "from-red-500/20 to-transparent" },
+    {
+      label: "PDF Executivo",
+      icon: FileDown,
+      color: "text-red-300",
+      bg: "from-red-500/20 to-transparent",
+    },
     { label: "PNG", icon: FileImage, color: "text-sky-300", bg: "from-sky-500/20 to-transparent" },
-    { label: "Excel", icon: FileSpreadsheet, color: "text-emerald-300", bg: "from-emerald-500/20 to-transparent" },
-    { label: "Checklist", icon: ClipboardList, color: "text-yellow-300", bg: "from-yellow-500/20 to-transparent" },
-    { label: "Projeto Executivo", icon: LayoutGrid, color: "text-violet-300", bg: "from-violet-500/20 to-transparent" },
+    {
+      label: "Excel",
+      icon: FileSpreadsheet,
+      color: "text-emerald-300",
+      bg: "from-emerald-500/20 to-transparent",
+    },
+    {
+      label: "Checklist",
+      icon: ClipboardList,
+      color: "text-yellow-300",
+      bg: "from-yellow-500/20 to-transparent",
+    },
+    {
+      label: "Projeto Executivo",
+      icon: LayoutGrid,
+      color: "text-violet-300",
+      bg: "from-violet-500/20 to-transparent",
+    },
   ];
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center p-6 md:p-12">
-      <div
-        className="text-center"
-        style={{ opacity: fadeIn(progress, 0, 0.2) }}
-      >
-        <div className="text-[10px] uppercase tracking-[0.4em] text-neon/80">
-          Exportações
-        </div>
+      <div className="text-center" style={{ opacity: fadeIn(progress, 0, 0.2) }}>
+        <div className="text-[10px] uppercase tracking-[0.4em] text-neon/80">Exportações</div>
         <div className="mt-1 font-display text-3xl font-bold text-white md:text-5xl">
           Tudo pronto em um clique
         </div>
@@ -2386,15 +2364,10 @@ function SceneGestao({ progress }: { progress: number; format: Format }) {
   ];
   return (
     <div className="absolute inset-0 flex flex-col p-6 md:p-12">
-      <div
-        className="flex items-center gap-3"
-        style={{ opacity: fadeIn(progress, 0, 0.2) }}
-      >
+      <div className="flex items-center gap-3" style={{ opacity: fadeIn(progress, 0, 0.2) }}>
         <Filter className="h-5 w-5 text-neon" />
         <div>
-          <div className="text-[10px] uppercase tracking-[0.4em] text-neon/80">
-            Gestão
-          </div>
+          <div className="text-[10px] uppercase tracking-[0.4em] text-neon/80">Gestão</div>
           <div className="font-display text-2xl font-bold text-white md:text-3xl">
             Filtros e governança
           </div>
@@ -2437,18 +2410,18 @@ function SceneGestao({ progress }: { progress: number; format: Format }) {
                 className="grid grid-cols-6 items-center gap-2 rounded-md border border-white/5 bg-white/[0.02] px-2 py-2 text-xs text-white/80"
                 style={{ opacity: t, transform: `translateX(${(1 - t) * -10}px)` }}
               >
-                <span className="font-mono text-white/50">
-                  #{2101 + i}
-                </span>
+                <span className="font-mono text-white/50">#{2101 + i}</span>
                 <span className="col-span-2 truncate">
-                  {[
-                    "Correia CR-104 · fiação exposta",
-                    "Silo S-07 · guarda-corpo",
-                    "Pátio B · rota obstruída",
-                    "Oficina · piso molhado",
-                    "Portaria · sinalização",
-                    "Túnel L2 · linha de vida",
-                  ][i]}
+                  {
+                    [
+                      "Correia CR-104 · fiação exposta",
+                      "Silo S-07 · guarda-corpo",
+                      "Pátio B · rota obstruída",
+                      "Oficina · piso molhado",
+                      "Portaria · sinalização",
+                      "Túnel L2 · linha de vida",
+                    ][i]
+                  }
                 </span>
                 <span className="text-white/70">
                   {["Logística", "Processo", "Pátio", "Manut.", "Adm.", "Túneis"][i]}
@@ -2492,17 +2465,10 @@ function SceneEncerramento({ progress }: { progress: number; format: Format }) {
           <div className="absolute inset-0 animate-pulse rounded-full bg-neon/20 blur-2xl" />
           <div className="h-9 w-9 rounded-full bg-neon shadow-[0_0_60px_rgba(72,255,120,0.9)]" />
         </div>
-        <h2 className="font-display text-5xl font-black md:text-7xl">
-          ValeTech IA
-        </h2>
+        <h2 className="font-display text-5xl font-black md:text-7xl">ValeTech IA</h2>
       </div>
-      <div
-        className="mt-6 max-w-2xl text-center"
-        style={{ opacity: t2 }}
-      >
-        <p className="text-lg text-white/80 md:text-2xl">
-          Muito mais do que inspeções.
-        </p>
+      <div className="mt-6 max-w-2xl text-center" style={{ opacity: t2 }}>
+        <p className="text-lg text-white/80 md:text-2xl">Muito mais do que inspeções.</p>
         <p className="mt-1 text-sm text-white/60 md:text-lg">
           Transformamos fotografias em projetos executivos.
         </p>
@@ -2520,12 +2486,9 @@ function SceneEncerramento({ progress }: { progress: number; format: Format }) {
           </span>
         ))}
       </div>
-      <div
-        className="mt-8 flex flex-col items-center gap-2"
-        style={{ opacity: t4 }}
-      >
+      <div className="mt-8 flex flex-col items-center gap-2" style={{ opacity: t4 }}>
         <div className="text-xs uppercase tracking-[0.4em] text-white/50">
-          www.valetech.ai
+          visionai.dvdswap.com.br
         </div>
         <div className="rounded-full bg-neon px-6 py-2.5 text-sm font-bold text-black shadow-[0_0_30px_rgba(72,255,120,0.4)]">
           Solicite uma demonstração
@@ -2539,19 +2502,9 @@ function SceneEncerramento({ progress }: { progress: number; format: Format }) {
 // Cenário industrial — foto real (asset)
 // ==========================================================
 
-
-function IndustrialScene({
-  opacity = 1,
-  clean = false,
-}: {
-  opacity?: number;
-  clean?: boolean;
-}) {
+function IndustrialScene({ opacity = 1, clean = false }: { opacity?: number; clean?: boolean }) {
   return (
-    <div
-      className="absolute inset-0 h-full w-full overflow-hidden"
-      style={{ opacity }}
-    >
+    <div className="absolute inset-0 h-full w-full overflow-hidden" style={{ opacity }}>
       <img
         src={cenaRealAsset.url}
         alt="Cena industrial real"
@@ -2564,13 +2517,10 @@ function IndustrialScene({
       />
       {/* Leve gradiente para integrar com o tema escuro */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/40" />
-      {clean && (
-        <div className="pointer-events-none absolute inset-0 bg-emerald-500/5" />
-      )}
+      {clean && <div className="pointer-events-none absolute inset-0 bg-emerald-500/5" />}
     </div>
   );
 }
-
 
 function MiniIndustrial({ hue }: { hue: number }) {
   const cols = ["#1e2a3a", "#2a1e2a", "#1e2a1e"];

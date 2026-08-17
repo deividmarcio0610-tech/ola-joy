@@ -54,7 +54,10 @@ export function BeforeAfterCompare({
     <Card>
       <CardContent className="space-y-3 p-4">
         {simulated && (
-          <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300">
+          <Badge
+            variant="outline"
+            className="border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+          >
             Imagem ilustrativa — não constitui evidência de execução.
           </Badge>
         )}
@@ -69,9 +72,7 @@ export function BeforeAfterCompare({
           <Badge variant="secondary">
             Risco eliminado: {comparison.risco_eliminado ? "sim" : "não"}
           </Badge>
-          {comparison.necessita_nova_acao && (
-            <Badge variant="destructive">Requer nova ação</Badge>
-          )}
+          {comparison.necessita_nova_acao && <Badge variant="destructive">Requer nova ação</Badge>}
         </div>
 
         <div>

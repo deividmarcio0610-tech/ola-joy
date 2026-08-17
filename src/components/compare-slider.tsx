@@ -44,7 +44,12 @@ export function CompareSlider({
       onTouchMove={(e) => dragging.current && onMove(e.touches[0].clientX)}
       onTouchEnd={() => (dragging.current = false)}
     >
-      <img src={afterSrc} alt={afterLabel} className="block w-full object-cover" draggable={false} />
+      <img
+        src={afterSrc}
+        alt={afterLabel}
+        className="block w-full object-cover"
+        draggable={false}
+      />
       <img
         src={beforeSrc}
         alt={beforeLabel}

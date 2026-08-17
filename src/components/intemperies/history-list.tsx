@@ -32,12 +32,22 @@ export function HistoryList({ locationId }: { locationId: string | null }) {
         setLoading(false);
       }
     })();
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, [locationId]);
 
   if (!locationId) return <div className="text-xs text-muted-foreground">Selecione um local.</div>;
-  if (loading) return <div className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" /> Carregando histórico…</div>;
-  if (!items.length) return <div className="text-xs text-muted-foreground">Nenhum evento registrado para este local.</div>;
+  if (loading)
+    return (
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Carregando histórico…
+      </div>
+    );
+  if (!items.length)
+    return (
+      <div className="text-xs text-muted-foreground">Nenhum evento registrado para este local.</div>
+    );
 
   return (
     <div className="space-y-2">
@@ -47,13 +57,20 @@ export function HistoryList({ locationId }: { locationId: string | null }) {
             <ClipboardList className="h-3.5 w-3.5 text-muted-foreground" />
             <span className="uppercase tracking-wide text-muted-foreground">{a.severity}</span>
             <span className="text-muted-foreground">·</span>
-            <span className="text-muted-foreground">{new Date(a.created_at).toLocaleString("pt-BR")}</span>
+            <span className="text-muted-foreground">
+              {new Date(a.created_at).toLocaleString("pt-BR")}
+            </span>
           </div>
           <div className="mt-1 text-sm font-semibold text-foreground">{a.title}</div>
           {a.message && <div className="text-xs text-foreground/70">{a.message}</div>}
           {a.decision && (
             <div className="mt-1 rounded border border-neon/40 bg-neon/5 px-2 py-1 text-[11px]">
-              <b>Decisão:</b> {a.decision} {a.decided_at && <span className="text-muted-foreground">({new Date(a.decided_at).toLocaleString("pt-BR")})</span>}
+              <b>Decisão:</b> {a.decision}{" "}
+              {a.decided_at && (
+                <span className="text-muted-foreground">
+                  ({new Date(a.decided_at).toLocaleString("pt-BR")})
+                </span>
+              )}
             </div>
           )}
         </div>

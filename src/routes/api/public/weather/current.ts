@@ -21,8 +21,11 @@ const CACHE = new Map<string, CacheEntry>();
 const IN_FLIGHT = new Map<string, Promise<unknown>>();
 const RATE_LIMIT_UNTIL = new Map<string, number>();
 
-const FRESH_MS = 90_000;       // 90s: dedup e cache "fresco"
-const STALE_MS = 30 * 60_000;  // 30min: janela de fallback com dado antigo
+const FRESH_MS = 90_000; // 90s: dedup e cache "fresco"
+const STALE_MS = 30 * 60_000; // 30min: janela de fallback com dado antigo
+
+// Marca erros de entrada para responder 400 em vez de 502 (falha do provedor).
+class BadRequestError extends Error {}
 
 function cacheKey(lat: number, lon: number) {
   return `${lat.toFixed(3)}:${lon.toFixed(3)}`;
@@ -60,21 +63,55 @@ async function fetchOpenMeteo(latitude: number, longitude: number): Promise<unkn
     timezone: "auto",
     forecast_days: "7",
     current: [
-      "temperature_2m","relative_humidity_2m","apparent_temperature","is_day",
-      "precipitation","rain","showers","weather_code","cloud_cover","pressure_msl",
-      "surface_pressure","wind_speed_10m","wind_direction_10m","wind_gusts_10m",
+      "temperature_2m",
+      "relative_humidity_2m",
+      "apparent_temperature",
+      "is_day",
+      "precipitation",
+      "rain",
+      "showers",
+      "weather_code",
+      "cloud_cover",
+      "pressure_msl",
+      "surface_pressure",
+      "wind_speed_10m",
+      "wind_direction_10m",
+      "wind_gusts_10m",
     ].join(","),
     hourly: [
-      "temperature_2m","relative_humidity_2m","apparent_temperature","precipitation_probability",
-      "precipitation","rain","showers","weather_code","cloud_cover","visibility",
-      "wind_speed_10m","wind_direction_10m","wind_gusts_10m","uv_index",
-      "cape","lifted_index",
+      "temperature_2m",
+      "relative_humidity_2m",
+      "apparent_temperature",
+      "precipitation_probability",
+      "precipitation",
+      "rain",
+      "showers",
+      "weather_code",
+      "cloud_cover",
+      "visibility",
+      "wind_speed_10m",
+      "wind_direction_10m",
+      "wind_gusts_10m",
+      "uv_index",
+      "cape",
+      "lifted_index",
     ].join(","),
     models: "best_match",
     daily: [
-      "weather_code","temperature_2m_max","temperature_2m_min","apparent_temperature_max",
-      "apparent_temperature_min","sunrise","sunset","uv_index_max","precipitation_sum",
-      "rain_sum","showers_sum","precipitation_probability_max","wind_speed_10m_max","wind_gusts_10m_max",
+      "weather_code",
+      "temperature_2m_max",
+      "temperature_2m_min",
+      "apparent_temperature_max",
+      "apparent_temperature_min",
+      "sunrise",
+      "sunset",
+      "uv_index_max",
+      "precipitation_sum",
+      "rain_sum",
+      "showers_sum",
+      "precipitation_probability_max",
+      "wind_speed_10m_max",
+      "wind_gusts_10m_max",
     ].join(","),
   });
 
@@ -115,9 +152,12 @@ function buildResponsePayload(
   longitude: number,
   data: {
     timezone?: string;
-    current?: unknown; current_units?: unknown;
-    hourly?: unknown; hourly_units?: unknown;
-    daily?: unknown; daily_units?: unknown;
+    current?: unknown;
+    current_units?: unknown;
+    hourly?: unknown;
+    hourly_units?: unknown;
+    daily?: unknown;
+    daily_units?: unknown;
   },
   meta: { fetchedAt: string; responseMs: number; stale?: boolean; staleReason?: string },
 ) {
@@ -147,8 +187,10 @@ export const Route = createFileRoute("/api/public/weather/current")({
           const url = new URL(request.url);
           const latitude = Number(url.searchParams.get("latitude"));
           const longitude = Number(url.searchParams.get("longitude"));
-          if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90) throw new Error("latitude inválida");
-          if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) throw new Error("longitude inválida");
+          if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90)
+            throw new BadRequestError("latitude inválida");
+          if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180)
+            throw new BadRequestError("longitude inválida");
 
           const key = cacheKey(latitude, longitude);
           const cached = CACHE.get(key);
@@ -163,7 +205,11 @@ export const Route = createFileRoute("/api/public/weather/current")({
             });
             return new Response(JSON.stringify(payload), {
               status: 200,
-              headers: { ...cors, "Content-Type": "application/json", "Cache-Control": "public, max-age=30" },
+              headers: {
+                ...cors,
+                "Content-Type": "application/json",
+                "Cache-Control": "public, max-age=30",
+              },
             });
           }
 
@@ -183,7 +229,11 @@ export const Route = createFileRoute("/api/public/weather/current")({
             });
             return new Response(JSON.stringify(payload), {
               status: 200,
-              headers: { ...cors, "Content-Type": "application/json", "Cache-Control": "public, max-age=30" },
+              headers: {
+                ...cors,
+                "Content-Type": "application/json",
+                "Cache-Control": "public, max-age=30",
+              },
             });
           } catch (err) {
             // 3) Falhou o provedor. Se temos dado antigo dentro da janela stale, servimos com aviso.
@@ -200,24 +250,34 @@ export const Route = createFileRoute("/api/public/weather/current")({
               });
               return new Response(JSON.stringify(payload), {
                 status: 200,
-                headers: { ...cors, "Content-Type": "application/json", "Cache-Control": "no-store" },
+                headers: {
+                  ...cors,
+                  "Content-Type": "application/json",
+                  "Cache-Control": "no-store",
+                },
               });
             }
             throw err;
           }
         } catch (err) {
           const isRate = err instanceof Error && err.message === "RATE_LIMITED";
+          const isBadRequest = err instanceof BadRequestError;
           return new Response(
             JSON.stringify({
               success: false,
               provider: "open-meteo",
               error: isRate
                 ? "O serviço meteorológico atingiu temporariamente o limite de consultas. Os últimos dados válidos continuam disponíveis. Nova tentativa será realizada automaticamente."
-                : err instanceof Error ? err.message : "Erro desconhecido",
+                : err instanceof Error
+                  ? err.message
+                  : "Erro desconhecido",
               rateLimited: isRate,
               fetchedAt: new Date().toISOString(),
             }),
-            { status: isRate ? 429 : 502, headers: { ...cors, "Content-Type": "application/json" } },
+            {
+              status: isRate ? 429 : isBadRequest ? 400 : 502,
+              headers: { ...cors, "Content-Type": "application/json" },
+            },
           );
         }
       },

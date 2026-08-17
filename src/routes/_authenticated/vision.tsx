@@ -16,7 +16,11 @@ import { exportVisionReportPdf } from "@/lib/vision-pdf";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { EquipAreaFields, emptyEquipArea, equipAreaPromptSuffix } from "@/components/equip-area-fields";
+import {
+  EquipAreaFields,
+  emptyEquipArea,
+  equipAreaPromptSuffix,
+} from "@/components/equip-area-fields";
 import { toast } from "sonner";
 import { chamarIrisChat } from "@/lib/iris-analyze";
 import { handleAiError } from "@/lib/ai-credits-error";
@@ -25,8 +29,12 @@ export const Route = createFileRoute("/_authenticated/vision")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "VALETECH · Vision AI IA" },
-      { name: "description", content: "Scanner 5S com IA. Aponte a câmera, analise riscos e receba plano de ação em segundos." },
+      { title: "VisionGuard AI · Vision AI IA" },
+      {
+        name: "description",
+        content:
+          "Scanner 5S com IA. Aponte a câmera, analise riscos e receba plano de ação em segundos.",
+      },
     ],
   }),
   component: VisionScan,
@@ -40,7 +48,10 @@ type Detection = {
   correction: string;
   confidence: number; // 0-100
   // bounding box in %
-  x: number; y: number; w: number; h: number;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
 };
 type Report = {
   score: number; // 0-100
@@ -66,10 +77,17 @@ function VisionScan() {
     async function start() {
       try {
         const s = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 1280 } },
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1280 },
+            height: { ideal: 1280 },
+          },
           audio: false,
         });
-        if (cancelled) { s.getTracks().forEach((t) => t.stop()); return; }
+        if (cancelled) {
+          s.getTracks().forEach((t) => t.stop());
+          return;
+        }
         streamRef.current = s;
         if (videoRef.current) {
           videoRef.current.srcObject = s;
@@ -121,7 +139,10 @@ function VisionScan() {
           {
             role: "user",
             content: [
-              { type: "text", text: "Analise esta cena operacional 5S." + equipAreaPromptSuffix(ctx) },
+              {
+                type: "text",
+                text: "Analise esta cena operacional 5S." + equipAreaPromptSuffix(ctx),
+              },
               { type: "image_url", image_url: { url: img } },
             ],
           },
@@ -177,7 +198,9 @@ function VisionScan() {
             <span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 animate-pulse rounded-full bg-neon" />
           </div>
           <div className="leading-tight">
-            <div className="font-display text-[13px] font-semibold tracking-widest">VALETECH.</div>
+            <div className="font-display text-[13px] font-semibold tracking-widest">
+              VisionGuard AI.
+            </div>
             <div className="text-[9px] uppercase tracking-[0.25em] text-muted-foreground">
               Vision AI · IA
             </div>
@@ -196,7 +219,10 @@ function VisionScan() {
       <div className="relative flex-1 overflow-hidden px-3">
         <div
           className="relative h-full w-full overflow-hidden rounded-2xl border-2 border-neon"
-          style={{ boxShadow: "0 0 20px 2px oklch(0.87 0.27 145 / 0.35), inset 0 0 30px oklch(0.87 0.27 145 / 0.15)" }}
+          style={{
+            boxShadow:
+              "0 0 20px 2px oklch(0.87 0.27 145 / 0.35), inset 0 0 30px oklch(0.87 0.27 145 / 0.15)",
+          }}
         >
           {/* Video / snapshot */}
           {snapshot ? (
@@ -246,7 +272,9 @@ function VisionScan() {
           {phase === "result-overlay" && report && (
             <>
               <div className="absolute inset-x-0 top-0 flex items-center gap-2 bg-gradient-to-b from-black/80 to-transparent p-3">
-                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-neon text-primary-foreground">✓</div>
+                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-neon text-primary-foreground">
+                  ✓
+                </div>
                 <div className="font-display text-xs tracking-widest">
                   Análise concluída · <span className="text-neon">Score {report.score}/100</span>
                 </div>
@@ -357,8 +385,7 @@ function NavItem({
 }
 
 function Reticles() {
-  const cls =
-    "absolute h-5 w-5 border-neon";
+  const cls = "absolute h-5 w-5 border-neon";
   return (
     <>
       <span className={`${cls} left-2 top-2 border-l-2 border-t-2`} />
@@ -454,8 +481,7 @@ function ReportScreen({
           .upload(photo_path, blob, { contentType: "image/jpeg" });
         if (up.error) throw up.error;
       }
-      const risk_level =
-        report.score >= 70 ? "verde" : report.score >= 40 ? "amarelo" : "vermelho";
+      const risk_level = report.score >= 70 ? "verde" : report.score >= 40 ? "amarelo" : "vermelho";
       await supabase.from("inspections").insert({
         user_id: uid,
         area: "Vision AI",
@@ -484,7 +510,7 @@ function ReportScreen({
           </div>
           <div>
             <div className="font-display text-[12px] font-semibold tracking-widest">
-              VALETECH.
+              VisionGuard AI.
             </div>
             <div className="text-[8px] uppercase tracking-[0.25em] text-muted-foreground">
               Vision AI · IA
@@ -528,8 +554,7 @@ function ReportScreen({
             ] as const
           ).map(([k, l]) => {
             const v = report.s?.[k] ?? 0;
-            const color =
-              v >= 70 ? "bg-neon" : v >= 40 ? "bg-yellow-400" : "bg-red-500";
+            const color = v >= 70 ? "bg-neon" : v >= 40 ? "bg-yellow-400" : "bg-red-500";
             return (
               <div key={k} className="rounded-md border border-border bg-card/40 p-2">
                 <div className="mb-1 h-16 w-full items-end overflow-hidden rounded bg-black/60">
@@ -538,9 +563,7 @@ function ReportScreen({
                     style={{ height: `${clamp(v)}%`, marginTop: `${100 - clamp(v)}%` }}
                   />
                 </div>
-                <div className="font-display text-[10px] font-semibold text-foreground">
-                  {v}
-                </div>
+                <div className="font-display text-[10px] font-semibold text-foreground">{v}</div>
                 <div className="mt-0.5 truncate font-display text-[8px] tracking-widest text-muted-foreground">
                   {l}
                 </div>
@@ -565,8 +588,8 @@ function ReportScreen({
         </div>
 
         <p className="pb-2 text-[10px] italic text-muted-foreground">
-          AVISO: As ações propostas pela IA devem ser avaliadas e validadas pelos responsáveis
-          antes da execução.
+          AVISO: As ações propostas pela IA devem ser avaliadas e validadas pelos responsáveis antes
+          da execução.
         </p>
       </div>
 

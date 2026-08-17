@@ -75,7 +75,7 @@ const system = [
   { title: "Configurações", url: "/configuracoes", icon: Settings },
 ];
 
-export function ValetechSidebar() {
+export function VisionGuardSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (r) => r.location.pathname });
@@ -91,8 +91,7 @@ export function ValetechSidebar() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  const isActive = (url: string) =>
-    pathname === url || pathname.startsWith(url + "/");
+  const isActive = (url: string) => pathname === url || pathname.startsWith(url + "/");
 
   async function handleSignOut() {
     await qc.cancelQueries();
@@ -145,7 +144,7 @@ export function ValetechSidebar() {
           {!collapsed && (
             <div className="flex flex-col leading-tight">
               <span className="font-display text-sm font-semibold tracking-widest text-foreground">
-                VALETECH
+                VisionGuard AI
               </span>
               <span className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
                 Vision AI

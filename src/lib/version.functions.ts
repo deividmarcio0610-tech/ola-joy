@@ -32,9 +32,7 @@ export const getLatestVersion = createServerFn({ method: "GET" })
     if (!data) return null;
     return {
       ...data,
-      release_notes: Array.isArray(data.release_notes)
-        ? (data.release_notes as string[])
-        : [],
+      release_notes: Array.isArray(data.release_notes) ? (data.release_notes as string[]) : [],
     } as AppVersion;
   });
 
@@ -51,9 +49,7 @@ export const listVersions = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return (data ?? []).map((d) => ({
       ...d,
-      release_notes: Array.isArray(d.release_notes)
-        ? (d.release_notes as string[])
-        : [],
+      release_notes: Array.isArray(d.release_notes) ? (d.release_notes as string[]) : [],
     })) as AppVersion[];
   });
 
@@ -64,17 +60,15 @@ export const recordInstall = createServerFn({ method: "POST" })
     z.object({ version: z.string().min(1), userAgent: z.string().optional() }).parse(data),
   )
   .handler(async ({ data, context }) => {
-    const { error } = await context.supabase
-      .from("app_version_installs")
-      .upsert(
-        {
-          user_id: context.userId,
-          version: data.version,
-          user_agent: data.userAgent ?? null,
-          last_seen_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id" },
-      );
+    const { error } = await context.supabase.from("app_version_installs").upsert(
+      {
+        user_id: context.userId,
+        version: data.version,
+        user_agent: data.userAgent ?? null,
+        last_seen_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" },
+    );
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -119,19 +113,18 @@ export const createVersion = createServerFn({ method: "POST" })
 export const updateVersion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
-    z.object({
-      id: z.string().uuid(),
-      is_active: z.boolean().optional(),
-      is_mandatory: z.boolean().optional(),
-      rollout_percent: z.number().int().min(0).max(100).optional(),
-    }).parse(data),
+    z
+      .object({
+        id: z.string().uuid(),
+        is_active: z.boolean().optional(),
+        is_mandatory: z.boolean().optional(),
+        rollout_percent: z.number().int().min(0).max(100).optional(),
+      })
+      .parse(data),
   )
   .handler(async ({ data, context }) => {
     const { id, ...patch } = data;
-    const { error } = await context.supabase
-      .from("app_versions")
-      .update(patch)
-      .eq("id", id);
+    const { error } = await context.supabase.from("app_versions").update(patch).eq("id", id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });

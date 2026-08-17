@@ -6,7 +6,13 @@ export function IconSvg({ k, color = "#111" }: { k: IconKey; color?: string }) {
   const stroke = color;
   const fill = "none";
   const sw = 6;
-  const common = { stroke, fill, strokeWidth: sw, strokeLinejoin: "round" as const, strokeLinecap: "round" as const };
+  const common = {
+    stroke,
+    fill,
+    strokeWidth: sw,
+    strokeLinejoin: "round" as const,
+    strokeLinecap: "round" as const,
+  };
   switch (k) {
     case "cone":
       return (

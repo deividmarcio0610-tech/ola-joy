@@ -19,7 +19,7 @@ export async function logAudit(
     module?: string;
     targetId?: string;
     metadata?: Record<string, unknown>;
-  } = {}
+  } = {},
 ) {
   try {
     const { data } = await supabase.auth.getUser();

@@ -20,7 +20,6 @@ import { GainFormDialog } from "./gain-form-dialog";
 import { analisarComIris, toReadableReport, urlToDataUrl } from "@/lib/iris-analyze";
 import { handleAiError } from "@/lib/ai-credits-error";
 
-
 export type ModuleKey =
   | "n3"
   | "kaizen"
@@ -176,7 +175,11 @@ export function RecordModule({
             {records.map((r) => (
               <li key={r.id} className="flex items-start gap-4 p-4">
                 {r.photo_url && (
-                  <img src={r.photo_url} alt="" className="h-20 w-20 shrink-0 rounded-md border border-border object-cover" />
+                  <img
+                    src={r.photo_url}
+                    alt=""
+                    className="h-20 w-20 shrink-0 rounded-md border border-border object-cover"
+                  />
                 )}
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center gap-2">
@@ -214,7 +217,6 @@ export function RecordModule({
                   </div>
                 </div>
                 <div className="flex flex-col gap-1">
-                  
                   {moduleKey !== "gain" && <RegisterGainButton record={r} />}
                   <Button
                     variant="ghost"
@@ -226,7 +228,6 @@ export function RecordModule({
                     <Trash2 className="h-4 w-4 text-muted-foreground hover:text-red-400" />
                   </Button>
                 </div>
-
               </li>
             ))}
           </ul>
@@ -236,20 +237,10 @@ export function RecordModule({
   );
 }
 
-function Kpi({
-  label,
-  value,
-  highlight,
-}: {
-  label: string;
-  value: number;
-  highlight?: boolean;
-}) {
+function Kpi({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) {
   return (
     <div className="rounded-lg border border-border bg-card/60 p-3">
-      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-        {label}
-      </div>
+      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
       <div
         className={`mt-1 font-display text-xl font-semibold ${highlight ? "text-neon" : "text-foreground"}`}
       >
@@ -258,7 +249,6 @@ function Kpi({
     </div>
   );
 }
-
 
 type RecordRow = {
   id: string;
@@ -274,7 +264,6 @@ type RecordRow = {
   equipment: string | null;
   created_at: string;
 };
-
 
 const MODULE_LABEL: Record<ModuleKey, string> = {
   n3: "N3 – Não Conformidade",
@@ -301,7 +290,7 @@ function IrisAnalyzeButton({ record, moduleKey }: { record: RecordRow; moduleKey
           "Este registro não tem foto anexada. A análise externa da IA exige uma imagem.",
         );
         setAnalysis(
-          "Sem foto anexada — a análise externa (Gemini) requer uma imagem para operar. Anexe uma foto ao registro para reanalisar.",
+          "Sem foto anexada — a análise de IA (Ollama/VPS) requer uma imagem. Anexe uma foto ao registro para reanalisar.",
         );
         return;
       }
@@ -346,7 +335,9 @@ Prioridade: ${record.priority}`;
             <Sparkles className="h-4 w-4 text-neon" />
             Análise IA — {record.title}
           </DialogTitle>
-          <DialogDescription>Diagnóstico técnico e plano de ação sugerido pela IA.</DialogDescription>
+          <DialogDescription>
+            Diagnóstico técnico e plano de ação sugerido pela IA.
+          </DialogDescription>
         </DialogHeader>
         <div className="max-h-[60vh] overflow-y-auto rounded-lg border border-border bg-card/40 p-4 text-sm">
           {loading ? (
@@ -390,9 +381,9 @@ function IrisModuleAnalyzeButton({
       const withPhoto = records.find((r) => r.photo_url);
       if (!withPhoto?.photo_url) {
         setAnalysis(
-          `PANORAMA GERAL\nMódulo ${MODULE_LABEL[moduleKey]} — ${records.length} registro(s), ${records.filter(
-            (r) => r.status === "aberto",
-          ).length} aberto(s), ${records.filter((r) => r.priority === "critica").length} crítico(s).\n\nOBSERVAÇÃO\nA análise externa (Gemini) exige uma imagem. Abra um registro com foto e use “Analisar com IA” no card para obter o parecer detalhado.\n\nAVISO: As ações propostas pela IA devem ser avaliadas e validadas pelos responsáveis antes da execução.`,
+          `PANORAMA GERAL\nMódulo ${MODULE_LABEL[moduleKey]} — ${records.length} registro(s), ${
+            records.filter((r) => r.status === "aberto").length
+          } aberto(s), ${records.filter((r) => r.priority === "critica").length} crítico(s).\n\nOBSERVAÇÃO\nA análise por IA (Ollama/VPS) exige uma imagem. Abra um registro com foto e use “Analisar com IA” no card para obter o parecer detalhado.\n\nAVISO: As ações propostas pela IA devem ser avaliadas e validadas pelos responsáveis antes da execução.`,
         );
         return;
       }
@@ -444,9 +435,7 @@ function IrisModuleAnalyzeButton({
               IA analisando módulo…
             </div>
           ) : analysis ? (
-            <div className="whitespace-pre-wrap leading-relaxed text-foreground">
-              {analysis}
-            </div>
+            <div className="whitespace-pre-wrap leading-relaxed text-foreground">{analysis}</div>
           ) : (
             <div className="text-muted-foreground">Preparando análise…</div>
           )}
@@ -494,5 +483,3 @@ function RegisterGainButton({ record }: { record: RecordRow }) {
     </>
   );
 }
-
-
