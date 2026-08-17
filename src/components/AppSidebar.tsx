@@ -48,16 +48,16 @@ export function AppSidebar() {
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center gap-2.5 px-2 py-2.5">
           {/* Logotipo tipográfico NEXUS: monograma com barra cyan. */}
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-primary/40 bg-primary/10 nexus-glow-cyan">
-            <span className="font-display text-sm font-bold text-primary">N</span>
+          <div className="nexus-glow-cyan flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-primary/40 bg-primary/10">
+            <span className="font-display text-sm font-bold text-primary">T4</span>
           </div>
           {!collapsed && (
             <div className="leading-tight">
               <p className="font-display text-sm font-bold tracking-[0.18em] text-foreground">
-                NEXUS
+                T4 EDGE
               </p>
               <p className="text-[9px] uppercase tracking-[0.22em] text-primary/80">
-                Trading Intelligence
+                Command Center
               </p>
             </div>
           )}

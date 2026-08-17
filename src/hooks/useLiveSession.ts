@@ -23,6 +23,7 @@ import {
 } from "@/lib/t4/diagnostics";
 import { createSignalSnapshot, type TradeSignalSnapshot } from "@/lib/t4/signalSnapshot";
 import { playConfirmationOnce } from "@/lib/t4/signalSound";
+import { printStore } from "@/lib/t4/printStore";
 import { analyze } from "@/lib/engines/analysisPipeline";
 import { READING_GATES, STRATEGY_VERSION } from "@/lib/engines/strategy";
 import type { AnalysisResult, Candle, ChatEntry, ReadingState } from "@/lib/engines/types";
@@ -498,6 +499,15 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
       if (priceTrustworthy && adjusted.internalConfirmation.capture.valid) {
         const detail = adjusted.internalConfirmation.capture.detail;
         if (detail.price !== null) {
+          // PRINT AUTOMÁTICO do evento real, carimbado com a hora DO GRÁFICO.
+          printStore.capture({
+            chartTime: adjusted.t,
+            asset,
+            kind: "SWEEP",
+            direction: adjusted.direction === "NEUTRO" ? null : adjusted.direction,
+            candleQuality: adjusted.reading.candleQuality,
+            zone: detail.side === "compradora" ? "LIQ. ACIMA" : "LIQ. ABAIXO",
+          });
           events.add({
             timestamp: adjusted.t,
             candleId: `${asset}:${adjusted.t}`,
@@ -519,6 +529,14 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
         adjusted.internalConfirmation.sms.confirmed &&
         adjusted.internalConfirmation.sms.brokenLevel !== null
       ) {
+        printStore.capture({
+          chartTime: adjusted.t,
+          asset,
+          kind: "CHOCH",
+          direction: adjusted.direction === "NEUTRO" ? null : adjusted.direction,
+          candleQuality: adjusted.reading.candleQuality,
+          zone: "ESTRUTURA",
+        });
         events.add({
           timestamp: adjusted.t,
           candleId: `${asset}:${adjusted.t}`,
@@ -535,6 +553,14 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
         });
       }
       if (priceTrustworthy && adjusted.mainPoi) {
+        printStore.capture({
+          chartTime: adjusted.t,
+          asset,
+          kind: "POI",
+          direction: adjusted.direction === "NEUTRO" ? null : adjusted.direction,
+          candleQuality: adjusted.reading.candleQuality,
+          zone: `POI ${adjusted.mainPoi.kind}`,
+        });
         events.add({
           timestamp: adjusted.t,
           candleId: `${asset}:${adjusted.t}`,
@@ -615,6 +641,22 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
                         ? "STOP_HIT"
                         : null;
           if (managementType) {
+            // Print do momento em que o preço BATEU cada nível da gestão.
+            printStore.capture({
+              chartTime: lastClosed.t,
+              asset,
+              kind:
+                managementType === "ENTRY_HIT"
+                  ? "GATILHO"
+                  : managementType === "PARTIAL_HIT"
+                    ? "PARCIAL"
+                    : managementType === "STOP_HIT" || managementType === "RUNNER_STOP"
+                      ? "STOP"
+                      : "ALVO",
+              direction: adjusted.direction === "NEUTRO" ? null : adjusted.direction,
+              candleQuality: adjusted.reading.candleQuality,
+              zone: progressed.status,
+            });
             screenRecordingManager.logEvent(managementType, lastClosed.t, {
               signalId: snapshotRef.current?.signalId ?? null,
               status: progressed.status,
@@ -742,6 +784,16 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
           });
           snapshotRef.current = snapshot;
           setSignalSnapshot(snapshot);
+          // Print da ENTRADA VALIDADA: o frame exato em que a técnica fechou
+          // 100% e a ordem simulada foi posicionada.
+          printStore.capture({
+            chartTime: snapshot.chartTimestamp,
+            asset,
+            kind: "ENTRADA VALIDADA",
+            direction: snapshot.direction,
+            candleQuality: adjusted.reading.candleQuality,
+            zone: snapshot.setup,
+          });
           // §8: alerta forte UMA vez por signalId, nunca por frame.
           playConfirmationOnce(snapshot.signalId, adjusted.direction, store.settings().sound);
           // §9: evento sincronizado (tempo real + tempo do gráfico) na gravação.
@@ -1206,6 +1258,13 @@ export function useLiveSession(asset: string, timeframeConfirmed: boolean) {
       segmentId: segmentIdRef.current,
       source: "LIVE",
       techniqueVersion: techniqueSnapshotRef.current,
+    });
+    printStore.capture({
+      chartTime: liveMarketClock.now().t,
+      asset,
+      kind: "SESSAO",
+      candleQuality: reconstructorRef.current.averageQuality(),
+      zone: "INÍCIO",
     });
     appendLog(
       `Sessão iniciada com ${seeded.accepted} candle(s) reais extraídos da janela. O candle em formação nunca entra na decisão.`,

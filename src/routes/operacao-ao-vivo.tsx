@@ -4,6 +4,10 @@ import { Bot, Play, Power, RotateCcw, ShieldAlert } from "lucide-react";
 
 import { AnalysisCockpit } from "@/components/analysis/AnalysisCockpit";
 import { useAnalyzer } from "@/components/analyzerContext";
+import { AutoPrintsPanel } from "@/components/edge/AutoPrintsPanel";
+import { OrderTicket } from "@/components/edge/OrderTicket";
+import { SessionEventsPanel } from "@/components/edge/SessionEventsPanel";
+import { TechniqueProgressBar } from "@/components/edge/TechniqueProgressBar";
 import { CaptureConsole } from "@/components/live/CaptureConsole";
 import { LivePreview } from "@/components/live/LivePreview";
 import { PipelineDiagnosticsCard } from "@/components/t4/PipelineDiagnosticsCard";
@@ -159,21 +163,41 @@ function LivePage() {
         onSwitchSource={() => void live.switchSourceAndStart()}
       />
 
-      {live.chart.status !== "sem-fonte" && (
-        <LivePreview
-          status={live.chart.status}
-          sourceLabel={live.chart.sourceLabel}
-          fps={live.chart.fps}
-          resolution={live.chart.resolution}
-          error={live.chart.error}
-          lastFrameAt={live.chart.lastFrameAt}
-          chartClockLabel={chartClockLabel}
-          priceInfo={live.priceInfo}
-          tickSize={live.calibration.tickSize}
-          decimals={live.calibration.decimals}
-          snapshot={live.signalSnapshot}
-        />
-      )}
+      {/* BARRA DA TÉCNICA — 0→100%; em 100% a ordem simulada é posicionada. */}
+      <TechniqueProgressBar progress={progress} snapshot={live.signalSnapshot} />
+
+      {/* COMMAND CENTER: gráfico capturado à esquerda, ordem/POI à direita. */}
+      <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="flex min-w-0 flex-col gap-3">
+          {live.chart.status !== "sem-fonte" && (
+            <LivePreview
+              status={live.chart.status}
+              sourceLabel={live.chart.sourceLabel}
+              fps={live.chart.fps}
+              resolution={live.chart.resolution}
+              error={live.chart.error}
+              lastFrameAt={live.chart.lastFrameAt}
+              chartClockLabel={chartClockLabel}
+              priceInfo={live.priceInfo}
+              tickSize={live.calibration.tickSize}
+              decimals={live.calibration.decimals}
+              snapshot={live.signalSnapshot}
+            />
+          )}
+          <AutoPrintsPanel />
+        </div>
+        <div className="flex flex-col gap-3">
+          <OrderTicket
+            progress={progress}
+            snapshot={live.signalSnapshot}
+            analysis={live.analysis}
+            operation={live.operation}
+            tickSize={live.calibration.tickSize}
+            decimals={live.calibration.decimals}
+          />
+          <SessionEventsPanel entries={live.chat} />
+        </div>
+      </div>
 
       <Card className="border-border/70 bg-panel p-3">
         <div className="flex flex-wrap items-start gap-3">

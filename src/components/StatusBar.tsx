@@ -25,9 +25,9 @@ export function StatusBar() {
 
   return (
     <div className="flex min-w-0 flex-1 items-center gap-3">
-      <span className="nexus-eyebrow shrink-0 text-primary/90">NEXUS TRADING INTELLIGENCE</span>
+      <span className="nexus-eyebrow shrink-0 text-primary/90">T4 EDGE COMMAND CENTER</span>
       <span className="nexus-eyebrow hidden min-w-0 truncate md:inline">
-        Plataforma de análise — sem execução automática de ordens
+        Sem execução automática de ordens
       </span>
       <span className="nexus-eyebrow hidden shrink-0 sm:inline">{STRATEGY_VERSION}</span>
       <span className="nexus-value ml-auto shrink-0 text-xs text-muted-foreground">{now}</span>
