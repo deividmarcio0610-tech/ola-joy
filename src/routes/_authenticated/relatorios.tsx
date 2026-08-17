@@ -1,434 +1,509 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { BarChart3, Loader2, FileDown, Sparkles } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import jsPDF from "jspdf";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { ModuleShell } from "@/components/module-shell";
-import { toast } from "sonner";
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
-} from "recharts";
+  BarChart3,
+  Download,
+  Loader2,
+  RefreshCw,
+  AlertTriangle,
+  Clock,
+  Gavel,
+  ListChecks,
+  CircleDashed,
+  Users,
+  Video,
+} from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { listMeetingSessions, type MeetingSession } from "@/lib/meetings.functions";
 
 export const Route = createFileRoute("/_authenticated/relatorios")({
-  head: () => ({ meta: [{ title: "Relatórios · VALETECH" }] }),
-  component: Reports,
+  component: RelatoriosPage,
 });
 
-const MODULE_LABEL: Record<string, string> = {
-  n3: "N3",
-  kaizen: "Kaizen",
-  environment: "Meio Amb.",
-  emergency: "Emergência",
-  supervision: "Supervisão",
-  crm: "CRM",
-  gain: "Ganhos",
-  inspecao: "Inspeção 5S",
-};
+type PeriodValue = "7" | "30" | "90" | "all";
 
-const COLORS = ["#3b82f6", "#eab308", "#22c55e", "#ef4444"];
+const PERIOD_OPTIONS: ReadonlyArray<{ value: PeriodValue; label: string; days: number | null }> = [
+  { value: "7", label: "Últimos 7 dias", days: 7 },
+  { value: "30", label: "Últimos 30 dias", days: 30 },
+  { value: "90", label: "Últimos 90 dias", days: 90 },
+  { value: "all", label: "Tudo", days: null },
+];
 
-type RecordRow = {
-  id: string;
-  module: string;
-  title: string | null;
-  description: string | null;
-  area: string | null;
-  location: string | null;
-  status: string;
-  priority: string;
-  financial_value: number | null;
-  photo_url: string | null;
-  created_at: string;
-  meta: Record<string, unknown> | null;
-};
-
-function Reports() {
-  const [building, setBuilding] = useState(false);
-
-  const { data, isLoading } = useQuery({
-    queryKey: ["reports-full"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("records")
-        .select(
-          "id, module, title, description, area, location, status, priority, financial_value, photo_url, created_at, meta",
-        )
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data as RecordRow[];
-    },
-  });
-
-  const byModule = new Map<string, number>();
-  const byStatus = new Map<string, number>();
-  const byPriority = new Map<string, number>();
-  let totalValor = 0;
-  data?.forEach((r) => {
-    byModule.set(r.module, (byModule.get(r.module) ?? 0) + 1);
-    byStatus.set(r.status, (byStatus.get(r.status) ?? 0) + 1);
-    byPriority.set(r.priority, (byPriority.get(r.priority) ?? 0) + 1);
-    if (r.financial_value) totalValor += Number(r.financial_value);
-  });
-
-  const moduleData = Array.from(byModule.entries()).map(([k, v]) => ({
-    name: MODULE_LABEL[k] ?? k,
-    total: v,
-  }));
-  const statusData = Array.from(byStatus.entries()).map(([k, v]) => ({ name: k, value: v }));
-
-  async function toDataUrl(url: string): Promise<string | null> {
-    try {
-      const res = await fetch(url);
-      const blob = await res.blob();
-      return await new Promise((resolve) => {
-        const r = new FileReader();
-        r.onload = () => resolve(r.result as string);
-        r.onerror = () => resolve(null);
-        r.readAsDataURL(blob);
-      });
-    } catch {
-      return null;
-    }
-  }
-
-  async function buildManagerialPdf() {
-    if (!data || data.length === 0) {
-      toast.error("Sem registros para gerar relatório.");
-      return;
-    }
-    setBuilding(true);
-    try {
-      const doc = new jsPDF({ unit: "pt", format: "a4" });
-      const pageW = doc.internal.pageSize.getWidth();
-      const pageH = doc.internal.pageSize.getHeight();
-      const margin = 40;
-
-      // === Capa ===
-      doc.setFillColor(0, 0, 0);
-      doc.rect(0, 0, pageW, pageH, "F");
-      doc.setTextColor(57, 255, 20);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(28);
-      doc.text("VALETECH", margin, 140);
-      doc.setFontSize(14);
-      doc.setTextColor(200, 200, 200);
-      doc.text("Relatório Gerencial · Modo Executivo", margin, 168);
-      doc.setFontSize(10);
-      doc.text(
-        `Emitido em ${new Date().toLocaleString("pt-BR")}`,
-        margin,
-        pageH - margin,
-      );
-      doc.setTextColor(57, 255, 20);
-      doc.setFontSize(11);
-      doc.text("Análise IA · Antes / Depois com IA", margin, pageH - margin - 18);
-
-      // === Indicadores ===
-      doc.addPage();
-      let y = margin;
-      doc.setTextColor(20, 20, 20);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(16);
-      doc.text("Indicadores Consolidados", margin, y);
-      y += 24;
-
-      const kpis: [string, string][] = [
-        ["Registros totais", String(data.length)],
-        [
-          "Concluídos",
-          String(data.filter((r) => r.status === "concluido").length),
-        ],
-        [
-          "Críticos",
-          String(data.filter((r) => r.priority === "critica").length),
-        ],
-        [
-          "Ganho consolidado",
-          `R$ ${totalValor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`,
-        ],
-      ];
-      const kpiW = (pageW - margin * 2 - 12) / 2;
-      kpis.forEach(([label, value], i) => {
-        const x = margin + (i % 2) * (kpiW + 12);
-        const yy = y + Math.floor(i / 2) * 70;
-        doc.setDrawColor(220, 220, 220);
-        doc.setFillColor(245, 245, 245);
-        doc.roundedRect(x, yy, kpiW, 58, 6, 6, "FD");
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        doc.setTextColor(90, 90, 90);
-        doc.text(label.toUpperCase(), x + 12, yy + 18);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(16);
-        doc.setTextColor(20, 20, 20);
-        doc.text(value, x + 12, yy + 42);
-      });
-      y += 160;
-
-      // Breakdown tables
-      const drawTable = (title: string, rows: [string, number][]) => {
-        if (y > pageH - 140) {
-          doc.addPage();
-          y = margin;
-        }
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(12);
-        doc.setTextColor(20, 20, 20);
-        doc.text(title, margin, y);
-        y += 14;
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-        rows.forEach(([k, v]) => {
-          doc.setDrawColor(230, 230, 230);
-          doc.line(margin, y + 4, pageW - margin, y + 4);
-          doc.text(k, margin, y);
-          doc.text(String(v), pageW - margin, y, { align: "right" });
-          y += 16;
-        });
-        y += 10;
-      };
-
-      drawTable(
-        "Registros por módulo",
-        Array.from(byModule.entries()).map(([k, v]) => [MODULE_LABEL[k] ?? k, v]),
-      );
-      drawTable("Distribuição por status", Array.from(byStatus.entries()));
-      drawTable("Distribuição por prioridade", Array.from(byPriority.entries()));
-
-      // === Detalhamento por registro ===
-      doc.addPage();
-      y = margin;
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(16);
-      doc.text("Detalhamento de Registros", margin, y);
-      y += 22;
-
-      // Order: critical first
-      const ordered = [...data].sort((a, b) => {
-        const rank: Record<string, number> = { critica: 0, alta: 1, media: 2, baixa: 3 };
-        return (rank[a.priority] ?? 9) - (rank[b.priority] ?? 9);
-      });
-
-      for (const r of ordered) {
-        const cardH = 210;
-        if (y + cardH > pageH - margin) {
-          doc.addPage();
-          y = margin;
-        }
-        doc.setDrawColor(220, 220, 220);
-        doc.setFillColor(250, 250, 250);
-        doc.roundedRect(margin, y, pageW - margin * 2, cardH, 6, 6, "FD");
-
-        // Header
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(11);
-        doc.setTextColor(20, 20, 20);
-        const title = r.title ?? "(sem título)";
-        doc.text(
-          doc.splitTextToSize(title, pageW - margin * 2 - 20)[0] ?? title,
-          margin + 10,
-          y + 18,
-        );
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(8);
-        doc.setTextColor(110, 110, 110);
-        doc.text(
-          `${(MODULE_LABEL[r.module] ?? r.module).toUpperCase()} · ${r.status.toUpperCase()} · Prioridade: ${r.priority}`,
-          margin + 10,
-          y + 32,
-        );
-
-        // Images
-        const imgW = 130;
-        const imgH = 100;
-        const imgY = y + 46;
-        const beforeX = margin + 10;
-        const afterX = beforeX + imgW + 10;
-        doc.setFontSize(7);
-        doc.setTextColor(90, 90, 90);
-        doc.text("ANTES", beforeX, imgY - 4);
-        doc.text("DEPOIS (IA)", afterX, imgY - 4);
-
-        const beforeUrl = r.photo_url ? await toDataUrl(r.photo_url) : null;
-        const afterUrlRaw = (r.meta as { after_url?: string } | null)?.after_url ?? null;
-        const afterUrl = afterUrlRaw ? await toDataUrl(afterUrlRaw) : null;
-
-        doc.setDrawColor(220, 220, 220);
-        doc.rect(beforeX, imgY, imgW, imgH);
-        doc.rect(afterX, imgY, imgW, imgH);
-        if (beforeUrl) {
-          try {
-            doc.addImage(beforeUrl, "JPEG", beforeX, imgY, imgW, imgH);
-          } catch {
-            /* ignore */
-          }
-        }
-        if (afterUrl) {
-          try {
-            doc.addImage(afterUrl, "PNG", afterX, imgY, imgW, imgH);
-          } catch {
-            /* ignore */
-          }
-        } else {
-          doc.setFontSize(7);
-          doc.setTextColor(150, 150, 150);
-          doc.text("(não gerado)", afterX + imgW / 2, imgY + imgH / 2, { align: "center" });
-        }
-
-        // Resumo lado direito
-        const infoX = afterX + imgW + 12;
-        const infoW = pageW - margin - infoX - 10;
-        doc.setFontSize(8);
-        doc.setTextColor(60, 60, 60);
-        const iris = (r.meta as { iris?: Record<string, string> } | null)?.iris ?? {};
-        const lines: string[] = [];
-        if (r.area) lines.push(`Área: ${r.area}`);
-        if (r.location) lines.push(`Local: ${r.location}`);
-        if (iris.equipment) lines.push(`Equipamento: ${iris.equipment}`);
-        if (iris.risk) lines.push(`Risco: ${iris.risk}`);
-        if (iris.immediate_action) lines.push(`Ação imediata: ${iris.immediate_action}`);
-        if (iris.final_action) lines.push(`Ação definitiva: ${iris.final_action}`);
-        if (iris.suggested_responsible)
-          lines.push(`Responsável: ${iris.suggested_responsible}`);
-        if (r.description) lines.push(`Descrição: ${r.description}`);
-        const wrapped = doc.splitTextToSize(lines.join("\n"), infoW);
-        doc.text(wrapped.slice(0, 12), infoX, imgY + 8);
-
-        // Footer date
-        doc.setFontSize(7);
-        doc.setTextColor(140, 140, 140);
-        doc.text(
-          new Date(r.created_at).toLocaleString("pt-BR"),
-          pageW - margin - 10,
-          y + cardH - 8,
-          { align: "right" },
-        );
-
-        y += cardH + 10;
-      }
-
-      doc.save(`valetech-gerencial-${Date.now()}.pdf`);
-      toast.success("PDF gerencial gerado.");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Falha ao gerar PDF.");
-    } finally {
-      setBuilding(false);
-    }
-  }
-
-  return (
-    <ModuleShell
-      icon={BarChart3}
-      title="Relatórios"
-      subtitle="Indicadores consolidados da plataforma."
-      status="operacional"
-    >
-      <div className="flex flex-wrap justify-end gap-2 print:hidden">
-        <Button
-          size="sm"
-          onClick={buildManagerialPdf}
-          disabled={building || isLoading}
-          className="gap-2"
-        >
-          {building ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Sparkles className="h-4 w-4" />
-          )}
-          PDF Gerencial (Antes/Depois)
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => window.print()}
-          className="gap-2"
-        >
-          <FileDown className="h-4 w-4" /> Imprimir visão
-        </Button>
-      </div>
-      {isLoading ? (
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Carregando…
-        </div>
-      ) : (
-        <>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <Kpi label="Registros totais" value={data?.length ?? 0} />
-            <Kpi
-              label="Concluídos"
-              value={data?.filter((r) => r.status === "concluido").length ?? 0}
-              highlight
-            />
-            <Kpi
-              label="Ganho consolidado"
-              value={`R$ ${totalValor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
-              highlight
-            />
-          </div>
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-xl border border-border bg-card/40 p-4">
-              <h3 className="mb-3 font-display text-sm font-semibold">Registros por módulo</h3>
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={moduleData}>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip contentStyle={{ background: "#0a0a0a", border: "1px solid #222" }} />
-                  <Bar dataKey="total" fill="#39ff14" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="rounded-xl border border-border bg-card/40 p-4">
-              <h3 className="mb-3 font-display text-sm font-semibold">Distribuição por status</h3>
-              <ResponsiveContainer width="100%" height={260}>
-                <PieChart>
-                  <Pie data={statusData} dataKey="value" nameKey="name" outerRadius={90}>
-                    {statusData.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Legend />
-                  <Tooltip contentStyle={{ background: "#0a0a0a", border: "1px solid #222" }} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </>
-      )}
-    </ModuleShell>
-  );
+function sessionDurationMs(session: MeetingSession): number {
+  if (!session.endTime) return 0;
+  const start = new Date(session.startTime).getTime();
+  const end = new Date(session.endTime).getTime();
+  if (Number.isNaN(start) || Number.isNaN(end) || end <= start) return 0;
+  return end - start;
 }
 
-function Kpi({
-  label,
-  value,
-  highlight,
-}: {
-  label: string;
-  value: number | string;
-  highlight?: boolean;
-}) {
+function formatDuration(totalMs: number): string {
+  const totalMinutes = Math.round(totalMs / 60000);
+  if (totalMinutes <= 0) return "0min";
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours === 0) return `${minutes}min`;
+  if (minutes === 0) return `${hours}h`;
+  return `${hours}h ${minutes}min`;
+}
+
+function formatDateTime(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function formatDateOnly(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
+}
+
+interface ResponsibleRow {
+  responsible: string;
+  total: number;
+  meetings: number;
+  nextDeadline: string;
+}
+
+function RelatoriosPage() {
+  const listSessions = useServerFn(listMeetingSessions);
+  const [period, setPeriod] = useState<PeriodValue>("30");
+
+  const { data, isPending, isError, error, refetch, isFetching } = useQuery<MeetingSession[]>({
+    queryKey: ["meeting-sessions", "relatorios"],
+    queryFn: async () => (await listSessions()) as unknown as MeetingSession[],
+  });
+
+  const sessions = useMemo<MeetingSession[]>(() => data ?? [], [data]);
+
+  const selectedPeriod =
+    PERIOD_OPTIONS.find((option) => option.value === period) ?? PERIOD_OPTIONS[1];
+
+  const filtered = useMemo(() => {
+    if (selectedPeriod.days === null) return sessions;
+    const threshold = Date.now() - selectedPeriod.days * 24 * 60 * 60 * 1000;
+    return sessions.filter((session) => {
+      const start = new Date(session.startTime).getTime();
+      return !Number.isNaN(start) && start >= threshold;
+    });
+  }, [sessions, selectedPeriod]);
+
+  const metrics = useMemo(() => {
+    const totalMeetings = filtered.length;
+    const totalMs = filtered.reduce((sum, session) => sum + sessionDurationMs(session), 0);
+    const totalDecisions = filtered.reduce((sum, session) => sum + session.decisions.length, 0);
+    const totalActions = filtered.reduce((sum, session) => sum + session.actions.length, 0);
+    const totalPending = filtered.reduce((sum, session) => sum + session.pending.length, 0);
+    const averageActions = totalMeetings === 0 ? 0 : totalActions / totalMeetings;
+
+    return { totalMeetings, totalMs, totalDecisions, totalActions, totalPending, averageActions };
+  }, [filtered]);
+
+  const responsibles = useMemo<ResponsibleRow[]>(() => {
+    const map = new Map<string, { total: number; meetings: Set<string>; deadlines: string[] }>();
+
+    for (const session of filtered) {
+      for (const action of session.actions) {
+        const name = action.responsible?.trim() || "Não atribuído";
+        const entry = map.get(name) ?? { total: 0, meetings: new Set<string>(), deadlines: [] };
+        entry.total += 1;
+        entry.meetings.add(session.id);
+        if (action.deadline?.trim()) entry.deadlines.push(action.deadline.trim());
+        map.set(name, entry);
+      }
+    }
+
+    return Array.from(map.entries())
+      .map(([responsible, entry]) => ({
+        responsible,
+        total: entry.total,
+        meetings: entry.meetings.size,
+        nextDeadline: entry.deadlines.sort()[0] ?? "—",
+      }))
+      .sort((a, b) => b.total - a.total || a.responsible.localeCompare(b.responsible, "pt-BR"));
+  }, [filtered]);
+
+  const buildMarkdown = (): string => {
+    const generatedAt = formatDateTime(new Date().toISOString());
+    const lines: string[] = [];
+
+    lines.push("# Relatório de Reuniões");
+    lines.push("");
+    lines.push(`- Período: ${selectedPeriod.label}`);
+    lines.push(`- Gerado em: ${generatedAt}`);
+    lines.push("");
+    lines.push("## Indicadores");
+    lines.push("");
+    lines.push("| Indicador | Valor |");
+    lines.push("| --- | --- |");
+    lines.push(`| Total de reuniões | ${metrics.totalMeetings} |`);
+    lines.push(`| Tempo total em reunião | ${formatDuration(metrics.totalMs)} |`);
+    lines.push(`| Total de decisões | ${metrics.totalDecisions} |`);
+    lines.push(`| Total de ações | ${metrics.totalActions} |`);
+    lines.push(`| Total de pendências | ${metrics.totalPending} |`);
+    lines.push(
+      `| Média de ações por reunião | ${metrics.averageActions.toFixed(1).replace(".", ",")} |`,
+    );
+    lines.push("");
+
+    lines.push("## Ações por responsável");
+    lines.push("");
+    if (responsibles.length === 0) {
+      lines.push("Nenhuma ação registrada no período.");
+    } else {
+      lines.push("| Responsável | Ações | Reuniões | Prazo mais próximo |");
+      lines.push("| --- | --- | --- | --- |");
+      for (const row of responsibles) {
+        lines.push(`| ${row.responsible} | ${row.total} | ${row.meetings} | ${row.nextDeadline} |`);
+      }
+    }
+    lines.push("");
+
+    lines.push("## Reuniões do período");
+    lines.push("");
+    if (filtered.length === 0) {
+      lines.push("Nenhuma reunião registrada no período.");
+    } else {
+      for (const session of filtered) {
+        lines.push(`### ${session.title}`);
+        lines.push("");
+        lines.push(`- Início: ${formatDateTime(session.startTime)}`);
+        lines.push(`- Duração: ${formatDuration(sessionDurationMs(session))}`);
+        lines.push(`- Decisões: ${session.decisions.length}`);
+        lines.push(`- Ações: ${session.actions.length}`);
+        lines.push(`- Pendências: ${session.pending.length}`);
+        lines.push("");
+
+        if (session.summary.trim()) {
+          lines.push("**Resumo**");
+          lines.push("");
+          lines.push(session.summary.trim());
+          lines.push("");
+        }
+
+        if (session.decisions.length > 0) {
+          lines.push("**Decisões**");
+          lines.push("");
+          for (const decision of session.decisions) lines.push(`- ${decision}`);
+          lines.push("");
+        }
+
+        if (session.actions.length > 0) {
+          lines.push("**Ações**");
+          lines.push("");
+          for (const action of session.actions) {
+            const responsible = action.responsible?.trim() || "Não atribuído";
+            const deadline = action.deadline?.trim() || "sem prazo";
+            lines.push(`- ${responsible}: ${action.task} (${deadline})`);
+          }
+          lines.push("");
+        }
+
+        if (session.pending.length > 0) {
+          lines.push("**Pendências**");
+          lines.push("");
+          for (const item of session.pending) lines.push(`- ${item}`);
+          lines.push("");
+        }
+      }
+    }
+
+    return lines.join("\n");
+  };
+
+  const handleExport = () => {
+    if (filtered.length === 0) {
+      toast.error("Não há reuniões no período selecionado para exportar.");
+      return;
+    }
+
+    const markdown = buildMarkdown();
+    const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const stamp = new Date().toISOString().slice(0, 10);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `relatorio-reunioes-${period}-${stamp}.md`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast.success("Relatório .md exportado.");
+  };
+
+  const kpis = [
+    { label: "Reuniões", value: String(metrics.totalMeetings), icon: Video },
+    { label: "Tempo em reunião", value: formatDuration(metrics.totalMs), icon: Clock },
+    { label: "Decisões", value: String(metrics.totalDecisions), icon: Gavel },
+    { label: "Ações", value: String(metrics.totalActions), icon: ListChecks },
+    { label: "Pendências", value: String(metrics.totalPending), icon: CircleDashed },
+    {
+      label: "Média de ações/reunião",
+      value: metrics.averageActions.toFixed(1).replace(".", ","),
+      icon: Users,
+    },
+  ];
+
   return (
-    <div className="rounded-lg border border-border bg-card/60 p-4">
-      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div
-        className={`mt-1 font-display text-xl font-semibold ${highlight ? "text-neon" : "text-foreground"}`}
-      >
-        {value}
+    <div className="space-y-8 animate-in fade-in duration-700">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold text-white">Relatórios de Sessões</h1>
+          <p className="text-white/40 text-sm">
+            Indicadores calculados a partir das reuniões salvas na sua conta.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <Button
+            variant="outline"
+            onClick={() => void refetch()}
+            disabled={isFetching}
+            className="rounded-full border-white/10 bg-transparent text-white/60 hover:text-white hover:bg-white/5"
+          >
+            <RefreshCw className={cn("w-4 h-4 mr-2", isFetching && "animate-spin")} />
+            Atualizar
+          </Button>
+          <Button
+            onClick={handleExport}
+            disabled={isPending || isError || filtered.length === 0}
+            className="bg-white hover:bg-white/90 text-black rounded-full font-bold h-11 px-6 disabled:opacity-40"
+          >
+            <Download className="w-4 h-4 mr-2" /> Exportar relatório (.md)
+          </Button>
+        </div>
       </div>
+
+      <Card className="p-4 bg-white/[0.02] border-white/5 rounded-2xl">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-wrap items-center gap-1 bg-white/5 p-1 rounded-full">
+            {PERIOD_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setPeriod(option.value)}
+                className={cn(
+                  "px-4 py-1.5 rounded-full text-xs font-bold transition-all",
+                  period === option.value
+                    ? "bg-white text-black"
+                    : "text-white/40 hover:text-white",
+                )}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-white/40">
+            {isPending
+              ? "Carregando reuniões..."
+              : isError
+                ? "Falha ao carregar os dados."
+                : `${filtered.length} de ${sessions.length} ${sessions.length === 1 ? "reunião" : "reuniões"} no período`}
+          </p>
+        </div>
+      </Card>
+
+      {isPending ? (
+        <Card className="p-12 bg-white/[0.02] border-white/5 rounded-2xl flex flex-col items-center justify-center gap-3">
+          <Loader2 className="w-6 h-6 text-white/40 animate-spin" />
+          <p className="text-xs text-white/40">Carregando suas reuniões...</p>
+        </Card>
+      ) : isError ? (
+        <Card className="p-12 bg-white/[0.02] border-white/5 rounded-2xl flex flex-col items-center justify-center text-center space-y-4">
+          <div className="w-12 h-12 bg-rose-500/10 rounded-full flex items-center justify-center text-rose-500">
+            <AlertTriangle className="w-6 h-6" />
+          </div>
+          <div>
+            <h4 className="font-bold text-sm text-white/60">
+              Não foi possível carregar os relatórios
+            </h4>
+            <p className="text-xs text-white/20 mt-1 max-w-md mx-auto">
+              {error instanceof Error ? error.message : "Erro inesperado ao consultar as reuniões."}
+            </p>
+          </div>
+          <Button
+            onClick={() => void refetch()}
+            className="bg-white hover:bg-white/90 text-black rounded-full font-bold"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" /> Tentar novamente
+          </Button>
+        </Card>
+      ) : sessions.length === 0 ? (
+        <Card className="p-12 bg-white/[0.02] border-white/5 border-dashed rounded-2xl flex flex-col items-center justify-center text-center space-y-4">
+          <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center text-white/20">
+            <BarChart3 className="w-6 h-6" />
+          </div>
+          <div>
+            <h4 className="font-bold text-sm text-white/60">Nenhuma reunião registrada ainda</h4>
+            <p className="text-xs text-white/20 mt-1 max-w-xs mx-auto">
+              Inicie uma sessão com o Copilot ao Vivo para que decisões, ações e pendências apareçam
+              aqui.
+            </p>
+          </div>
+          <Button asChild className="bg-white hover:bg-white/90 text-black rounded-full font-bold">
+            <Link to="/copiloto">Iniciar uma reunião</Link>
+          </Button>
+        </Card>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            {kpis.map((kpi) => (
+              <Card key={kpi.label} className="p-6 bg-white/[0.02] border-white/5 rounded-2xl">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-white/20">
+                    {kpi.label}
+                  </span>
+                  <kpi.icon className="w-4 h-4 text-white/20" />
+                </div>
+                <p className="text-2xl font-bold text-white">{kpi.value}</p>
+              </Card>
+            ))}
+          </div>
+
+          {filtered.length === 0 ? (
+            <Card className="p-12 bg-white/[0.02] border-white/5 border-dashed rounded-2xl flex flex-col items-center justify-center text-center space-y-4">
+              <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center text-white/20">
+                <BarChart3 className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="font-bold text-sm text-white/60">
+                  Nenhuma reunião em {selectedPeriod.label.toLowerCase()}
+                </h4>
+                <p className="text-xs text-white/20 mt-1">
+                  Amplie o período para ver as reuniões mais antigas.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => setPeriod("all")}
+                className="rounded-full border-white/10 bg-transparent text-white/60 hover:text-white hover:bg-white/5"
+              >
+                Ver tudo
+              </Button>
+            </Card>
+          ) : (
+            <>
+              <Card className="bg-white/[0.02] border-white/5 rounded-2xl overflow-hidden">
+                <div className="p-6 border-b border-white/5">
+                  <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                    <Users className="w-4 h-4 text-white/40" /> Ações por responsável
+                  </h2>
+                  <p className="text-xs text-white/40 mt-1">
+                    Distribuição das ações registradas em {selectedPeriod.label.toLowerCase()}.
+                  </p>
+                </div>
+                {responsibles.length === 0 ? (
+                  <p className="p-6 text-xs text-white/20">
+                    Nenhuma ação foi registrada nas reuniões deste período.
+                  </p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-white/5 text-[10px] uppercase tracking-widest text-white/20">
+                          <th className="text-left font-bold px-6 py-3">Responsável</th>
+                          <th className="text-right font-bold px-6 py-3">Ações</th>
+                          <th className="text-right font-bold px-6 py-3">Reuniões</th>
+                          <th className="text-right font-bold px-6 py-3">Prazo mais próximo</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {responsibles.map((row) => (
+                          <tr
+                            key={row.responsible}
+                            className="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors"
+                          >
+                            <td className="px-6 py-3 text-white/80">{row.responsible}</td>
+                            <td className="px-6 py-3 text-right font-bold text-emerald-500">
+                              {row.total}
+                            </td>
+                            <td className="px-6 py-3 text-right text-white/40">{row.meetings}</td>
+                            <td className="px-6 py-3 text-right text-white/40">
+                              {row.nextDeadline}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </Card>
+
+              <Card className="bg-white/[0.02] border-white/5 rounded-2xl overflow-hidden">
+                <div className="p-6 border-b border-white/5">
+                  <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                    <Video className="w-4 h-4 text-white/40" /> Reuniões do período
+                  </h2>
+                  <p className="text-xs text-white/40 mt-1">
+                    {filtered.length} {filtered.length === 1 ? "reunião" : "reuniões"} em{" "}
+                    {selectedPeriod.label.toLowerCase()}.
+                  </p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-white/5 text-[10px] uppercase tracking-widest text-white/20">
+                        <th className="text-left font-bold px-6 py-3">Reunião</th>
+                        <th className="text-left font-bold px-6 py-3">Data</th>
+                        <th className="text-right font-bold px-6 py-3">Duração</th>
+                        <th className="text-right font-bold px-6 py-3">Decisões</th>
+                        <th className="text-right font-bold px-6 py-3">Ações</th>
+                        <th className="text-right font-bold px-6 py-3">Pendências</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filtered.map((session) => (
+                        <tr
+                          key={session.id}
+                          className="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors"
+                        >
+                          <td className="px-6 py-3 text-white/80 max-w-xs truncate">
+                            {session.title}
+                          </td>
+                          <td className="px-6 py-3 text-white/40">
+                            {formatDateOnly(session.startTime)}
+                          </td>
+                          <td className="px-6 py-3 text-right text-white/40">
+                            {session.endTime
+                              ? formatDuration(sessionDurationMs(session))
+                              : "Em aberto"}
+                          </td>
+                          <td className="px-6 py-3 text-right text-white/60">
+                            {session.decisions.length}
+                          </td>
+                          <td className="px-6 py-3 text-right font-bold text-emerald-500">
+                            {session.actions.length}
+                          </td>
+                          <td className="px-6 py-3 text-right text-white/60">
+                            {session.pending.length}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+            </>
+          )}
+        </>
+      )}
     </div>
   );
 }

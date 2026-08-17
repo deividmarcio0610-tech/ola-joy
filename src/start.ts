@@ -19,6 +19,8 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
 });
 
 export const startInstance = createStart(() => ({
+  // Sem isto o browser nunca envia o bearer token nos RPCs e todo server function
+  // autenticado responde 401.
   functionMiddleware: [attachSupabaseAuth],
   requestMiddleware: [errorMiddleware],
 }));

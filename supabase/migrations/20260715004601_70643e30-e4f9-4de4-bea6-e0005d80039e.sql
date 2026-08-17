@@ -1,1 +1,0 @@
-REVOKE EXECUTE ON FUNCTION public.next_internal_code(text, text) FROM PUBLIC, authenticated, anon;

@@ -9,49 +9,36 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApiChatRouteImport } from './routes/api/chat'
-import { Route as AuthenticatedVisionRouteImport } from './routes/_authenticated/vision'
-import { Route as AuthenticatedUsuariosRouteImport } from './routes/_authenticated/usuarios'
-import { Route as AuthenticatedSupervisaoRouteImport } from './routes/_authenticated/supervisao'
-import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
-import { Route as AuthenticatedNovidadesRouteImport } from './routes/_authenticated/novidades'
-import { Route as AuthenticatedNotificacoesRouteImport } from './routes/_authenticated/notificacoes'
-import { Route as AuthenticatedN3RouteImport } from './routes/_authenticated/n3'
-import { Route as AuthenticatedMonitoramentoValeRouteImport } from './routes/_authenticated/monitoramento-vale'
-import { Route as AuthenticatedMeioAmbienteRouteImport } from './routes/_authenticated/meio-ambiente'
-import { Route as AuthenticatedKaizenRouteImport } from './routes/_authenticated/kaizen'
-import { Route as AuthenticatedIrisRouteImport } from './routes/_authenticated/iris'
-import { Route as AuthenticatedIntemperiesRouteImport } from './routes/_authenticated/intemperies'
-import { Route as AuthenticatedInspecaoRouteImport } from './routes/_authenticated/inspecao'
-import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
-import { Route as AuthenticatedEmergenciaRouteImport } from './routes/_authenticated/emergencia'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedCrmRouteImport } from './routes/_authenticated/crm'
-import { Route as AuthenticatedControleGanhosRouteImport } from './routes/_authenticated/controle-ganhos'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as SecurityRouteImport } from './routes/security'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as AuthenticatedAtasRouteImport } from './routes/_authenticated/atas'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
-import { Route as AuthenticatedCamera360RouteImport } from './routes/_authenticated/camera-360'
-import { Route as AuthenticatedAuditoriaRouteImport } from './routes/_authenticated/auditoria'
-import { Route as AuthenticatedApresentacaoRouteImport } from './routes/_authenticated/apresentacao'
-import { Route as AuthenticatedAmbientalRouteImport } from './routes/_authenticated/ambiental'
-import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat.index'
-import { Route as ApiIrisProvidersDiagnosticRouteImport } from './routes/api/iris/providers-diagnostic'
-import { Route as ApiIrisKaizenChatRouteImport } from './routes/api/iris/kaizen-chat'
-import { Route as ApiIrisGenerateCorrectedRouteImport } from './routes/api/iris/generate-corrected'
-import { Route as ApiIrisGenerateAfterRouteImport } from './routes/api/iris/generate-after'
-import { Route as AuthenticatedIntemperiesNotificacoesRouteImport } from './routes/_authenticated/intemperies.notificacoes'
-import { Route as AuthenticatedAdminVersoesRouteImport } from './routes/_authenticated/admin.versoes'
-import { Route as AuthenticatedAdminImageProvidersRouteImport } from './routes/_authenticated/admin.image-providers'
-import { Route as ApiPublicWeatherGeocodeRouteImport } from './routes/api/public/weather/geocode'
-import { Route as ApiPublicWeatherCurrentRouteImport } from './routes/api/public/weather/current'
-import { Route as ApiPublicLightningRecentRouteImport } from './routes/api/public/lightning/recent'
+import { Route as AuthenticatedCopilotoRouteImport } from './routes/_authenticated/copiloto'
+import { Route as AuthenticatedCurriculoRouteImport } from './routes/_authenticated/curriculo'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedDiagnosticoRouteImport } from './routes/_authenticated/diagnostico'
+import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
+import { Route as AuthenticatedMemoriaRouteImport } from './routes/_authenticated/memoria'
+import { Route as AuthenticatedMinhaIaRouteImport } from './routes/_authenticated/minha-ia'
+import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
+import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
+import { Route as AuthenticatedReunioesRouteImport } from './routes/_authenticated/reunioes'
+import { Route as AuthenticatedSimuladorRouteImport } from './routes/_authenticated/simulador'
+import { Route as AuthenticatedTeleprompterRouteImport } from './routes/_authenticated/teleprompter'
+import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authenticated/templates'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -59,97 +46,40 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const SecurityRoute = SecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiChatRoute = ApiChatRouteImport.update({
-  id: '/api/chat',
-  path: '/api/chat',
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedVisionRoute = AuthenticatedVisionRouteImport.update({
-  id: '/vision',
-  path: '/vision',
+const AuthenticatedAtasRoute = AuthenticatedAtasRouteImport.update({
+  id: '/atas',
+  path: '/atas',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedUsuariosRoute = AuthenticatedUsuariosRouteImport.update({
-  id: '/usuarios',
-  path: '/usuarios',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedSupervisaoRoute = AuthenticatedSupervisaoRouteImport.update({
-  id: '/supervisao',
-  path: '/supervisao',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
-  id: '/relatorios',
-  path: '/relatorios',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedNovidadesRoute = AuthenticatedNovidadesRouteImport.update({
-  id: '/novidades',
-  path: '/novidades',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedNotificacoesRoute =
-  AuthenticatedNotificacoesRouteImport.update({
-    id: '/notificacoes',
-    path: '/notificacoes',
+const AuthenticatedConfiguracoesRoute =
+  AuthenticatedConfiguracoesRouteImport.update({
+    id: '/configuracoes',
+    path: '/configuracoes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedN3Route = AuthenticatedN3RouteImport.update({
-  id: '/n3',
-  path: '/n3',
+const AuthenticatedCopilotoRoute = AuthenticatedCopilotoRouteImport.update({
+  id: '/copiloto',
+  path: '/copiloto',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedMonitoramentoValeRoute =
-  AuthenticatedMonitoramentoValeRouteImport.update({
-    id: '/monitoramento-vale',
-    path: '/monitoramento-vale',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedMeioAmbienteRoute =
-  AuthenticatedMeioAmbienteRouteImport.update({
-    id: '/meio-ambiente',
-    path: '/meio-ambiente',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedKaizenRoute = AuthenticatedKaizenRouteImport.update({
-  id: '/kaizen',
-  path: '/kaizen',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedIrisRoute = AuthenticatedIrisRouteImport.update({
-  id: '/iris',
-  path: '/iris',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedIntemperiesRoute =
-  AuthenticatedIntemperiesRouteImport.update({
-    id: '/intemperies',
-    path: '/intemperies',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedInspecaoRoute = AuthenticatedInspecaoRouteImport.update({
-  id: '/inspecao',
-  path: '/inspecao',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedHistoricoRoute = AuthenticatedHistoricoRouteImport.update({
-  id: '/historico',
-  path: '/historico',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedEmergenciaRoute = AuthenticatedEmergenciaRouteImport.update({
-  id: '/emergencia',
-  path: '/emergencia',
+const AuthenticatedCurriculoRoute = AuthenticatedCurriculoRouteImport.update({
+  id: '/curriculo',
+  path: '/curriculo',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -157,381 +87,225 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedCrmRoute = AuthenticatedCrmRouteImport.update({
-  id: '/crm',
-  path: '/crm',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedControleGanhosRoute =
-  AuthenticatedControleGanhosRouteImport.update({
-    id: '/controle-ganhos',
-    path: '/controle-ganhos',
+const AuthenticatedDiagnosticoRoute =
+  AuthenticatedDiagnosticoRouteImport.update({
+    id: '/diagnostico',
+    path: '/diagnostico',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedConfiguracoesRoute =
-  AuthenticatedConfiguracoesRouteImport.update({
-    id: '/configuracoes',
-    path: '/configuracoes',
+const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMemoriaRoute = AuthenticatedMemoriaRouteImport.update({
+  id: '/memoria',
+  path: '/memoria',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMinhaIaRoute = AuthenticatedMinhaIaRouteImport.update({
+  id: '/minha-ia',
+  path: '/minha-ia',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
+  id: '/relatorios',
+  path: '/relatorios',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedReunioesRoute = AuthenticatedReunioesRouteImport.update({
+  id: '/reunioes',
+  path: '/reunioes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSimuladorRoute = AuthenticatedSimuladorRouteImport.update({
+  id: '/simulador',
+  path: '/simulador',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTeleprompterRoute =
+  AuthenticatedTeleprompterRouteImport.update({
+    id: '/teleprompter',
+    path: '/teleprompter',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedCamera360Route = AuthenticatedCamera360RouteImport.update({
-  id: '/camera-360',
-  path: '/camera-360',
+const AuthenticatedTemplatesRoute = AuthenticatedTemplatesRouteImport.update({
+  id: '/templates',
+  path: '/templates',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedAuditoriaRoute = AuthenticatedAuditoriaRouteImport.update({
-  id: '/auditoria',
-  path: '/auditoria',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedApresentacaoRoute =
-  AuthenticatedApresentacaoRouteImport.update({
-    id: '/apresentacao',
-    path: '/apresentacao',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAmbientalRoute = AuthenticatedAmbientalRouteImport.update({
-  id: '/ambiental',
-  path: '/ambiental',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedChatIndexRoute = AuthenticatedChatIndexRouteImport.update({
-  id: '/chat/',
-  path: '/chat/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const ApiIrisProvidersDiagnosticRoute =
-  ApiIrisProvidersDiagnosticRouteImport.update({
-    id: '/api/iris/providers-diagnostic',
-    path: '/api/iris/providers-diagnostic',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiIrisKaizenChatRoute = ApiIrisKaizenChatRouteImport.update({
-  id: '/api/iris/kaizen-chat',
-  path: '/api/iris/kaizen-chat',
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiIrisGenerateCorrectedRoute =
-  ApiIrisGenerateCorrectedRouteImport.update({
-    id: '/api/iris/generate-corrected',
-    path: '/api/iris/generate-corrected',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiIrisGenerateAfterRoute = ApiIrisGenerateAfterRouteImport.update({
-  id: '/api/iris/generate-after',
-  path: '/api/iris/generate-after',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedIntemperiesNotificacoesRoute =
-  AuthenticatedIntemperiesNotificacoesRouteImport.update({
-    id: '/notificacoes',
-    path: '/notificacoes',
-    getParentRoute: () => AuthenticatedIntemperiesRoute,
-  } as any)
-const AuthenticatedAdminVersoesRoute =
-  AuthenticatedAdminVersoesRouteImport.update({
-    id: '/admin/versoes',
-    path: '/admin/versoes',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAdminImageProvidersRoute =
-  AuthenticatedAdminImageProvidersRouteImport.update({
-    id: '/admin/image-providers',
-    path: '/admin/image-providers',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const ApiPublicWeatherGeocodeRoute = ApiPublicWeatherGeocodeRouteImport.update({
-  id: '/api/public/weather/geocode',
-  path: '/api/public/weather/geocode',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicWeatherCurrentRoute = ApiPublicWeatherCurrentRouteImport.update({
-  id: '/api/public/weather/current',
-  path: '/api/public/weather/current',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicLightningRecentRoute =
-  ApiPublicLightningRecentRouteImport.update({
-    id: '/api/public/lightning/recent',
-    path: '/api/public/lightning/recent',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/reset-password': typeof ResetPasswordRoute
-  '/ambiental': typeof AuthenticatedAmbientalRoute
-  '/apresentacao': typeof AuthenticatedApresentacaoRoute
-  '/auditoria': typeof AuthenticatedAuditoriaRoute
-  '/camera-360': typeof AuthenticatedCamera360Route
+  '/privacy': typeof PrivacyRoute
+  '/security': typeof SecurityRoute
+  '/terms': typeof TermsRoute
+  '/atas': typeof AuthenticatedAtasRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
-  '/controle-ganhos': typeof AuthenticatedControleGanhosRoute
-  '/crm': typeof AuthenticatedCrmRoute
+  '/copiloto': typeof AuthenticatedCopilotoRoute
+  '/curriculo': typeof AuthenticatedCurriculoRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/emergencia': typeof AuthenticatedEmergenciaRoute
-  '/historico': typeof AuthenticatedHistoricoRoute
-  '/inspecao': typeof AuthenticatedInspecaoRoute
-  '/intemperies': typeof AuthenticatedIntemperiesRouteWithChildren
-  '/iris': typeof AuthenticatedIrisRoute
-  '/kaizen': typeof AuthenticatedKaizenRoute
-  '/meio-ambiente': typeof AuthenticatedMeioAmbienteRoute
-  '/monitoramento-vale': typeof AuthenticatedMonitoramentoValeRoute
-  '/n3': typeof AuthenticatedN3Route
-  '/notificacoes': typeof AuthenticatedNotificacoesRoute
-  '/novidades': typeof AuthenticatedNovidadesRoute
+  '/diagnostico': typeof AuthenticatedDiagnosticoRoute
+  '/home': typeof AuthenticatedHomeRoute
+  '/memoria': typeof AuthenticatedMemoriaRoute
+  '/minha-ia': typeof AuthenticatedMinhaIaRoute
+  '/perfil': typeof AuthenticatedPerfilRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
-  '/supervisao': typeof AuthenticatedSupervisaoRoute
-  '/usuarios': typeof AuthenticatedUsuariosRoute
-  '/vision': typeof AuthenticatedVisionRoute
-  '/api/chat': typeof ApiChatRoute
-  '/admin/image-providers': typeof AuthenticatedAdminImageProvidersRoute
-  '/admin/versoes': typeof AuthenticatedAdminVersoesRoute
-  '/intemperies/notificacoes': typeof AuthenticatedIntemperiesNotificacoesRoute
-  '/api/iris/generate-after': typeof ApiIrisGenerateAfterRoute
-  '/api/iris/generate-corrected': typeof ApiIrisGenerateCorrectedRoute
-  '/api/iris/kaizen-chat': typeof ApiIrisKaizenChatRoute
-  '/api/iris/providers-diagnostic': typeof ApiIrisProvidersDiagnosticRoute
-  '/chat/': typeof AuthenticatedChatIndexRoute
-  '/api/public/lightning/recent': typeof ApiPublicLightningRecentRoute
-  '/api/public/weather/current': typeof ApiPublicWeatherCurrentRoute
-  '/api/public/weather/geocode': typeof ApiPublicWeatherGeocodeRoute
+  '/reunioes': typeof AuthenticatedReunioesRoute
+  '/simulador': typeof AuthenticatedSimuladorRoute
+  '/teleprompter': typeof AuthenticatedTeleprompterRoute
+  '/templates': typeof AuthenticatedTemplatesRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/reset-password': typeof ResetPasswordRoute
-  '/ambiental': typeof AuthenticatedAmbientalRoute
-  '/apresentacao': typeof AuthenticatedApresentacaoRoute
-  '/auditoria': typeof AuthenticatedAuditoriaRoute
-  '/camera-360': typeof AuthenticatedCamera360Route
+  '/privacy': typeof PrivacyRoute
+  '/security': typeof SecurityRoute
+  '/terms': typeof TermsRoute
+  '/atas': typeof AuthenticatedAtasRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
-  '/controle-ganhos': typeof AuthenticatedControleGanhosRoute
-  '/crm': typeof AuthenticatedCrmRoute
+  '/copiloto': typeof AuthenticatedCopilotoRoute
+  '/curriculo': typeof AuthenticatedCurriculoRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/emergencia': typeof AuthenticatedEmergenciaRoute
-  '/historico': typeof AuthenticatedHistoricoRoute
-  '/inspecao': typeof AuthenticatedInspecaoRoute
-  '/intemperies': typeof AuthenticatedIntemperiesRouteWithChildren
-  '/iris': typeof AuthenticatedIrisRoute
-  '/kaizen': typeof AuthenticatedKaizenRoute
-  '/meio-ambiente': typeof AuthenticatedMeioAmbienteRoute
-  '/monitoramento-vale': typeof AuthenticatedMonitoramentoValeRoute
-  '/n3': typeof AuthenticatedN3Route
-  '/notificacoes': typeof AuthenticatedNotificacoesRoute
-  '/novidades': typeof AuthenticatedNovidadesRoute
+  '/diagnostico': typeof AuthenticatedDiagnosticoRoute
+  '/home': typeof AuthenticatedHomeRoute
+  '/memoria': typeof AuthenticatedMemoriaRoute
+  '/minha-ia': typeof AuthenticatedMinhaIaRoute
+  '/perfil': typeof AuthenticatedPerfilRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
-  '/supervisao': typeof AuthenticatedSupervisaoRoute
-  '/usuarios': typeof AuthenticatedUsuariosRoute
-  '/vision': typeof AuthenticatedVisionRoute
-  '/api/chat': typeof ApiChatRoute
-  '/admin/image-providers': typeof AuthenticatedAdminImageProvidersRoute
-  '/admin/versoes': typeof AuthenticatedAdminVersoesRoute
-  '/intemperies/notificacoes': typeof AuthenticatedIntemperiesNotificacoesRoute
-  '/api/iris/generate-after': typeof ApiIrisGenerateAfterRoute
-  '/api/iris/generate-corrected': typeof ApiIrisGenerateCorrectedRoute
-  '/api/iris/kaizen-chat': typeof ApiIrisKaizenChatRoute
-  '/api/iris/providers-diagnostic': typeof ApiIrisProvidersDiagnosticRoute
-  '/chat': typeof AuthenticatedChatIndexRoute
-  '/api/public/lightning/recent': typeof ApiPublicLightningRecentRoute
-  '/api/public/weather/current': typeof ApiPublicWeatherCurrentRoute
-  '/api/public/weather/geocode': typeof ApiPublicWeatherGeocodeRoute
+  '/reunioes': typeof AuthenticatedReunioesRoute
+  '/simulador': typeof AuthenticatedSimuladorRoute
+  '/teleprompter': typeof AuthenticatedTeleprompterRoute
+  '/templates': typeof AuthenticatedTemplatesRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
-  '/reset-password': typeof ResetPasswordRoute
-  '/_authenticated/ambiental': typeof AuthenticatedAmbientalRoute
-  '/_authenticated/apresentacao': typeof AuthenticatedApresentacaoRoute
-  '/_authenticated/auditoria': typeof AuthenticatedAuditoriaRoute
-  '/_authenticated/camera-360': typeof AuthenticatedCamera360Route
+  '/privacy': typeof PrivacyRoute
+  '/security': typeof SecurityRoute
+  '/terms': typeof TermsRoute
+  '/_authenticated/atas': typeof AuthenticatedAtasRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
-  '/_authenticated/controle-ganhos': typeof AuthenticatedControleGanhosRoute
-  '/_authenticated/crm': typeof AuthenticatedCrmRoute
+  '/_authenticated/copiloto': typeof AuthenticatedCopilotoRoute
+  '/_authenticated/curriculo': typeof AuthenticatedCurriculoRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/emergencia': typeof AuthenticatedEmergenciaRoute
-  '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
-  '/_authenticated/inspecao': typeof AuthenticatedInspecaoRoute
-  '/_authenticated/intemperies': typeof AuthenticatedIntemperiesRouteWithChildren
-  '/_authenticated/iris': typeof AuthenticatedIrisRoute
-  '/_authenticated/kaizen': typeof AuthenticatedKaizenRoute
-  '/_authenticated/meio-ambiente': typeof AuthenticatedMeioAmbienteRoute
-  '/_authenticated/monitoramento-vale': typeof AuthenticatedMonitoramentoValeRoute
-  '/_authenticated/n3': typeof AuthenticatedN3Route
-  '/_authenticated/notificacoes': typeof AuthenticatedNotificacoesRoute
-  '/_authenticated/novidades': typeof AuthenticatedNovidadesRoute
+  '/_authenticated/diagnostico': typeof AuthenticatedDiagnosticoRoute
+  '/_authenticated/home': typeof AuthenticatedHomeRoute
+  '/_authenticated/memoria': typeof AuthenticatedMemoriaRoute
+  '/_authenticated/minha-ia': typeof AuthenticatedMinhaIaRoute
+  '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
-  '/_authenticated/supervisao': typeof AuthenticatedSupervisaoRoute
-  '/_authenticated/usuarios': typeof AuthenticatedUsuariosRoute
-  '/_authenticated/vision': typeof AuthenticatedVisionRoute
-  '/api/chat': typeof ApiChatRoute
-  '/_authenticated/admin/image-providers': typeof AuthenticatedAdminImageProvidersRoute
-  '/_authenticated/admin/versoes': typeof AuthenticatedAdminVersoesRoute
-  '/_authenticated/intemperies/notificacoes': typeof AuthenticatedIntemperiesNotificacoesRoute
-  '/api/iris/generate-after': typeof ApiIrisGenerateAfterRoute
-  '/api/iris/generate-corrected': typeof ApiIrisGenerateCorrectedRoute
-  '/api/iris/kaizen-chat': typeof ApiIrisKaizenChatRoute
-  '/api/iris/providers-diagnostic': typeof ApiIrisProvidersDiagnosticRoute
-  '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
-  '/api/public/lightning/recent': typeof ApiPublicLightningRecentRoute
-  '/api/public/weather/current': typeof ApiPublicWeatherCurrentRoute
-  '/api/public/weather/geocode': typeof ApiPublicWeatherGeocodeRoute
+  '/_authenticated/reunioes': typeof AuthenticatedReunioesRoute
+  '/_authenticated/simulador': typeof AuthenticatedSimuladorRoute
+  '/_authenticated/teleprompter': typeof AuthenticatedTeleprompterRoute
+  '/_authenticated/templates': typeof AuthenticatedTemplatesRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/auth'
-    | '/reset-password'
-    | '/ambiental'
-    | '/apresentacao'
-    | '/auditoria'
-    | '/camera-360'
+    | '/privacy'
+    | '/security'
+    | '/terms'
+    | '/atas'
     | '/configuracoes'
-    | '/controle-ganhos'
-    | '/crm'
+    | '/copiloto'
+    | '/curriculo'
     | '/dashboard'
-    | '/emergencia'
-    | '/historico'
-    | '/inspecao'
-    | '/intemperies'
-    | '/iris'
-    | '/kaizen'
-    | '/meio-ambiente'
-    | '/monitoramento-vale'
-    | '/n3'
-    | '/notificacoes'
-    | '/novidades'
+    | '/diagnostico'
+    | '/home'
+    | '/memoria'
+    | '/minha-ia'
+    | '/perfil'
     | '/relatorios'
-    | '/supervisao'
-    | '/usuarios'
-    | '/vision'
-    | '/api/chat'
-    | '/admin/image-providers'
-    | '/admin/versoes'
-    | '/intemperies/notificacoes'
-    | '/api/iris/generate-after'
-    | '/api/iris/generate-corrected'
-    | '/api/iris/kaizen-chat'
-    | '/api/iris/providers-diagnostic'
-    | '/chat/'
-    | '/api/public/lightning/recent'
-    | '/api/public/weather/current'
-    | '/api/public/weather/geocode'
+    | '/reunioes'
+    | '/simulador'
+    | '/teleprompter'
+    | '/templates'
+    | '/api/public/health'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
-    | '/reset-password'
-    | '/ambiental'
-    | '/apresentacao'
-    | '/auditoria'
-    | '/camera-360'
+    | '/privacy'
+    | '/security'
+    | '/terms'
+    | '/atas'
     | '/configuracoes'
-    | '/controle-ganhos'
-    | '/crm'
+    | '/copiloto'
+    | '/curriculo'
     | '/dashboard'
-    | '/emergencia'
-    | '/historico'
-    | '/inspecao'
-    | '/intemperies'
-    | '/iris'
-    | '/kaizen'
-    | '/meio-ambiente'
-    | '/monitoramento-vale'
-    | '/n3'
-    | '/notificacoes'
-    | '/novidades'
+    | '/diagnostico'
+    | '/home'
+    | '/memoria'
+    | '/minha-ia'
+    | '/perfil'
     | '/relatorios'
-    | '/supervisao'
-    | '/usuarios'
-    | '/vision'
-    | '/api/chat'
-    | '/admin/image-providers'
-    | '/admin/versoes'
-    | '/intemperies/notificacoes'
-    | '/api/iris/generate-after'
-    | '/api/iris/generate-corrected'
-    | '/api/iris/kaizen-chat'
-    | '/api/iris/providers-diagnostic'
-    | '/chat'
-    | '/api/public/lightning/recent'
-    | '/api/public/weather/current'
-    | '/api/public/weather/geocode'
+    | '/reunioes'
+    | '/simulador'
+    | '/teleprompter'
+    | '/templates'
+    | '/api/public/health'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
-    | '/reset-password'
-    | '/_authenticated/ambiental'
-    | '/_authenticated/apresentacao'
-    | '/_authenticated/auditoria'
-    | '/_authenticated/camera-360'
+    | '/privacy'
+    | '/security'
+    | '/terms'
+    | '/_authenticated/atas'
     | '/_authenticated/configuracoes'
-    | '/_authenticated/controle-ganhos'
-    | '/_authenticated/crm'
+    | '/_authenticated/copiloto'
+    | '/_authenticated/curriculo'
     | '/_authenticated/dashboard'
-    | '/_authenticated/emergencia'
-    | '/_authenticated/historico'
-    | '/_authenticated/inspecao'
-    | '/_authenticated/intemperies'
-    | '/_authenticated/iris'
-    | '/_authenticated/kaizen'
-    | '/_authenticated/meio-ambiente'
-    | '/_authenticated/monitoramento-vale'
-    | '/_authenticated/n3'
-    | '/_authenticated/notificacoes'
-    | '/_authenticated/novidades'
+    | '/_authenticated/diagnostico'
+    | '/_authenticated/home'
+    | '/_authenticated/memoria'
+    | '/_authenticated/minha-ia'
+    | '/_authenticated/perfil'
     | '/_authenticated/relatorios'
-    | '/_authenticated/supervisao'
-    | '/_authenticated/usuarios'
-    | '/_authenticated/vision'
-    | '/api/chat'
-    | '/_authenticated/admin/image-providers'
-    | '/_authenticated/admin/versoes'
-    | '/_authenticated/intemperies/notificacoes'
-    | '/api/iris/generate-after'
-    | '/api/iris/generate-corrected'
-    | '/api/iris/kaizen-chat'
-    | '/api/iris/providers-diagnostic'
-    | '/_authenticated/chat/'
-    | '/api/public/lightning/recent'
-    | '/api/public/weather/current'
-    | '/api/public/weather/geocode'
+    | '/_authenticated/reunioes'
+    | '/_authenticated/simulador'
+    | '/_authenticated/teleprompter'
+    | '/_authenticated/templates'
+    | '/api/public/health'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
-  ResetPasswordRoute: typeof ResetPasswordRoute
-  ApiChatRoute: typeof ApiChatRoute
-  ApiIrisGenerateAfterRoute: typeof ApiIrisGenerateAfterRoute
-  ApiIrisGenerateCorrectedRoute: typeof ApiIrisGenerateCorrectedRoute
-  ApiIrisKaizenChatRoute: typeof ApiIrisKaizenChatRoute
-  ApiIrisProvidersDiagnosticRoute: typeof ApiIrisProvidersDiagnosticRoute
-  ApiPublicLightningRecentRoute: typeof ApiPublicLightningRecentRoute
-  ApiPublicWeatherCurrentRoute: typeof ApiPublicWeatherCurrentRoute
-  ApiPublicWeatherGeocodeRoute: typeof ApiPublicWeatherGeocodeRoute
+  PrivacyRoute: typeof PrivacyRoute
+  SecurityRoute: typeof SecurityRoute
+  TermsRoute: typeof TermsRoute
+  ApiPublicHealthRoute: typeof ApiPublicHealthRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -541,144 +315,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/chat': {
-      id: '/api/chat'
-      path: '/api/chat'
-      fullPath: '/api/chat'
-      preLoaderRoute: typeof ApiChatRouteImport
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/vision': {
-      id: '/_authenticated/vision'
-      path: '/vision'
-      fullPath: '/vision'
-      preLoaderRoute: typeof AuthenticatedVisionRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/security': {
+      id: '/security'
+      path: '/security'
+      fullPath: '/security'
+      preLoaderRoute: typeof SecurityRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/usuarios': {
-      id: '/_authenticated/usuarios'
-      path: '/usuarios'
-      fullPath: '/usuarios'
-      preLoaderRoute: typeof AuthenticatedUsuariosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/supervisao': {
-      id: '/_authenticated/supervisao'
-      path: '/supervisao'
-      fullPath: '/supervisao'
-      preLoaderRoute: typeof AuthenticatedSupervisaoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/relatorios': {
-      id: '/_authenticated/relatorios'
-      path: '/relatorios'
-      fullPath: '/relatorios'
-      preLoaderRoute: typeof AuthenticatedRelatoriosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/novidades': {
-      id: '/_authenticated/novidades'
-      path: '/novidades'
-      fullPath: '/novidades'
-      preLoaderRoute: typeof AuthenticatedNovidadesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/notificacoes': {
-      id: '/_authenticated/notificacoes'
-      path: '/notificacoes'
-      fullPath: '/notificacoes'
-      preLoaderRoute: typeof AuthenticatedNotificacoesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/n3': {
-      id: '/_authenticated/n3'
-      path: '/n3'
-      fullPath: '/n3'
-      preLoaderRoute: typeof AuthenticatedN3RouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/monitoramento-vale': {
-      id: '/_authenticated/monitoramento-vale'
-      path: '/monitoramento-vale'
-      fullPath: '/monitoramento-vale'
-      preLoaderRoute: typeof AuthenticatedMonitoramentoValeRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/meio-ambiente': {
-      id: '/_authenticated/meio-ambiente'
-      path: '/meio-ambiente'
-      fullPath: '/meio-ambiente'
-      preLoaderRoute: typeof AuthenticatedMeioAmbienteRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/kaizen': {
-      id: '/_authenticated/kaizen'
-      path: '/kaizen'
-      fullPath: '/kaizen'
-      preLoaderRoute: typeof AuthenticatedKaizenRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/iris': {
-      id: '/_authenticated/iris'
-      path: '/iris'
-      fullPath: '/iris'
-      preLoaderRoute: typeof AuthenticatedIrisRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/intemperies': {
-      id: '/_authenticated/intemperies'
-      path: '/intemperies'
-      fullPath: '/intemperies'
-      preLoaderRoute: typeof AuthenticatedIntemperiesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/inspecao': {
-      id: '/_authenticated/inspecao'
-      path: '/inspecao'
-      fullPath: '/inspecao'
-      preLoaderRoute: typeof AuthenticatedInspecaoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/historico': {
-      id: '/_authenticated/historico'
-      path: '/historico'
-      fullPath: '/historico'
-      preLoaderRoute: typeof AuthenticatedHistoricoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/emergencia': {
-      id: '/_authenticated/emergencia'
-      path: '/emergencia'
-      fullPath: '/emergencia'
-      preLoaderRoute: typeof AuthenticatedEmergenciaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/crm': {
-      id: '/_authenticated/crm'
-      path: '/crm'
-      fullPath: '/crm'
-      preLoaderRoute: typeof AuthenticatedCrmRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/controle-ganhos': {
-      id: '/_authenticated/controle-ganhos'
-      path: '/controle-ganhos'
-      fullPath: '/controle-ganhos'
-      preLoaderRoute: typeof AuthenticatedControleGanhosRouteImport
+    '/_authenticated/atas': {
+      id: '/_authenticated/atas'
+      path: '/atas'
+      fullPath: '/atas'
+      preLoaderRoute: typeof AuthenticatedAtasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/configuracoes': {
@@ -688,185 +357,141 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConfiguracoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/camera-360': {
-      id: '/_authenticated/camera-360'
-      path: '/camera-360'
-      fullPath: '/camera-360'
-      preLoaderRoute: typeof AuthenticatedCamera360RouteImport
+    '/_authenticated/copiloto': {
+      id: '/_authenticated/copiloto'
+      path: '/copiloto'
+      fullPath: '/copiloto'
+      preLoaderRoute: typeof AuthenticatedCopilotoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/auditoria': {
-      id: '/_authenticated/auditoria'
-      path: '/auditoria'
-      fullPath: '/auditoria'
-      preLoaderRoute: typeof AuthenticatedAuditoriaRouteImport
+    '/_authenticated/curriculo': {
+      id: '/_authenticated/curriculo'
+      path: '/curriculo'
+      fullPath: '/curriculo'
+      preLoaderRoute: typeof AuthenticatedCurriculoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/apresentacao': {
-      id: '/_authenticated/apresentacao'
-      path: '/apresentacao'
-      fullPath: '/apresentacao'
-      preLoaderRoute: typeof AuthenticatedApresentacaoRouteImport
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/ambiental': {
-      id: '/_authenticated/ambiental'
-      path: '/ambiental'
-      fullPath: '/ambiental'
-      preLoaderRoute: typeof AuthenticatedAmbientalRouteImport
+    '/_authenticated/diagnostico': {
+      id: '/_authenticated/diagnostico'
+      path: '/diagnostico'
+      fullPath: '/diagnostico'
+      preLoaderRoute: typeof AuthenticatedDiagnosticoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/chat/': {
-      id: '/_authenticated/chat/'
-      path: '/chat'
-      fullPath: '/chat/'
-      preLoaderRoute: typeof AuthenticatedChatIndexRouteImport
+    '/_authenticated/home': {
+      id: '/_authenticated/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof AuthenticatedHomeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/iris/providers-diagnostic': {
-      id: '/api/iris/providers-diagnostic'
-      path: '/api/iris/providers-diagnostic'
-      fullPath: '/api/iris/providers-diagnostic'
-      preLoaderRoute: typeof ApiIrisProvidersDiagnosticRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/iris/kaizen-chat': {
-      id: '/api/iris/kaizen-chat'
-      path: '/api/iris/kaizen-chat'
-      fullPath: '/api/iris/kaizen-chat'
-      preLoaderRoute: typeof ApiIrisKaizenChatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/iris/generate-corrected': {
-      id: '/api/iris/generate-corrected'
-      path: '/api/iris/generate-corrected'
-      fullPath: '/api/iris/generate-corrected'
-      preLoaderRoute: typeof ApiIrisGenerateCorrectedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/iris/generate-after': {
-      id: '/api/iris/generate-after'
-      path: '/api/iris/generate-after'
-      fullPath: '/api/iris/generate-after'
-      preLoaderRoute: typeof ApiIrisGenerateAfterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/intemperies/notificacoes': {
-      id: '/_authenticated/intemperies/notificacoes'
-      path: '/notificacoes'
-      fullPath: '/intemperies/notificacoes'
-      preLoaderRoute: typeof AuthenticatedIntemperiesNotificacoesRouteImport
-      parentRoute: typeof AuthenticatedIntemperiesRoute
-    }
-    '/_authenticated/admin/versoes': {
-      id: '/_authenticated/admin/versoes'
-      path: '/admin/versoes'
-      fullPath: '/admin/versoes'
-      preLoaderRoute: typeof AuthenticatedAdminVersoesRouteImport
+    '/_authenticated/memoria': {
+      id: '/_authenticated/memoria'
+      path: '/memoria'
+      fullPath: '/memoria'
+      preLoaderRoute: typeof AuthenticatedMemoriaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/admin/image-providers': {
-      id: '/_authenticated/admin/image-providers'
-      path: '/admin/image-providers'
-      fullPath: '/admin/image-providers'
-      preLoaderRoute: typeof AuthenticatedAdminImageProvidersRouteImport
+    '/_authenticated/minha-ia': {
+      id: '/_authenticated/minha-ia'
+      path: '/minha-ia'
+      fullPath: '/minha-ia'
+      preLoaderRoute: typeof AuthenticatedMinhaIaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/weather/geocode': {
-      id: '/api/public/weather/geocode'
-      path: '/api/public/weather/geocode'
-      fullPath: '/api/public/weather/geocode'
-      preLoaderRoute: typeof ApiPublicWeatherGeocodeRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_authenticated/perfil': {
+      id: '/_authenticated/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof AuthenticatedPerfilRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/weather/current': {
-      id: '/api/public/weather/current'
-      path: '/api/public/weather/current'
-      fullPath: '/api/public/weather/current'
-      preLoaderRoute: typeof ApiPublicWeatherCurrentRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_authenticated/relatorios': {
+      id: '/_authenticated/relatorios'
+      path: '/relatorios'
+      fullPath: '/relatorios'
+      preLoaderRoute: typeof AuthenticatedRelatoriosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/lightning/recent': {
-      id: '/api/public/lightning/recent'
-      path: '/api/public/lightning/recent'
-      fullPath: '/api/public/lightning/recent'
-      preLoaderRoute: typeof ApiPublicLightningRecentRouteImport
+    '/_authenticated/reunioes': {
+      id: '/_authenticated/reunioes'
+      path: '/reunioes'
+      fullPath: '/reunioes'
+      preLoaderRoute: typeof AuthenticatedReunioesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/simulador': {
+      id: '/_authenticated/simulador'
+      path: '/simulador'
+      fullPath: '/simulador'
+      preLoaderRoute: typeof AuthenticatedSimuladorRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/teleprompter': {
+      id: '/_authenticated/teleprompter'
+      path: '/teleprompter'
+      fullPath: '/teleprompter'
+      preLoaderRoute: typeof AuthenticatedTeleprompterRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/templates': {
+      id: '/_authenticated/templates'
+      path: '/templates'
+      fullPath: '/templates'
+      preLoaderRoute: typeof AuthenticatedTemplatesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
 }
-
-interface AuthenticatedIntemperiesRouteChildren {
-  AuthenticatedIntemperiesNotificacoesRoute: typeof AuthenticatedIntemperiesNotificacoesRoute
-}
-
-const AuthenticatedIntemperiesRouteChildren: AuthenticatedIntemperiesRouteChildren =
-  {
-    AuthenticatedIntemperiesNotificacoesRoute:
-      AuthenticatedIntemperiesNotificacoesRoute,
-  }
-
-const AuthenticatedIntemperiesRouteWithChildren =
-  AuthenticatedIntemperiesRoute._addFileChildren(
-    AuthenticatedIntemperiesRouteChildren,
-  )
 
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedAmbientalRoute: typeof AuthenticatedAmbientalRoute
-  AuthenticatedApresentacaoRoute: typeof AuthenticatedApresentacaoRoute
-  AuthenticatedAuditoriaRoute: typeof AuthenticatedAuditoriaRoute
-  AuthenticatedCamera360Route: typeof AuthenticatedCamera360Route
+  AuthenticatedAtasRoute: typeof AuthenticatedAtasRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
-  AuthenticatedControleGanhosRoute: typeof AuthenticatedControleGanhosRoute
-  AuthenticatedCrmRoute: typeof AuthenticatedCrmRoute
+  AuthenticatedCopilotoRoute: typeof AuthenticatedCopilotoRoute
+  AuthenticatedCurriculoRoute: typeof AuthenticatedCurriculoRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedEmergenciaRoute: typeof AuthenticatedEmergenciaRoute
-  AuthenticatedHistoricoRoute: typeof AuthenticatedHistoricoRoute
-  AuthenticatedInspecaoRoute: typeof AuthenticatedInspecaoRoute
-  AuthenticatedIntemperiesRoute: typeof AuthenticatedIntemperiesRouteWithChildren
-  AuthenticatedIrisRoute: typeof AuthenticatedIrisRoute
-  AuthenticatedKaizenRoute: typeof AuthenticatedKaizenRoute
-  AuthenticatedMeioAmbienteRoute: typeof AuthenticatedMeioAmbienteRoute
-  AuthenticatedMonitoramentoValeRoute: typeof AuthenticatedMonitoramentoValeRoute
-  AuthenticatedN3Route: typeof AuthenticatedN3Route
-  AuthenticatedNotificacoesRoute: typeof AuthenticatedNotificacoesRoute
-  AuthenticatedNovidadesRoute: typeof AuthenticatedNovidadesRoute
+  AuthenticatedDiagnosticoRoute: typeof AuthenticatedDiagnosticoRoute
+  AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
+  AuthenticatedMemoriaRoute: typeof AuthenticatedMemoriaRoute
+  AuthenticatedMinhaIaRoute: typeof AuthenticatedMinhaIaRoute
+  AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
-  AuthenticatedSupervisaoRoute: typeof AuthenticatedSupervisaoRoute
-  AuthenticatedUsuariosRoute: typeof AuthenticatedUsuariosRoute
-  AuthenticatedVisionRoute: typeof AuthenticatedVisionRoute
-  AuthenticatedAdminImageProvidersRoute: typeof AuthenticatedAdminImageProvidersRoute
-  AuthenticatedAdminVersoesRoute: typeof AuthenticatedAdminVersoesRoute
-  AuthenticatedChatIndexRoute: typeof AuthenticatedChatIndexRoute
+  AuthenticatedReunioesRoute: typeof AuthenticatedReunioesRoute
+  AuthenticatedSimuladorRoute: typeof AuthenticatedSimuladorRoute
+  AuthenticatedTeleprompterRoute: typeof AuthenticatedTeleprompterRoute
+  AuthenticatedTemplatesRoute: typeof AuthenticatedTemplatesRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedAmbientalRoute: AuthenticatedAmbientalRoute,
-  AuthenticatedApresentacaoRoute: AuthenticatedApresentacaoRoute,
-  AuthenticatedAuditoriaRoute: AuthenticatedAuditoriaRoute,
-  AuthenticatedCamera360Route: AuthenticatedCamera360Route,
+  AuthenticatedAtasRoute: AuthenticatedAtasRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
-  AuthenticatedControleGanhosRoute: AuthenticatedControleGanhosRoute,
-  AuthenticatedCrmRoute: AuthenticatedCrmRoute,
+  AuthenticatedCopilotoRoute: AuthenticatedCopilotoRoute,
+  AuthenticatedCurriculoRoute: AuthenticatedCurriculoRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedEmergenciaRoute: AuthenticatedEmergenciaRoute,
-  AuthenticatedHistoricoRoute: AuthenticatedHistoricoRoute,
-  AuthenticatedInspecaoRoute: AuthenticatedInspecaoRoute,
-  AuthenticatedIntemperiesRoute: AuthenticatedIntemperiesRouteWithChildren,
-  AuthenticatedIrisRoute: AuthenticatedIrisRoute,
-  AuthenticatedKaizenRoute: AuthenticatedKaizenRoute,
-  AuthenticatedMeioAmbienteRoute: AuthenticatedMeioAmbienteRoute,
-  AuthenticatedMonitoramentoValeRoute: AuthenticatedMonitoramentoValeRoute,
-  AuthenticatedN3Route: AuthenticatedN3Route,
-  AuthenticatedNotificacoesRoute: AuthenticatedNotificacoesRoute,
-  AuthenticatedNovidadesRoute: AuthenticatedNovidadesRoute,
+  AuthenticatedDiagnosticoRoute: AuthenticatedDiagnosticoRoute,
+  AuthenticatedHomeRoute: AuthenticatedHomeRoute,
+  AuthenticatedMemoriaRoute: AuthenticatedMemoriaRoute,
+  AuthenticatedMinhaIaRoute: AuthenticatedMinhaIaRoute,
+  AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
-  AuthenticatedSupervisaoRoute: AuthenticatedSupervisaoRoute,
-  AuthenticatedUsuariosRoute: AuthenticatedUsuariosRoute,
-  AuthenticatedVisionRoute: AuthenticatedVisionRoute,
-  AuthenticatedAdminImageProvidersRoute: AuthenticatedAdminImageProvidersRoute,
-  AuthenticatedAdminVersoesRoute: AuthenticatedAdminVersoesRoute,
-  AuthenticatedChatIndexRoute: AuthenticatedChatIndexRoute,
+  AuthenticatedReunioesRoute: AuthenticatedReunioesRoute,
+  AuthenticatedSimuladorRoute: AuthenticatedSimuladorRoute,
+  AuthenticatedTeleprompterRoute: AuthenticatedTeleprompterRoute,
+  AuthenticatedTemplatesRoute: AuthenticatedTemplatesRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -876,16 +501,21 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
-  ResetPasswordRoute: ResetPasswordRoute,
-  ApiChatRoute: ApiChatRoute,
-  ApiIrisGenerateAfterRoute: ApiIrisGenerateAfterRoute,
-  ApiIrisGenerateCorrectedRoute: ApiIrisGenerateCorrectedRoute,
-  ApiIrisKaizenChatRoute: ApiIrisKaizenChatRoute,
-  ApiIrisProvidersDiagnosticRoute: ApiIrisProvidersDiagnosticRoute,
-  ApiPublicLightningRecentRoute: ApiPublicLightningRecentRoute,
-  ApiPublicWeatherCurrentRoute: ApiPublicWeatherCurrentRoute,
-  ApiPublicWeatherGeocodeRoute: ApiPublicWeatherGeocodeRoute,
+  PrivacyRoute: PrivacyRoute,
+  SecurityRoute: SecurityRoute,
+  TermsRoute: TermsRoute,
+  ApiPublicHealthRoute: ApiPublicHealthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
