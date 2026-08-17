@@ -81,15 +81,15 @@ reiniciar o PM2. Sem isso todo `process.env` fica indefinido e as server functio
 
 O contrato completo, comentado, está em [`.env.example`](./.env.example). Resumo:
 
-| Variável                                                                                      | Obrigatória | Papel                                                                              |
-| --------------------------------------------------------------------------------------------- | ----------- | ---------------------------------------------------------------------------------- |
-| `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_PROJECT_ID`              | sim         | Cliente do navegador (protegido por RLS)                                           |
-| `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_PROJECT_ID`                             | sim         | Mesmos valores, lidos em runtime pelo servidor                                     |
-| `SUPABASE_SERVICE_ROLE_KEY`                                                                   | sim         | Operações administrativas no servidor — ignora RLS, nunca com prefixo `VITE_`      |
-| `VISION_AI_API_URL`, `VISION_AI_API_KEY`                                                      | para IA     | ÍRIS, chat, análise de foto/vídeo e geração "DEPOIS"                               |
-| `GEMINI_API_KEY`, `OPENAI_API_KEY`, `FAL_API_KEY`, `REPLICATE_API_TOKEN`, `STABILITY_API_KEY` | opcional    | Providers de geração de imagem (configure ao menos um para usar o Kaizen "DEPOIS") |
-| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`                                      | para push   | Web Push. Gere com `npx web-push generate-vapid-keys`                              |
-| `LIGHTNING_PROVIDER`, `OPENWEATHER_API_KEY`                                                   | opcional    | Contagem de raios (`disabled` por padrão)                                          |
+| Variável                                                                                      | Obrigatória | Papel                                                                                                   |
+| --------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------- |
+| `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_PROJECT_ID`              | sim         | Cliente do navegador (protegido por RLS)                                                                |
+| `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_PROJECT_ID`                             | sim         | Mesmos valores, lidos em runtime pelo servidor                                                          |
+| `SUPABASE_SERVICE_ROLE_KEY`                                                                   | sim         | Operações administrativas no servidor — ignora RLS, nunca com prefixo `VITE_`                           |
+| `VISION_AI_API_URL`, `VISION_AI_API_KEY`                                                      | para IA     | ÍRIS, chat, análise de foto/vídeo e geração "DEPOIS"                                                    |
+| `GEMINI_API_KEY`, `OPENAI_API_KEY`, `FAL_API_KEY`, `REPLICATE_API_TOKEN`, `STABILITY_API_KEY` | inativas    | Roteador multiprovedor em `src/lib/image-providers/` — sem rota que o chame desde a migração para a VPS |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`                                      | para push   | Web Push. Gere com `npx web-push generate-vapid-keys`                                                   |
+| `LIGHTNING_PROVIDER`, `OPENWEATHER_API_KEY`                                                   | opcional    | Contagem de raios (`disabled` por padrão)                                                               |
 
 `VALETECH_AI_API_URL` / `VALETECH_AI_API_KEY` continuam aceitas como fallback dos nomes `VISION_*`.
 
@@ -97,8 +97,8 @@ O contrato completo, comentado, está em [`.env.example`](./.env.example). Resum
 
 O app sobe mesmo sem as variáveis opcionais:
 
-- IA não configurada → `/api/vps/*` responde JSON `503 CONFIG_MISSING` e a UI mostra o banner
-  "servidor de IA indisponível" (nenhuma tela quebra).
+- IA não configurada → `/api/vps/*` responde JSON `503 CONFIG_MISSING` e o banner
+  "Servidor de IA local indisponível" aparece no topo das telas autenticadas (nada quebra).
 - Push sem VAPID → o envio falha com mensagem nomeando a variável ausente.
 - Raios com `LIGHTNING_PROVIDER=disabled` → o painel informa o estado real, sem inventar dado.
 
@@ -130,7 +130,7 @@ src/
     api/public/         # clima, geocoding e descargas atmosféricas
   lib/
     vps-ai/             # config/cliente server-only + api e hooks do browser
-    image-providers/    # roteador multi-provider de geração de imagem
+    image-providers/    # roteador multi-provider (configurável, hoje sem rota que o consuma)
     reports/            # PDF, DOCX, XLSX, QR code
     weather/, lightning/, push/, environmental/, safety-plan/
   components/           # UI (shadcn) + módulos de registro, VPS e intempéries

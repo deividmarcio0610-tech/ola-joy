@@ -1,5 +1,5 @@
 // Mapeia perigos/riscos/ações → correções específicas por Norma Regulamentadora.
-// Mesma lógica usada no edge function `analisar-com-iris` (handleSimulation)
+// Mesma lógica de handleSimulation usada pela API de IA da VPS
 // para que o usuário veja, antes de gerar a Foto Depois, o que a IA vai corrigir.
 
 export type NrCorrection = {

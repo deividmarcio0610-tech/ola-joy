@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database, Json } from "@/integrations/supabase/types";
+import { RECORD_MODULES } from "@/lib/record-modules";
 import { z } from "zod";
 
 // Hamming distance between two hex strings (matched-length).
@@ -42,9 +44,7 @@ const FindSimilarInput = z.object({
   location: z.string().nullable().optional(),
   equipment: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
-  module: z
-    .enum(["n3", "crm", "kaizen", "environment", "emergency", "gain", "supervision"])
-    .optional(),
+  module: z.enum(RECORD_MODULES).optional(),
   onlySent: z.boolean().optional(),
   excludeId: z.string().uuid().optional(),
 });
@@ -118,7 +118,7 @@ export const findSimilar = createServerFn({ method: "POST" })
   });
 
 const CreateInput = z.object({
-  module: z.enum(["n3", "crm", "kaizen", "environment", "emergency", "gain", "inspecao"]),
+  module: z.enum(RECORD_MODULES),
   title: z.string().min(1),
   description: z.string().default(""),
   area: z.string().nullable().optional(),
@@ -171,7 +171,9 @@ export const createRecordWithCode = createServerFn({ method: "POST" })
       internalCode = codeRes as string;
     }
 
-    const insertRow = {
+    // Tipado contra o schema: era o cast `as never` que deixava passar um módulo
+    // fora do enum record_module e só quebrava em produção, no INSERT.
+    const insertRow: Database["public"]["Tables"]["records"]["Insert"] = {
       user_id: userId,
       module: data.module,
       title: data.title,
@@ -180,24 +182,28 @@ export const createRecordWithCode = createServerFn({ method: "POST" })
       location: data.location ?? null,
       equipment: data.equipment ?? null,
       equipment_number: data.equipment_number ?? null,
-      status: "aberto" as never,
-      priority: data.priority as never,
+      status: "aberto",
+      priority: data.priority as Database["public"]["Enums"]["record_priority"],
       financial_value: data.financial_value ?? null,
       photo_url: data.photo_url ?? null,
       image_hash: data.image_hash ?? null,
       image_phash: data.image_phash ?? null,
       internal_code: internalCode,
       // Registro com foto/análise entra pendente de revisão → Monitoramento Vale
-      vale_status: (data.photo_url ? "awaiting_review" : "draft") as never,
+      vale_status: data.photo_url ? "awaiting_review" : "draft",
       parent_record_id: data.parent_record_id ?? null,
       recurrence_index: recurrenceIndex,
-      similarity_meta: data.similarity_meta ?? null,
-      meta: (data.meta ?? {}) as never,
+      // Os campos jsonb chegam validados pelo zod como objeto solto; a conversão para
+      // Json é só de tipo — o conteúdo já é serializável.
+      similarity_meta: (data.similarity_meta ?? null) as Json,
+      meta: (data.meta ?? {}) as Json,
     };
+
+    const initialValeStatus = insertRow.vale_status;
 
     const { data: inserted, error } = await supabase
       .from("records")
-      .insert(insertRow as never)
+      .insert(insertRow)
       .select()
       .single();
     if (error) throw new Error(error.message);
@@ -207,7 +213,9 @@ export const createRecordWithCode = createServerFn({ method: "POST" })
       record_id: insertedRow.id,
       user_id: userId,
       action: data.kind === "recurrence" ? "recurrence_created" : "record_created",
-      to_status: "draft",
+      // O registro nasce em awaiting_review quando tem foto; gravar "draft" fixo
+      // deixava a trilha de auditoria fora de sincronia com records.vale_status.
+      to_status: initialValeStatus,
       justification: data.justification ?? null,
       meta: (data.similarity_meta ?? null) as never,
     } as never);

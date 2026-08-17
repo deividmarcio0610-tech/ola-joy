@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import { APP_VERSION, bucketFromId, compareVersions } from "../src/lib/version.ts";
 import { MAX_IMAGE_MB, MAX_VIDEO_MB, sanitizeText, validateFile } from "../src/lib/validation.ts";
+import { RECORD_MODULES, isRecordModule, toRecordModule } from "../src/lib/record-modules.ts";
 
 // ── version.ts ───────────────────────────────────────────────────────────────
 
@@ -116,4 +117,30 @@ test("sanitizeText corta no limite e apara as bordas", () => {
   assert.equal(sanitizeText("a".repeat(5000)).length, 2000, "limite padrão");
   assert.equal(sanitizeText("a".repeat(50), 10).length, 10, "limite explícito");
   assert.equal(sanitizeText(""), "");
+});
+
+// ── record-modules.ts ────────────────────────────────────────────────────────
+
+test("toRecordModule só produz valores do enum record_module do banco", () => {
+  // Gravar um valor fora do enum faz o Postgres recusar o INSERT inteiro — foi assim
+  // que o módulo Inspeção ficou sem conseguir salvar, mandando "inspecao".
+  for (const key of RECORD_MODULES) {
+    const mapped = toRecordModule(key);
+    assert.ok(
+      isRecordModule(mapped),
+      `toRecordModule("${key}") devolveu "${mapped}", que não existe em record_module`,
+    );
+  }
+});
+
+test("supervisão é gravada como N3 e os demais módulos passam intactos", () => {
+  assert.equal(toRecordModule("supervision"), "n3");
+  for (const key of RECORD_MODULES.filter((m) => m !== "supervision")) {
+    assert.equal(toRecordModule(key), key);
+  }
+});
+
+test("isRecordModule rejeita o valor legado que quebrava o INSERT", () => {
+  assert.equal(isRecordModule("inspecao"), false);
+  assert.equal(isRecordModule("inspection"), true);
 });

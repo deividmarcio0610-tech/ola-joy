@@ -23,6 +23,25 @@ const RATE_LIMIT_UNTIL = new Map<string, number>();
 
 const FRESH_MS = 90_000; // 90s: dedup e cache "fresco"
 const STALE_MS = 30 * 60_000; // 30min: janela de fallback com dado antigo
+// A rota é pública e a chave vem de lat/lon arbitrários: sem teto, um cliente
+// enumerando coordenadas faz o Map crescer até estourar a memória do processo.
+const MAX_CACHE_ENTRIES = 500;
+
+function rememberPayload(key: string, payload: unknown) {
+  const now = Date.now();
+  // Descarta o que já passou da janela stale — não serve nem como fallback.
+  for (const [k, entry] of CACHE) {
+    if (now - entry.fetchedAt > STALE_MS) CACHE.delete(k);
+  }
+  // Ainda cheio: remove as entradas mais antigas (Map preserva ordem de inserção).
+  while (CACHE.size >= MAX_CACHE_ENTRIES) {
+    const oldest = CACHE.keys().next();
+    if (oldest.done) break;
+    CACHE.delete(oldest.value);
+  }
+  CACHE.delete(key); // reinsere no fim para que a ordem reflita o uso recente
+  CACHE.set(key, { key, fetchedAt: now, payload });
+}
 
 // Marca erros de entrada para responder 400 em vez de 502 (falha do provedor).
 class BadRequestError extends Error {}
@@ -137,7 +156,7 @@ async function fetchOpenMeteo(latitude: number, longitude: number): Promise<unkn
         throw lastErr;
       }
       const json = await res.json();
-      CACHE.set(key, { key, fetchedAt: Date.now(), payload: json });
+      rememberPayload(key, json);
       return json;
     } catch (e) {
       lastErr = e;

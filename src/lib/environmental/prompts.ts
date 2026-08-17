@@ -1,5 +1,5 @@
 // Prompts do módulo de Auditoria Ambiental N3.
-// Enviados via `mode: "chat"` da Edge Function analisar-com-iris, com
+// Enviados via `mode: "chat"` para /api/vps/analisar, com
 // response_format json_object.
 
 import { ENV_CATEGORIES } from "./schema";

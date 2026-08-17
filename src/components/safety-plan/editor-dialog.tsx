@@ -33,6 +33,8 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { supabase } from "@/integrations/supabase/client";
+import { validateFile } from "@/lib/validation";
 import { IconSvg, LIBRARY, CATEGORY_LABEL } from "@/lib/safety-plan/icons";
 import {
   PALETTE,
@@ -85,6 +87,7 @@ export function SafetyPlanEditorDialog({
   title,
 }: Props) {
   const [photoUrl, setPhotoUrl] = useState<string | undefined>(initialPhoto);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [interventions, setInterventions] = useState<ProjectIntervention[]>([]);
   const [meta, setMeta] = useState<SafetyPlanState["meta"]>({
     data: new Date().toLocaleDateString("pt-BR"),
@@ -375,6 +378,10 @@ export function SafetyPlanEditorDialog({
 
   const handleSave = async () => {
     if (!photoUrl) return toast.error("Carregue uma fotografia primeiro.");
+    if (uploadingPhoto) return toast.error("Aguarde o envio da fotografia terminar.");
+    if (photoUrl.startsWith("blob:")) {
+      return toast.error("A fotografia não chegou ao servidor. Reenvie antes de salvar.");
+    }
     setSaving(true);
     try {
       const row = await save({
@@ -398,9 +405,49 @@ export function SafetyPlanEditorDialog({
     }
   };
 
+  /**
+   * O blob: local serve de preview imediato, mas morre com a aba — e o plano grava
+   * photoUrl em safety_plans.photo_url. Sem subir para o Storage, todo projeto salvo
+   * voltava com a fotografia quebrada. Fluxo: preview instantâneo → upload → troca
+   * pela URL assinada → revoga o blob.
+   */
   const handleUpload = async (file: File) => {
-    const url = URL.createObjectURL(file);
-    setPhotoUrl(url);
+    const check = validateFile(file, "image");
+    if (!check.ok) {
+      toast.error(check.error);
+      return;
+    }
+    const preview = URL.createObjectURL(file);
+    setPhotoUrl((prev) => {
+      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+      return preview;
+    });
+    setUploadingPhoto(true);
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const userId = auth.user?.id;
+      if (!userId) throw new Error("Sessão expirada. Faça login novamente.");
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `safety-plans/${userId}/${Date.now()}.${ext}`;
+      const up = await supabase.storage.from("inspections").upload(path, file);
+      if (up.error) throw up.error;
+      const { data: signed } = await supabase.storage
+        .from("inspections")
+        .createSignedUrl(path, 60 * 60 * 24 * 365);
+      if (!signed?.signedUrl) throw new Error("Não foi possível assinar a URL da fotografia.");
+      setPhotoUrl(signed.signedUrl);
+      URL.revokeObjectURL(preview);
+    } catch (e) {
+      // Volta ao estado sem foto: o botão de carregar só aparece quando photoUrl é
+      // vazio, então manter o blob morto aqui deixaria o usuário sem como tentar de novo.
+      setPhotoUrl((prev) => (prev === preview ? undefined : prev));
+      URL.revokeObjectURL(preview);
+      toast.error(
+        `${e instanceof Error ? e.message : "Falha ao enviar a fotografia."} Tente carregar novamente.`,
+      );
+    } finally {
+      setUploadingPhoto(false);
+    }
   };
 
   return (
@@ -431,13 +478,13 @@ export function SafetyPlanEditorDialog({
               canUndo={history.length > 0}
               canRedo={future.length > 0}
               onSave={handleSave}
-              saving={saving}
+              saving={saving || uploadingPhoto}
               onExportPng={handleExportPng}
               onExportPdf={handleExportPdf}
               onFinishRoute={finishRoute}
               routeActive={tool.kind === "route" && routePoints.length > 0}
             />
-            {!photoUrl && (
+            {(!photoUrl || uploadingPhoto) && (
               <label className="ml-auto cursor-pointer">
                 <input
                   type="file"
@@ -446,7 +493,8 @@ export function SafetyPlanEditorDialog({
                   onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])}
                 />
                 <span className="inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm hover:bg-muted">
-                  <Upload className="h-4 w-4" /> Carregar fotografia
+                  <Upload className="h-4 w-4" />
+                  {uploadingPhoto ? "Enviando fotografia…" : "Carregar fotografia"}
                 </span>
               </label>
             )}

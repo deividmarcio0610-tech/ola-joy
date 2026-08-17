@@ -1,6 +1,10 @@
 // ImageProviderRouter: orquestra os provedores em cascata,
 // atualiza circuit breaker, registra job/attempts e retorna a imagem final.
 // Server-only — nunca importar do client.
+//
+// ESTADO: sem chamador desde a migração para a IA da VPS — a geração do "DEPOIS"
+// passa por /api/vps/generate-after. O código e a tela /admin/image-providers
+// seguem mantidos para religar o roteador quando/se a geração voltar para cá.
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";

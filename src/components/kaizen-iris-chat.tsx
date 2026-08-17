@@ -228,7 +228,6 @@ export function KaizenIrisChat({ onClose }: { onClose?: () => void }) {
         },
         { signal: abortRef.current.signal },
       ).catch((e): GenResp => ({ error: e instanceof Error ? e.message : "Falha" }));
-      clearInterval(interval);
 
       if (!data.success || !data.imageBase64) {
         setProgress(0);
@@ -250,7 +249,6 @@ export function KaizenIrisChat({ onClose }: { onClose?: () => void }) {
         generatedImage: { dataUrl, corrections: selectedCorrections },
       });
     } catch (e) {
-      clearInterval(interval);
       setProgress(0);
       setProgressLabel("");
       const isAbort = e instanceof Error && e.name === "AbortError";
@@ -259,6 +257,9 @@ export function KaizenIrisChat({ onClose }: { onClose?: () => void }) {
         content: `⚠️ ${isAbort ? "Geração cancelada." : e instanceof Error ? e.message : "Falha na geração."}`,
       });
     } finally {
+      // No finally: um return antecipado ou o desmonte do componente no meio da
+      // geração deixavam o intervalo de progresso rodando.
+      clearInterval(interval);
       setGenerating(false);
       abortRef.current = null;
     }

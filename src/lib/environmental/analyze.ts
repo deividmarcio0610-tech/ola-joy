@@ -1,6 +1,6 @@
 // Cliente da análise ambiental N3.
-// Reutiliza a Edge Function `analisar-com-iris` no modo `chat` com
-// response_format = json_object e nosso system prompt N3.
+// Passa por chamarIrisChat → /api/vps/analisar (modo chat) com
+// response_format = json_object e o system prompt N3 deste módulo.
 
 import { supabase } from "@/integrations/supabase/client";
 import { chamarIrisChat, type IrisChatMessage } from "@/lib/iris-analyze";

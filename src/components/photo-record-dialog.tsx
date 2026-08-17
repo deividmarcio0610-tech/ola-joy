@@ -15,6 +15,7 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { findSimilar, createRecordWithCode } from "@/lib/records.functions";
+import { toRecordModule } from "@/lib/record-modules";
 import { sha256OfFile, dHashOfFile } from "@/lib/image-hash";
 import { CompareSlider } from "@/components/compare-slider";
 import jsPDF from "jspdf";
@@ -326,7 +327,11 @@ function PhotoRecordContent({
       const preview = URL.createObjectURL(f);
       next.push({ file: f, preview });
     }
-    setPhotos(next);
+    // Troca de seleção: sem revogar, cada re-seleção deixava os blobs anteriores vivos.
+    setPhotos((prev) => {
+      for (const p of prev) URL.revokeObjectURL(p.preview);
+      return next;
+    });
     setResult(null);
     setCompareResult(null);
     setSimilar([]);
@@ -702,13 +707,7 @@ function PhotoRecordContent({
       let insertedId: string | null = null;
       let internalCode: string | null = null;
 
-      const moduleForServer = (
-        chosenModule === "inspection"
-          ? "inspecao"
-          : chosenModule === "supervision"
-            ? "n3"
-            : chosenModule
-      ) as "n3" | "crm" | "kaizen" | "environment" | "emergency" | "gain" | "inspecao";
+      const moduleForServer = toRecordModule(chosenModule);
       const out = await createRecordFn({
         data: {
           module: moduleForServer,
@@ -1952,7 +1951,10 @@ function PhotoRecordContent({
                                   toast.error(v.error);
                                   return;
                                 }
-                                setCorrectionPhoto({ file: f, preview: URL.createObjectURL(f) });
+                                setCorrectionPhoto((prev) => {
+                                  if (prev) URL.revokeObjectURL(prev.preview);
+                                  return { file: f, preview: URL.createObjectURL(f) };
+                                });
                                 setCompareResult(null);
                               }}
                             />
@@ -1972,7 +1974,10 @@ function PhotoRecordContent({
                                   toast.error(v.error);
                                   return;
                                 }
-                                setCorrectionPhoto({ file: f, preview: URL.createObjectURL(f) });
+                                setCorrectionPhoto((prev) => {
+                                  if (prev) URL.revokeObjectURL(prev.preview);
+                                  return { file: f, preview: URL.createObjectURL(f) };
+                                });
                                 setCompareResult(null);
                               }}
                             />

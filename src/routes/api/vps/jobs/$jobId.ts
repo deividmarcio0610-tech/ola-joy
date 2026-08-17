@@ -10,7 +10,12 @@ export const Route = createFileRoute("/api/vps/jobs/$jobId")({
         if (!auth.ok) return jsonError(auth.status, auth.message);
         const res = await callVpsAI<Record<string, unknown>>(
           `/v1/jobs/${encodeURIComponent(params.jobId)}`,
-          { method: "GET", timeoutMs: 15_000 },
+          {
+            method: "GET",
+            timeoutMs: 15_000,
+            // Identifica o dono da sessão para a VPS validar a posse do job.
+            extraHeaders: { "X-Vision-User": auth.userId },
+          },
         );
         if (!res.ok) return jsonError(res.status, res.errorMessage ?? "Falha", res.errorCode);
         return Response.json(res.data ?? {});

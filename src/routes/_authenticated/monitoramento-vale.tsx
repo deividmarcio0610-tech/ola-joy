@@ -862,7 +862,7 @@ function MonitoringPage() {
                   <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="n3">N3</SelectItem>
                   <SelectItem value="crm">CRM</SelectItem>
-                  <SelectItem value="inspecao">Inspeção</SelectItem>
+                  <SelectItem value="inspection">Inspeção</SelectItem>
                   <SelectItem value="kaizen">Kaizen</SelectItem>
                   <SelectItem value="environment">Meio Ambiente</SelectItem>
                   <SelectItem value="emergency">Emergência</SelectItem>
