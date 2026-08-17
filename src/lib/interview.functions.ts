@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { AiGatewayError, chatJson, isAiConfigured } from "./ai-gateway.server";
+import { AiError, chatJson, isAiConfigured } from "./vllm.server";
 
 /**
  * Funções de servidor do simulador de entrevistas.
@@ -25,7 +25,7 @@ export type InterviewQuestionSource = "ia" | "padrao" | "erro";
 
 /** Traduz erros do gateway em mensagens que a UI pode exibir direto ao usuário. */
 function aiErrorMessage(err: unknown): string {
-  if (err instanceof AiGatewayError) return err.message;
+  if (err instanceof AiError) return err.message;
   return String((err as Error)?.message ?? err);
 }
 
@@ -90,7 +90,7 @@ export const generateInterviewQuestions = createServerFn({ method: "POST" })
         source: "padrao" as InterviewQuestionSource,
         questions: fallbackQuestions(vaga, area, nivel, quantidade),
         notice:
-          "IA não configurada no servidor (LOVABLE_API_KEY ausente). Estas são perguntas padrão, " +
+          "IA não configurada no servidor (VLLM_BASE_URL ausente). Estas são perguntas padrão, " +
           "não foram geradas para a sua vaga.",
       };
     }
@@ -186,7 +186,7 @@ export const evaluateInterviewAnswers = createServerFn({ method: "POST" })
       return {
         ok: false as const,
         error:
-          "IA não configurada no servidor (LOVABLE_API_KEY ausente). Sem ela não há como avaliar as respostas — " +
+          "IA não configurada no servidor (VLLM_BASE_URL ausente). Sem ela não há como avaliar as respostas — " +
           "nenhuma nota será exibida.",
       };
     }

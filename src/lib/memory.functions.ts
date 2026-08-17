@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { AiGatewayError, chatJson, isAiConfigured } from "./ai-gateway.server";
+import { AiError, chatJson, isAiConfigured } from "./vllm.server";
 
 /**
  * Memória profissional do usuário (tabela public.professional_memories):
@@ -65,7 +65,7 @@ export const analyzeMemory = createServerFn({ method: "POST" })
     if (!isAiConfigured()) {
       return {
         ok: false as const,
-        error: "IA não configurada: defina LOVABLE_API_KEY nas variáveis de ambiente do servidor.",
+        error: "IA não configurada: defina VLLM_BASE_URL apontando para o seu servidor vLLM.",
       };
     }
 
@@ -102,7 +102,7 @@ export const analyzeMemory = createServerFn({ method: "POST" })
     } catch (err) {
       return {
         ok: false as const,
-        error: err instanceof AiGatewayError ? err.message : String((err as Error)?.message ?? err),
+        error: err instanceof AiError ? err.message : String((err as Error)?.message ?? err),
       };
     }
   });
@@ -178,7 +178,7 @@ export const parseResume = createServerFn({ method: "POST" })
     if (!isAiConfigured()) {
       return {
         ok: false as const,
-        error: "IA não configurada: defina LOVABLE_API_KEY nas variáveis de ambiente do servidor.",
+        error: "IA não configurada: defina VLLM_BASE_URL apontando para o seu servidor vLLM.",
       };
     }
 
@@ -210,7 +210,7 @@ export const parseResume = createServerFn({ method: "POST" })
     } catch (err) {
       return {
         ok: false as const,
-        error: err instanceof AiGatewayError ? err.message : String((err as Error)?.message ?? err),
+        error: err instanceof AiError ? err.message : String((err as Error)?.message ?? err),
       };
     }
 

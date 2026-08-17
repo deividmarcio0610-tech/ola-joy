@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { AiGatewayError, chat } from "./ai-gateway.server";
+import { AiError, chat } from "./vllm.server";
 
 /**
  * Resposta do copiloto para uma pauta/contexto informado pelo usuário,
@@ -46,7 +46,7 @@ export const getCopilotResponse = createServerFn({ method: "POST" })
         ok: false as const,
         text: "",
         timestamp: Date.now(),
-        error: err instanceof AiGatewayError ? err.message : String((err as Error)?.message ?? err),
+        error: err instanceof AiError ? err.message : String((err as Error)?.message ?? err),
       };
     }
   });

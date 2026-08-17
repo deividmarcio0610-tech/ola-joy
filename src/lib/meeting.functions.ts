@@ -1,12 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { AiGatewayError, chat, chatJson, isAiConfigured } from "./ai-gateway.server";
+import { AiError, chat, chatJson, isAiConfigured } from "./vllm.server";
 import { detectQuestionForDeivid } from "./audio-pipeline";
 
 /**
  * Funções de servidor da reunião: detecção de perguntas, resposta sugerida,
  * extração incremental de decisões/ações/pendências e geração da ata final.
- * Toda a inteligência roda no Lovable AI Gateway (ver ai-gateway.server.ts).
+ * Toda a inteligência roda no seu servidor vLLM (ver vllm.server.ts).
  */
 
 // Bloco de transcrição produzido pelo pipeline de áudio do copiloto.
@@ -49,7 +49,7 @@ function blocksToTranscript(blocks: Array<z.infer<typeof blockSchema>>): string 
 
 /** Traduz erros do gateway em mensagens que a UI pode exibir direto ao usuário. */
 function aiErrorMessage(err: unknown): string {
-  if (err instanceof AiGatewayError) return err.message;
+  if (err instanceof AiError) return err.message;
   return String((err as Error)?.message ?? err);
 }
 
