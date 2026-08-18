@@ -268,8 +268,7 @@ export function runBacktest(
     for (let step = 0; step < Math.min(future.length, config.maxBarsToTrigger); step++) {
       const candle = future[step]!;
       const touchedEntry = candle.l <= entry && candle.h >= entry;
-      const brokeStopFirst =
-        decision.direction === "COMPRA" ? candle.l <= stop : candle.h >= stop;
+      const brokeStopFirst = decision.direction === "COMPRA" ? candle.l <= stop : candle.h >= stop;
       if (touchedEntry) {
         entryIndexOffset = step;
         break;
@@ -381,7 +380,10 @@ export function runBacktest(
     decisionsEvaluated,
     cancelled,
     seriesHash: seriesHash(series),
-    configHash: trades[0]?.configHash ?? evaluateT4Core(new CausalWindow(series, series.length - 1), true)?.configHash ?? "",
+    configHash:
+      trades[0]?.configHash ??
+      evaluateT4Core(new CausalWindow(series, series.length - 1), true)?.configHash ??
+      "",
     strategyVersion: trades[0]?.strategyVersion ?? "",
     firstCandleAt: series[0]?.t ?? null,
     lastCandleAt: series[series.length - 1]?.t ?? null,

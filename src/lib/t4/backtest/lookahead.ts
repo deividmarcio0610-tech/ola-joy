@@ -171,6 +171,8 @@ export function futureAfterEntry(
   maxCandles = Number.POSITIVE_INFINITY,
 ): Candle[] {
   const from = entryIndex + 1;
-  const to = Number.isFinite(maxCandles) ? Math.min(series.length, from + maxCandles) : series.length;
+  const to = Number.isFinite(maxCandles)
+    ? Math.min(series.length, from + maxCandles)
+    : series.length;
   return series.slice(from, to);
 }

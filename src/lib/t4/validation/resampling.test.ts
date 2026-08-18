@@ -6,7 +6,11 @@ import { classifyResult } from "./metrics";
 import type { T4Trade } from "./types";
 import { ZERO_COSTS } from "./types";
 
-function trade(resultR: number | null, index: number, dataset: T4Trade["dataset"] = "TRAIN"): T4Trade {
+function trade(
+  resultR: number | null,
+  index: number,
+  dataset: T4Trade["dataset"] = "TRAIN",
+): T4Trade {
   return {
     tradeId: `t${index}`,
     signalId: `s${index}`,

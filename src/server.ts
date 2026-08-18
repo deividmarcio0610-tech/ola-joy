@@ -5,6 +5,7 @@ import { renderErrorPage } from "./lib/error-page";
 import { handleHealthRequest } from "./lib/healthEndpoints";
 import { handleClaudeAdminRequest } from "./server/claudeAdminEndpoints";
 import { handleErrorCenterRequest } from "./server/errorEndpoints";
+import { handlePrintAnalysisRequest } from "./server/printAnalysisEndpoints";
 import { handleRecordingRequest } from "./server/recordingEndpoints";
 import { handleTradingRequest } from "./server/tradingEndpoints";
 
@@ -62,6 +63,9 @@ export default {
 
       const recording = await handleRecordingRequest(request);
       if (recording) return recording;
+
+      const printAnalysis = await handlePrintAnalysisRequest(request);
+      if (printAnalysis) return printAnalysis;
 
       const errors = await handleErrorCenterRequest(request);
       if (errors) return errors;

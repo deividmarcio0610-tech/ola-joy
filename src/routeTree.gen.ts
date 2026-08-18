@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AnalisadorRouteImport } from './routes/analisador'
+import { Route as AnalisarPrintRouteImport } from './routes/analisar-print'
 import { Route as AprendizadoRouteImport } from './routes/aprendizado'
 import { Route as BacktestRouteImport } from './routes/backtest'
 import { Route as BibliotecaRouteImport } from './routes/biblioteca'
@@ -18,6 +19,7 @@ import { Route as ClaudeRouteImport } from './routes/claude'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as ErrosRouteImport } from './routes/erros'
 import { Route as GerenciamentoRouteImport } from './routes/gerenciamento'
+import { Route as HistoricoAnalisesRouteImport } from './routes/historico-analises'
 import { Route as OperacaoAoVivoRouteImport } from './routes/operacao-ao-vivo'
 
 const IndexRoute = IndexRouteImport.update({
@@ -28,6 +30,11 @@ const IndexRoute = IndexRouteImport.update({
 const AnalisadorRoute = AnalisadorRouteImport.update({
   id: '/analisador',
   path: '/analisador',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnalisarPrintRoute = AnalisarPrintRouteImport.update({
+  id: '/analisar-print',
+  path: '/analisar-print',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AprendizadoRoute = AprendizadoRouteImport.update({
@@ -65,6 +72,11 @@ const GerenciamentoRoute = GerenciamentoRouteImport.update({
   path: '/gerenciamento',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HistoricoAnalisesRoute = HistoricoAnalisesRouteImport.update({
+  id: '/historico-analises',
+  path: '/historico-analises',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OperacaoAoVivoRoute = OperacaoAoVivoRouteImport.update({
   id: '/operacao-ao-vivo',
   path: '/operacao-ao-vivo',
@@ -74,6 +86,7 @@ const OperacaoAoVivoRoute = OperacaoAoVivoRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/analisador': typeof AnalisadorRoute
+  '/analisar-print': typeof AnalisarPrintRoute
   '/aprendizado': typeof AprendizadoRoute
   '/backtest': typeof BacktestRoute
   '/biblioteca': typeof BibliotecaRoute
@@ -81,11 +94,13 @@ export interface FileRoutesByFullPath {
   '/configuracoes': typeof ConfiguracoesRoute
   '/erros': typeof ErrosRoute
   '/gerenciamento': typeof GerenciamentoRoute
+  '/historico-analises': typeof HistoricoAnalisesRoute
   '/operacao-ao-vivo': typeof OperacaoAoVivoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/analisador': typeof AnalisadorRoute
+  '/analisar-print': typeof AnalisarPrintRoute
   '/aprendizado': typeof AprendizadoRoute
   '/backtest': typeof BacktestRoute
   '/biblioteca': typeof BibliotecaRoute
@@ -93,12 +108,14 @@ export interface FileRoutesByTo {
   '/configuracoes': typeof ConfiguracoesRoute
   '/erros': typeof ErrosRoute
   '/gerenciamento': typeof GerenciamentoRoute
+  '/historico-analises': typeof HistoricoAnalisesRoute
   '/operacao-ao-vivo': typeof OperacaoAoVivoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/analisador': typeof AnalisadorRoute
+  '/analisar-print': typeof AnalisarPrintRoute
   '/aprendizado': typeof AprendizadoRoute
   '/backtest': typeof BacktestRoute
   '/biblioteca': typeof BibliotecaRoute
@@ -106,6 +123,7 @@ export interface FileRoutesById {
   '/configuracoes': typeof ConfiguracoesRoute
   '/erros': typeof ErrosRoute
   '/gerenciamento': typeof GerenciamentoRoute
+  '/historico-analises': typeof HistoricoAnalisesRoute
   '/operacao-ao-vivo': typeof OperacaoAoVivoRoute
 }
 export interface FileRouteTypes {
@@ -113,6 +131,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/analisador'
+    | '/analisar-print'
     | '/aprendizado'
     | '/backtest'
     | '/biblioteca'
@@ -120,11 +139,13 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/erros'
     | '/gerenciamento'
+    | '/historico-analises'
     | '/operacao-ao-vivo'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/analisador'
+    | '/analisar-print'
     | '/aprendizado'
     | '/backtest'
     | '/biblioteca'
@@ -132,11 +153,13 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/erros'
     | '/gerenciamento'
+    | '/historico-analises'
     | '/operacao-ao-vivo'
   id:
     | '__root__'
     | '/'
     | '/analisador'
+    | '/analisar-print'
     | '/aprendizado'
     | '/backtest'
     | '/biblioteca'
@@ -144,12 +167,14 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/erros'
     | '/gerenciamento'
+    | '/historico-analises'
     | '/operacao-ao-vivo'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnalisadorRoute: typeof AnalisadorRoute
+  AnalisarPrintRoute: typeof AnalisarPrintRoute
   AprendizadoRoute: typeof AprendizadoRoute
   BacktestRoute: typeof BacktestRoute
   BibliotecaRoute: typeof BibliotecaRoute
@@ -157,6 +182,7 @@ export interface RootRouteChildren {
   ConfiguracoesRoute: typeof ConfiguracoesRoute
   ErrosRoute: typeof ErrosRoute
   GerenciamentoRoute: typeof GerenciamentoRoute
+  HistoricoAnalisesRoute: typeof HistoricoAnalisesRoute
   OperacaoAoVivoRoute: typeof OperacaoAoVivoRoute
 }
 
@@ -174,6 +200,13 @@ declare module '@tanstack/react-router' {
       path: '/analisador'
       fullPath: '/analisador'
       preLoaderRoute: typeof AnalisadorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/analisar-print': {
+      id: '/analisar-print'
+      path: '/analisar-print'
+      fullPath: '/analisar-print'
+      preLoaderRoute: typeof AnalisarPrintRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/aprendizado': {
@@ -225,6 +258,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GerenciamentoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/historico-analises': {
+      id: '/historico-analises'
+      path: '/historico-analises'
+      fullPath: '/historico-analises'
+      preLoaderRoute: typeof HistoricoAnalisesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/operacao-ao-vivo': {
       id: '/operacao-ao-vivo'
       path: '/operacao-ao-vivo'
@@ -238,6 +278,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalisadorRoute: AnalisadorRoute,
+  AnalisarPrintRoute: AnalisarPrintRoute,
   AprendizadoRoute: AprendizadoRoute,
   BacktestRoute: BacktestRoute,
   BibliotecaRoute: BibliotecaRoute,
@@ -245,6 +286,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConfiguracoesRoute: ConfiguracoesRoute,
   ErrosRoute: ErrosRoute,
   GerenciamentoRoute: GerenciamentoRoute,
+  HistoricoAnalisesRoute: HistoricoAnalisesRoute,
   OperacaoAoVivoRoute: OperacaoAoVivoRoute,
 }
 export const routeTree = rootRouteImport

@@ -100,7 +100,11 @@ describe("ciclo DETECTED → PENDING_CLOSE → CONFIRMED/INVALIDATED", () => {
   };
 
   it("candle ABERTO: critério que exige fechamento fica PENDING_CLOSE e NÃO conta", () => {
-    const state = evaluateSignal(new CausalWindow(data, 1), [precisaFechar, naoPrecisaFechar], false);
+    const state = evaluateSignal(
+      new CausalWindow(data, 1),
+      [precisaFechar, naoPrecisaFechar],
+      false,
+    );
     expect(state.lifecycle).toBe("PENDING_CLOSE");
     // Só o critério que não depende de fechamento entra na confluência.
     expect(state.confirmedConfluence).toBe(40);
@@ -111,7 +115,11 @@ describe("ciclo DETECTED → PENDING_CLOSE → CONFIRMED/INVALIDATED", () => {
   });
 
   it("candle FECHADO: o mesmo cenário confirma e atinge 100", () => {
-    const state = evaluateSignal(new CausalWindow(data, 1), [precisaFechar, naoPrecisaFechar], true);
+    const state = evaluateSignal(
+      new CausalWindow(data, 1),
+      [precisaFechar, naoPrecisaFechar],
+      true,
+    );
     expect(state.lifecycle).toBe("CONFIRMED");
     expect(state.confirmedConfluence).toBe(100);
   });

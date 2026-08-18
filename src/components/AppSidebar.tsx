@@ -10,6 +10,8 @@ import {
   Settings,
   Wallet,
   BookOpen,
+  ImagePlus,
+  History,
 } from "lucide-react";
 
 import {
@@ -28,6 +30,8 @@ import {
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Analisador", url: "/analisador", icon: Activity },
+  { title: "Analisar Print", url: "/analisar-print", icon: ImagePlus },
+  { title: "Histórico de Análises", url: "/historico-analises", icon: History },
   { title: "Gerenciamento", url: "/gerenciamento", icon: Wallet },
   { title: "Aprendizado", url: "/aprendizado", icon: Brain },
   { title: "Biblioteca", url: "/biblioteca", icon: BookOpen },

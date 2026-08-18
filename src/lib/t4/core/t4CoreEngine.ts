@@ -123,7 +123,8 @@ export function backtestReading(window: Candle[], lastCandleClosed: boolean): Re
     candleQuality: 100,
     closedCandles: window.length,
     lastCandleClosed,
-    issues: window.length >= READING_GATES.minClosedCandles ? [] : ["Histórico fechado insuficiente."],
+    issues:
+      window.length >= READING_GATES.minClosedCandles ? [] : ["Histórico fechado insuficiente."],
     label: "SÉRIE HISTÓRICA",
   };
 }
@@ -178,7 +179,10 @@ export function buildT4Criteria(context: T4CoreContext): CriterionCheck[] {
           : direction === "VENDA"
             ? pa.imbalance <= -t.minReactionImbalance && pa.conviction >= t.minReactionConviction
             : false;
-      return { met, detail: `imbalance=${pa.imbalance.toFixed(0)} convicção=${pa.conviction.toFixed(0)}` };
+      return {
+        met,
+        detail: `imbalance=${pa.imbalance.toFixed(0)} convicção=${pa.conviction.toFixed(0)}`,
+      };
     },
     retest: () => {
       const inPoi = poi !== null && analysis.price >= poi.lower && analysis.price <= poi.upper;
@@ -198,7 +202,10 @@ export function buildT4Criteria(context: T4CoreContext): CriterionCheck[] {
       };
     },
     sequence: () => ({
-      met: analysis.sequence.complete && !analysis.sequence.staleSweep && !analysis.sequence.orderViolated,
+      met:
+        analysis.sequence.complete &&
+        !analysis.sequence.staleSweep &&
+        !analysis.sequence.orderViolated,
       detail: analysis.sequence.complete
         ? "sequência completa"
         : `faltando: ${analysis.sequence.missing.join(", ") || "—"}`,
@@ -314,9 +321,8 @@ export function evaluateT4Live(
 ): T4CoreDecision | null {
   if (window.length === 0) return null;
   const ordered = window.slice().sort((a, b) => a.t - b.t);
-  return evaluateT4Core(
-    new CausalWindow(ordered, ordered.length - 1),
-    reading.lastCandleClosed,
-    { reading, riskParams },
-  );
+  return evaluateT4Core(new CausalWindow(ordered, ordered.length - 1), reading.lastCandleClosed, {
+    reading,
+    riskParams,
+  });
 }

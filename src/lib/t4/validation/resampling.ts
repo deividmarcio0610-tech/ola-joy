@@ -235,7 +235,7 @@ export function analyzeSampleSize(trades: T4Trade[], targetHalfWidthR = 0.1): Sa
   // n necessário para 1,96 * s/√n <= alvo  →  n >= (1,96*s/alvo)²
   const required =
     targetHalfWidthR > 0 && standardDeviation > 0
-      ? Math.ceil((1.96 * standardDeviation / targetHalfWidthR) ** 2)
+      ? Math.ceil(((1.96 * standardDeviation) / targetHalfWidthR) ** 2)
       : null;
   return {
     currentTrades: n,
