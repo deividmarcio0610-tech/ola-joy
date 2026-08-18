@@ -7,7 +7,9 @@
 
 ## Pré-requisitos
 
-- Node.js 22.5+ (SQLite nativo) — ou Docker;
+- **Node.js 22.13+** — o módulo `node:sqlite` existe desde o 22.5, mas só
+  dispensa a flag `--experimental-sqlite` a partir do 22.13; em 22.5–22.12 o
+  build passa e o servidor morre no boot. O script valida isso e aborta;
 - HTTPS no domínio para permitir compartilhamento de tela;
 - diretório persistente gravável para SQLite (`/var/lib/analisador`);
 - túnel GPU ativo apenas quando a análise por Ollama for necessária.
@@ -59,10 +61,31 @@ git pull origin claude/t4-unificacao-finalizacao-tefo0d
 bash deploy/deploy-vps.sh
 ```
 
-O script é idempotente e **para no primeiro erro**: valida o `.env`, faz
-backup do SQLite, roda os gates (typecheck + 321 testes + build), sobe/reinicia
-o PM2 `analisador` e executa a validação pós-deploy abaixo. Nada é publicado
-se um gate falhar.
+O script é idempotente e **para no primeiro erro**: valida Node ≥ 22.13 e o
+`.env`, confere colisão de nome PM2 e de porta, faz backup CONSISTENTE do
+SQLite (`VACUUM INTO`, que inclui o WAL), roda os
+gates (typecheck + testes + build), sobe/reinicia o PM2 e executa a validação
+pós-deploy abaixo. Nada é publicado se um gate falhar.
+
+### Subindo LADO A LADO com um app que já está no ar
+
+Se a máquina já serve outro aplicativo (por exemplo o **T4 EDGE** em
+`analisador.dvdswap.com.br`), **não reaproveite o nome nem a porta dele**. O
+script detecta os dois casos e aborta com instrução, mas o caminho correto é
+escolher identidade própria desde o começo:
+
+```bash
+T4_APP_NAME=t4-analisador PORT=8085 DATA_DIR=/var/lib/t4-analisador \
+  bash deploy/deploy-vps.sh
+```
+
+Estas variáveis de linha de comando **vencem o que estiver no `.env`** — o
+script as preserva antes de carregar o arquivo.
+
+Depois aponte um **server block novo** do Nginx (ex.: `t4.dvdswap.com.br`) para
+`http://127.0.0.1:8085`. O app antigo continua intocado no domínio dele. Use
+também um `DATA_DIR` exclusivo (ex.: `/var/lib/t4-analisador`) para os dois
+bancos nunca se misturarem.
 
 ## Passo a passo manual (equivalente ao script)
 
@@ -78,7 +101,7 @@ sudo mkdir -p /var/lib/analisador && sudo chown "$(whoami)" /var/lib/analisador
 # 2. Build validado (não pule os gates)
 npm ci            # ou: bun install --frozen-lockfile
 npm run typecheck # precisa sair 0
-npm test          # precisa sair 0 (321 testes)
+npm test          # precisa sair 0 (328 testes)
 npm run build     # precisa sair 0
 
 # 3. Processo PM2 (nome fixo: analisador) com o .env carregado

@@ -40,9 +40,26 @@ let singleton: DatabaseSync | null = null;
 function db(): DatabaseSync {
   if (singleton) return singleton;
   mkdirSync(dataDir(), { recursive: true });
-  singleton = new DatabaseSync(dbPath());
-  singleton.exec("PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;");
-  migrate(singleton);
+  const database = new DatabaseSync(dbPath());
+  try {
+    database.exec("PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;");
+    migrate(database);
+  } catch (error) {
+    // Falha de migração NÃO pode envenenar o singleton: se a conexão ficasse
+    // publicada com o schema pela metade, toda chamada seguinte a db() a
+    // devolveria sem nunca reexecutar migrate(), e o processo continuaria de pé
+    // servindo `no such column` para sempre. Fechando e zerando aqui, a próxima
+    // chamada tenta a migração de novo e o erro real sobe para quem chamou.
+    try {
+      database.close();
+    } catch {
+      // Conexão já inutilizável — o erro que importa é o original.
+    }
+    singleton = null;
+    throw error;
+  }
+  // Só publica o singleton depois de migrado com sucesso.
+  singleton = database;
   return singleton;
 }
 
