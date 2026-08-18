@@ -26,7 +26,9 @@ export interface CriterionContribution {
   withoutCount: number;
   withExpectancy: number | null;
   withoutExpectancy: number | null;
+  /** PERCENTUAL 0–100. */
   withWinRate: number | null;
+  /** PERCENTUAL 0–100. */
   withoutWinRate: number | null;
   /** Diferença de expectativa (com − sem). Positivo = o critério ajudou. */
   delta: number | null;
@@ -112,6 +114,32 @@ export function ablationTest(trades: T4Trade[], baselineThreshold = 0): Ablation
   if (executed.length === 0) return [];
   const before = computeT4Metrics(executed);
 
+  // SEM LIMIAR NÃO EXISTE ABLAÇÃO. Com corte 0, remover um critério nunca
+  // desqualifica um trade (qualquer confluência continua passando), e todas as
+  // linhas voltariam NEUTRO — uma parede de "sem efeito" que parece resultado e
+  // não é. Melhor dizer que o teste não se aplica.
+  if (baselineThreshold <= 0) {
+    const catalogWithoutThreshold = new Map<string, string>();
+    for (const trade of executed) {
+      for (const criterion of trade.criteria) {
+        if (!catalogWithoutThreshold.has(criterion.id)) {
+          catalogWithoutThreshold.set(criterion.id, criterion.label);
+        }
+      }
+    }
+    return [...catalogWithoutThreshold.entries()].map(([id, label]) => ({
+      removedCriterionId: id,
+      label,
+      tradesAfter: executed.length,
+      expectancyAfter: null,
+      expectancyBefore: before.expectancy,
+      deltaExpectancy: null,
+      totalRAfter: null,
+      verdict: "INDISPONIVEL" as const,
+      note: "Ablação não se aplica com limiar de confluência 0: sem corte, remover um critério não desqualifica nenhum trade. Rode o backtest com um limiar para medir o efeito.",
+    }));
+  }
+
   const catalog = new Map<string, string>();
   for (const trade of executed) {
     for (const criterion of trade.criteria) {
@@ -164,6 +192,7 @@ export interface DegradationWindow {
   days: 30 | 60 | 90;
   trades: number;
   expectancy: number | null;
+  /** PERCENTUAL 0–100. */
   winRate: number | null;
   totalR: number | null;
   reliable: boolean;

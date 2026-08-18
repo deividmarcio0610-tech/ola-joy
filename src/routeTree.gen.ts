@@ -21,6 +21,7 @@ import { Route as ErrosRouteImport } from './routes/erros'
 import { Route as GerenciamentoRouteImport } from './routes/gerenciamento'
 import { Route as HistoricoAnalisesRouteImport } from './routes/historico-analises'
 import { Route as OperacaoAoVivoRouteImport } from './routes/operacao-ao-vivo'
+import { Route as ValidacaoT4RouteImport } from './routes/validacao-t4'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -82,6 +83,11 @@ const OperacaoAoVivoRoute = OperacaoAoVivoRouteImport.update({
   path: '/operacao-ao-vivo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ValidacaoT4Route = ValidacaoT4RouteImport.update({
+  id: '/validacao-t4',
+  path: '/validacao-t4',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/gerenciamento': typeof GerenciamentoRoute
   '/historico-analises': typeof HistoricoAnalisesRoute
   '/operacao-ao-vivo': typeof OperacaoAoVivoRoute
+  '/validacao-t4': typeof ValidacaoT4Route
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -110,6 +117,7 @@ export interface FileRoutesByTo {
   '/gerenciamento': typeof GerenciamentoRoute
   '/historico-analises': typeof HistoricoAnalisesRoute
   '/operacao-ao-vivo': typeof OperacaoAoVivoRoute
+  '/validacao-t4': typeof ValidacaoT4Route
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/gerenciamento': typeof GerenciamentoRoute
   '/historico-analises': typeof HistoricoAnalisesRoute
   '/operacao-ao-vivo': typeof OperacaoAoVivoRoute
+  '/validacao-t4': typeof ValidacaoT4Route
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/gerenciamento'
     | '/historico-analises'
     | '/operacao-ao-vivo'
+    | '/validacao-t4'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
     | '/gerenciamento'
     | '/historico-analises'
     | '/operacao-ao-vivo'
+    | '/validacao-t4'
   id:
     | '__root__'
     | '/'
@@ -169,6 +180,7 @@ export interface FileRouteTypes {
     | '/gerenciamento'
     | '/historico-analises'
     | '/operacao-ao-vivo'
+    | '/validacao-t4'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -184,6 +196,7 @@ export interface RootRouteChildren {
   GerenciamentoRoute: typeof GerenciamentoRoute
   HistoricoAnalisesRoute: typeof HistoricoAnalisesRoute
   OperacaoAoVivoRoute: typeof OperacaoAoVivoRoute
+  ValidacaoT4Route: typeof ValidacaoT4Route
 }
 
 declare module '@tanstack/react-router' {
@@ -272,6 +285,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OperacaoAoVivoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/validacao-t4': {
+      id: '/validacao-t4'
+      path: '/validacao-t4'
+      fullPath: '/validacao-t4'
+      preLoaderRoute: typeof ValidacaoT4RouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -288,6 +308,7 @@ const rootRouteChildren: RootRouteChildren = {
   GerenciamentoRoute: GerenciamentoRoute,
   HistoricoAnalisesRoute: HistoricoAnalisesRoute,
   OperacaoAoVivoRoute: OperacaoAoVivoRoute,
+  ValidacaoT4Route: ValidacaoT4Route,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

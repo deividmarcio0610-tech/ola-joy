@@ -204,3 +204,22 @@ describe("fórmulas das métricas", () => {
     expect(metrics.profitFactor).toBeNull();
   });
 });
+
+describe("unidade das taxas", () => {
+  it("winRate/lossRate/breakevenRate são PERCENTUAL 0–100, não fração", () => {
+    // 3 ganhos, 1 perda: 75% de acerto. Se a unidade fosse fração, a UI
+    // multiplicaria de novo e mostraria 7500%.
+    const trades = [
+      trade({ resultR: 1 }),
+      trade({ resultR: 1 }),
+      trade({ resultR: 1 }),
+      trade({ resultR: -1 }),
+    ];
+    const metrics = computeT4Metrics(trades);
+    expect(metrics.winRate).toBeCloseTo(75, 6);
+    expect(metrics.lossRate).toBeCloseTo(25, 6);
+    expect(metrics.winRate + metrics.lossRate + metrics.breakevenRate).toBeCloseTo(100, 6);
+    // A expectância continua usando a FRAÇÃO internamente.
+    expect(metrics.expectancy).toBeCloseTo(0.75 * 1 - 0.25 * 1, 6);
+  });
+});

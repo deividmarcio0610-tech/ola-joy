@@ -15,8 +15,11 @@ export interface T4Metrics {
   wins: number;
   losses: number;
   breakevens: number;
+  /** PERCENTUAL 0–100 (não fração). Ex.: 67.14 significa 67,14% de acerto. */
   winRate: number;
+  /** PERCENTUAL 0–100. */
   lossRate: number;
+  /** PERCENTUAL 0–100. */
   breakevenRate: number;
   avgWinR: number;
   avgLossR: number;
@@ -246,6 +249,8 @@ export function computeT4Metrics(input: T4Trade[]): T4Metrics {
     wins: wins.length,
     losses: losses.length,
     breakevens: breakevens.length,
+    // Publicados em PERCENTUAL 0–100; internamente as taxas são frações,
+    // porque a fórmula da expectância exige fração.
     winRate: winRate * 100,
     lossRate: lossRate * 100,
     breakevenRate: breakevenRate * 100,

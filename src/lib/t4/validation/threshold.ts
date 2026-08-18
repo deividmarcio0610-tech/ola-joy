@@ -18,6 +18,7 @@ import type { T4Trade } from "./types";
 export interface ThresholdPoint {
   threshold: number;
   trades: number;
+  /** PERCENTUAL 0–100, herdado de T4Metrics. */
   winRate: number;
   expectancy: number;
   profitFactor: number | null;

@@ -220,3 +220,15 @@ describe("degradationReport", () => {
     for (const window of report.windows) expect(window.reliable).toBe(false);
   });
 });
+
+describe("ablação sem limiar", () => {
+  it("com corte 0 declara INDISPONIVEL em vez de uma parede de NEUTRO", () => {
+    const results = ablationTest(reactionCarriesSample(), 0);
+    expect(results.length).toBeGreaterThan(0);
+    for (const row of results) {
+      expect(row.verdict).toBe("INDISPONIVEL");
+      expect(row.deltaExpectancy).toBeNull();
+      expect(row.note).toContain("não se aplica com limiar de confluência 0");
+    }
+  });
+});

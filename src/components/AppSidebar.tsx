@@ -12,6 +12,7 @@ import {
   BookOpen,
   ImagePlus,
   History,
+  ShieldCheck,
 } from "lucide-react";
 
 import {
@@ -36,6 +37,7 @@ const items = [
   { title: "Aprendizado", url: "/aprendizado", icon: Brain },
   { title: "Biblioteca", url: "/biblioteca", icon: BookOpen },
   { title: "Backtest", url: "/backtest", icon: BarChart3 },
+  { title: "Validação T4", url: "/validacao-t4", icon: ShieldCheck },
   { title: "Operação ao Vivo", url: "/operacao-ao-vivo", icon: Radio },
   { title: "Erros / Diagnóstico", url: "/erros", icon: AlertTriangle },
   { title: "Claude Admin", url: "/claude", icon: Bot },
