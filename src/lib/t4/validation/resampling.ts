@@ -34,8 +34,15 @@ export interface BootstrapResult {
   ci95High: number;
   /** Fração das reamostragens com expectância > 0. */
   probabilityPositive: number;
-  /** true quando o IC 95% NÃO cruza zero. */
+  /** true quando o IC 95% NÃO cruza zero (para qualquer um dos lados). */
   significant: boolean;
+  /**
+   * true SOMENTE quando o IC 95% inteiro está acima de zero — evidência de
+   * vantagem POSITIVA. `significant` sozinho não serve para premiar uma
+   * estratégia: um IC inteiramente NEGATIVO também é significativo, e
+   * significa que a técnica perde de forma consistente.
+   */
+  significantlyPositive: boolean;
 }
 
 function percentile(sorted: number[], p: number): number {
@@ -71,6 +78,7 @@ export function bootstrapExpectancy(
       ci95High: 0,
       probabilityPositive: 0,
       significant: false,
+      significantlyPositive: false,
     };
   }
 
@@ -105,6 +113,7 @@ export function bootstrapExpectancy(
     probabilityPositive: positives / iterations,
     // Significativo = o intervalo inteiro fica de um lado do zero.
     significant: ci95Low > 0 || ci95High < 0,
+    significantlyPositive: ci95Low > 0,
   };
 }
 
