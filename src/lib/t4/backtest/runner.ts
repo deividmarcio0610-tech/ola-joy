@@ -74,10 +74,29 @@ export interface BacktestHooks {
   shouldCancel?: () => boolean;
   /** Frequência (em candles) das notificações de progresso. */
   progressEvery?: number;
+  /**
+   * FATIAMENTO RETOMÁVEL. O job em segundo plano precisa devolver o controle
+   * ao event loop de tempos em tempos; para isso ele varre a série em blocos.
+   *
+   * `fromIndex`/`toIndex` limitam apenas os candles DECIDIDOS neste bloco — a
+   * janela causal continua enxergando todo o passado, então a decisão de um
+   * candle é idêntica à de um run inteiro. Reprocessar o prefixo a cada bloco
+   * daria o mesmo resultado, mas em tempo quadrático.
+   */
+  fromIndex?: number;
+  toIndex?: number;
+  /** Estado de continuidade devolvido pelo bloco anterior. */
+  busyUntilIndex?: number;
 }
 
 export interface BacktestRunResult {
   trades: T4Trade[];
+  /**
+   * Índice até o qual o mercado segue ocupado por uma operação aberta. O bloco
+   * seguinte precisa recebê-lo de volta, senão a mesma operação viraria dois
+   * trades na fronteira entre blocos.
+   */
+  busyUntilIndex: number;
   scannedCandles: number;
   decisionsEvaluated: number;
   cancelled: boolean;
@@ -179,9 +198,12 @@ export function runBacktest(
   // Índice até o qual o mercado já está "ocupado" por uma operação anterior.
   // Sem isso o mesmo setup viraria dezenas de trades sobrepostos e as
   // métricas contariam o mesmo movimento várias vezes.
-  let busyUntilIndex = -1;
+  let busyUntilIndex = hooks.busyUntilIndex ?? -1;
 
-  for (let index = 0; index < series.length; index++) {
+  const from = Math.max(0, hooks.fromIndex ?? 0);
+  const to = Math.min(series.length, hooks.toIndex ?? series.length);
+
+  for (let index = from; index < to; index++) {
     if (hooks.shouldCancel?.()) {
       cancelled = true;
       break;
@@ -368,7 +390,7 @@ export function runBacktest(
   }
 
   hooks.onProgress?.({
-    processed: series.length,
+    processed: to,
     total: series.length,
     opportunities: trades.length,
     executed: trades.filter((trade) => trade.outcome === "EXECUTED").length,
@@ -376,6 +398,7 @@ export function runBacktest(
 
   return {
     trades,
+    busyUntilIndex,
     scannedCandles: series.length,
     decisionsEvaluated,
     cancelled,

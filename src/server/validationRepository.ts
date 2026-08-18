@@ -64,7 +64,7 @@ function db(): DatabaseSync {
       );
       CREATE INDEX IF NOT EXISTS idx_backtest_runs_created ON t4_backtest_runs(created_at);
       CREATE INDEX IF NOT EXISTS idx_backtest_runs_repro
-        ON t4_backtest_runs(config_hash, dataset_hash);
+        ON t4_backtest_runs(config_hash, series_hash);
 
       CREATE TABLE IF NOT EXISTS t4_trades (
         trade_id TEXT NOT NULL,
@@ -416,21 +416,24 @@ export function listBacktestRuns(limit = 30): BacktestRunRecord[] {
 }
 
 /**
- * REPRODUTIBILIDADE (requisito 18): mesma configuração + mesmo dataset devem
- * devolver o mesmo run. Isto permite a UI dizer "este resultado já foi
- * calculado" em vez de recalcular e fingir que é novo.
+ * REPRODUTIBILIDADE (requisito 18): mesma configuração + MESMA SÉRIE DE
+ * ENTRADA devem devolver o mesmo run.
+ *
+ * A chave é o `seriesHash` (a ENTRADA), não o `datasetHash` (o resultado):
+ * procurar pelo hash dos trades exigiria já ter rodado o backtest para
+ * descobrir se era preciso rodá-lo — a busca nunca encontraria nada.
  */
 export function findReproducibleRun(
   configHash: string,
-  datasetHash: string,
+  seriesHash: string,
 ): BacktestRunRecord | null {
   const row = db()
     .prepare(
       `SELECT * FROM t4_backtest_runs
-       WHERE config_hash = ? AND dataset_hash = ? AND status = 'DONE'
+       WHERE config_hash = ? AND series_hash = ? AND status = 'DONE'
        ORDER BY created_at ASC LIMIT 1`,
     )
-    .get(configHash, datasetHash) as Record<string, unknown> | undefined;
+    .get(configHash, seriesHash) as Record<string, unknown> | undefined;
   return row ? mapRun(row) : null;
 }
 

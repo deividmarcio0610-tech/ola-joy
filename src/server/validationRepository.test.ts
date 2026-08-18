@@ -242,17 +242,18 @@ describe("runs de backtest", () => {
 
   it("mesma configuração + mesmo dataset reencontra o run já calculado", () => {
     newRun("run-a");
-    updateBacktestRun("run-a", { status: "DONE", datasetHash: "ds_1" });
-    const found = findReproducibleRun("cfg_abc", "ds_1");
+    // A chave é o hash da SÉRIE DE ENTRADA, não o dos trades produzidos.
+    updateBacktestRun("run-a", { status: "DONE", seriesHash: "series_1", datasetHash: "ds_1" });
+    const found = findReproducibleRun("cfg_abc", "series_1");
     expect(found?.runId).toBe("run-a");
-    expect(findReproducibleRun("cfg_abc", "ds_OUTRO")).toBeNull();
-    expect(findReproducibleRun("cfg_OUTRO", "ds_1")).toBeNull();
+    expect(findReproducibleRun("cfg_abc", "series_OUTRA")).toBeNull();
+    expect(findReproducibleRun("cfg_OUTRO", "series_1")).toBeNull();
   });
 
   it("run não concluído não conta como reproduzível", () => {
     newRun("run-b");
-    updateBacktestRun("run-b", { status: "RUNNING", datasetHash: "ds_2" });
-    expect(findReproducibleRun("cfg_abc", "ds_2")).toBeNull();
+    updateBacktestRun("run-b", { status: "RUNNING", seriesHash: "series_2" });
+    expect(findReproducibleRun("cfg_abc", "series_2")).toBeNull();
   });
 
   it("lista os runs do mais recente para o mais antigo", () => {

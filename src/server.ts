@@ -6,6 +6,7 @@ import { handleHealthRequest } from "./lib/healthEndpoints";
 import { handleClaudeAdminRequest } from "./server/claudeAdminEndpoints";
 import { handleErrorCenterRequest } from "./server/errorEndpoints";
 import { handlePrintAnalysisRequest } from "./server/printAnalysisEndpoints";
+import { handleValidationRequest } from "./server/validationEndpoints";
 import { handleRecordingRequest } from "./server/recordingEndpoints";
 import { handleTradingRequest } from "./server/tradingEndpoints";
 
@@ -66,6 +67,9 @@ export default {
 
       const printAnalysis = await handlePrintAnalysisRequest(request);
       if (printAnalysis) return printAnalysis;
+
+      const validation = await handleValidationRequest(request);
+      if (validation) return validation;
 
       const errors = await handleErrorCenterRequest(request);
       if (errors) return errors;
