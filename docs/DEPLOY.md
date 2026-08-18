@@ -37,6 +37,11 @@ ADMIN_TOKEN=defina-um-token-forte           # admin: /claude, /erros, promover/r
 OPERATOR_TOKEN=defina-outro-token-forte     # operador: gravação/leitura do T4 (opcional; ADMIN_TOKEN serve)
 TRADING_SESSION_SECRET=um-segredo-longo-e-aleatorio   # assinatura das sessões (permite rotacionar tokens)
 
+# ── ANÁLISE POR PRINT (opcional, mas sem isto a tela avisa e não analisa)
+# A área "Analisar Print" exige um modelo REALMENTE multimodal. Sem
+# OLLAMA_VISION_MODEL a tela mostra "ANÁLISE IA INDISPONÍVEL" e o botão
+# ANALISAR T4 fica bloqueado — nunca um resultado falso.
+
 # Claude Admin (opcional)
 # ANTHROPIC_API_KEY=
 # ANTHROPIC_MODEL=claude-sonnet-5
@@ -101,7 +106,7 @@ sudo mkdir -p /var/lib/analisador && sudo chown "$(whoami)" /var/lib/analisador
 # 2. Build validado (não pule os gates)
 npm ci            # ou: bun install --frozen-lockfile
 npm run typecheck # precisa sair 0
-npm test          # precisa sair 0 (328 testes)
+npm test          # precisa sair 0 (553 testes)
 npm run build     # precisa sair 0
 
 # 3. Processo PM2 (nome fixo: analisador) com o .env carregado
@@ -111,8 +116,9 @@ pm2 restart analisador --update-env 2>/dev/null || \
 pm2 save
 ```
 
-A migração do banco (schema 5: auditoria de técnicas) é automática e
-idempotente no boot; **a técnica promovida no banco é preservada** —
+A migração do banco (schema 5: auditoria de técnicas, mais as tabelas `t4_*`
+da validação e as `print_analyses*`) é automática, aditiva e idempotente no
+boot; **a técnica promovida no banco é preservada** —
 `STRATEGY_VERSION` do código só semeia banco vazio.
 
 ## Validação obrigatória pós-deploy
@@ -136,6 +142,33 @@ curl -s -o /dev/null -w '%{http_code}\n' -X POST https://SEU-DOMINIO/api/trading
 Na interface: o cartão **“GRAVAÇÃO BLOQUEADA”** aparece no topo — digite o
 token uma vez para desbloquear leitura e gravação (cookie de 12 h). A análise
 visual funciona mesmo sem desbloquear; só a persistência exige a sessão.
+
+### Áreas novas nesta versão
+
+| Rota | O que é |
+|---|---|
+| `/validacao-t4` | Painel de validação estatística: robustez decomposta, TRAIN×OOS×FORWARD, curvas, segmentação, limiar, walk-forward, bootstrap/Monte Carlo e replay candle a candle com as entradas históricas em roxo. |
+| `/analisar-print` | Análise manual por captura: `Ctrl+V` no print do Profit, leitura T4 pela IA multimodal e overlay desenhado sobre a imagem original intacta. |
+| `/historico-analises` | Histórico das análises por print, com feedback do operador. |
+
+```bash
+# Loopback na VPS — as três respondem 200 com o app de pé
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8081/validacao-t4
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8081/analisar-print
+curl -s http://127.0.0.1:8081/api/validation/strategy      # versão + configHash congelado
+curl -s http://127.0.0.1:8081/api/print-analysis/status    # available:false sem modelo visual (correto)
+```
+
+O backtest pesado roda em SEGUNDO PLANO: `POST /api/validation/runs` devolve
+`202` com o `runId` na hora, o progresso sai em `/runs/{id}/progress` e o
+cancelamento em `/runs/{id}/cancel`. A interface nunca fica travada.
+
+A migração da validação é **aditiva e prefixada com `t4_`**
+(`t4_strategy_versions`, `t4_backtest_runs`, `t4_trades`,
+`t4_trade_snapshots`, `t4_metrics`, `t4_forward_sessions`,
+`t4_validation_results`, `t4_simulation_runs`, `t4_audit_events`), porque o
+schema legado já tem `backtest_runs` e `validation_results` com outras
+colunas. Nenhuma tabela existente é tocada.
 
 `technique-current` deve mostrar a técnica ativa do banco (`origin:
 "BOOTSTRAP"` na primeira instalação; `"PROMOTION"`/`"ROLLBACK"` depois), com
